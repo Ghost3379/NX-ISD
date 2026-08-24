@@ -31,7 +31,7 @@ N X - I S D
 
 ### Sensors
 * **Motion/IMU:** BNO085 (9-DOF Motion Co-Processor)
-* **Environment:** BME280 (Temperature, Humidity, Pressure)
+* **Environment:** BME690 (Temperature, Humidity, Pressure, Gas)
 * **Ambient Light:** OPT3001
 * **Biometrics:** MAX30102 (Heart Rate / SpO2)
 * **Timing:** RV-3028-C7 Real-Time Clock (RTC)
@@ -51,4 +51,6 @@ N X - I S D
 The board is programmed via **PlatformIO** (Arduino Framework) and is optimized to run the custom **ISD-Core** firmware.
 
 ## License
-This project is licensed under the MIT License. See the LICENSE file for details.
+The software/firmware in the [ISD-Core] directory is licensed under the GNU General Public License v3.0 (GPLv3).
+
+The hardware design files in the [ISD-PCB] directory are licensed under the CERN Open Hardware Licence Version 2 - Strongly Reciprocal (CERN-OHL-S).
