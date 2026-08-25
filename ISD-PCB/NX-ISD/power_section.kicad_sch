@@ -7233,7 +7233,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1uF"
+		(property "Value" "1u"
 			(at 67.31 128.2699 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7719,7 +7719,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
 			(at 252.4252 57.15 0)
 			(hide yes)
 			(show_name no)
@@ -10033,7 +10033,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1uF"
+		(property "Value" "1u"
 			(at 151.13 137.1599 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10431,7 +10431,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "10uF"
+		(property "Value" "10u"
 			(at 163.83 137.1599 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13135,7 +13135,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
 			(at 183.8452 57.15 0)
 			(hide yes)
 			(show_name no)
