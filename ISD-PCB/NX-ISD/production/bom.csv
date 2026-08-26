@@ -1,42 +1,46 @@
 ﻿Designator,Footprint,Quantity,Value, Distributor,DONE
-B1,BUZ-SMD_4P-L8.5-W8.5-BR-1,1,SMD-8503-3627-16Ω,lcsc,
-"C1, C12, C17, C29, C30, C5, C6, C7",0402,8,100n,digikey,
-"C10, C13, C15, C2, C3, C4, C9, C20, C21, C8",0603,10,1u,digikey,
-"C11, C14",0402,2,10n,digikey,
-"C16, C22",0603,2,10uF,digikey,
-"C27, C28",0402,2,22p,digikey,
-D1,0603,1,ORANGE,digikey,
-D2,0402,1,1N4148WT,mouser,
-D5,D_SOD-123,1,D_Schottky_Filled,mouser,
-"G1, G2, G3, G4, G5, G6, G7, G8, G9",LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B,9,XL-1010RGBC-WS2812B,lcsc,
-J1,TE_1-2328702-0,1,1-2328702-0,mouser,
-"Q1, Q4",SOT-23,2,AO3400A,mouser,
-Q2,SOT-23,1,AO3401A,mouser,
-Q3,SOT-323_SC-70,1,BC847W,mouser,
-"R1, R9",0402,2,5.1k,digikey,
-"R10, R15, R5",0402,3,220,digikey,
-R11,0402,1,500,digikey,
-"R12, R14, R17, R3, R4",0402,6,10k,digikey,
-TH1,0402,1,10k,digikey,
-R13,0402,1,1k,digikey,
-R2,0402,1,3K3,digikey,
-R6,0402,1,100K,digikey,
-R8,0402,1,27k,digikey,
-RN1,SOIC-16_3.9x9.9mm_P1.27mm,1,8x4.7k,mouser,
-S1,KEY-SMD_TS-1101VS-C-A-A,1,TS18-5-15-SL-260,lcsc,
-U1,ESP32-S3-WROOM-1,1,ESP32-S3-WROOM-1,mouser,
-U10,IC_BNO085,1,BNO085,mouser,
-U11,USB-C-SMD_HYCW275-USBC24-050B,1,HYCW275-USBC24-050B,lcsc,
-U12,SON65P200X200X65-7N,1,OPT3001DNPR,mouser,
-U13,SOT23-5,1,RT9193-18GB,lcsc,
-U14,LGA-8_L8.0-W6.0-P1.27-TL_ZDSD02GLGEAG,1,ZDSD02GLGEAG,lcsc,
-U15,SOT-666,1,USBLC6-2P6,mouser,
-U2,VREG_NCP167BMX330TBG,1,NCP167BMX330TBG,mouser,
-U3,SON50P200X200X80-9N,1,MAX17048G_T10,lcsc,
-U4,MicroCrystal_C7_SON-8_1.5x3.2mm_P0.9mm,1,RV-3028-C7,digikey,
-U5,Maxim_OLGA-14_3.3x5.6mm_P0.8mm,1,MAX30102,mouser,
-U6,Bosch_LGA-8_3x3mm_P0.8mm_ClockwisePinNumbering,1,BME690,mouser,
-U7,SW-SMD_TM-2025A,1,TM-2025A,lcsc,
-U8,SON50P200X200X80-9N,1,BQ25170DSGR,lcsc,
-U9,SOT23-5,1,RT9193-28GB,lcsc,
-Y2,Crystal_SMD_3215-2Pin_3.2x1.5mm,1,32.768,digikey,
+B1,BUZ-SMD_4P-L8.5-W8.5-BR-1,1,SMD-8503-3627-16Ω,lcsc,X
+"C1, C12, C17, C29, C30, C5, C6, C7",0402,8,100n,digikey,x
+"C10, C13, C15, C2, C3, C4, C9, C20, C21, C8",0603,10,1u,digikey,x
+"C11, C14",0402,2,10n,digikey,x
+"C16, C22",0603,2,10u,digikey,x
+"C27, C28",0402,2,22p,digikey,x
+D1,0603,1,ORANGE,lcsc,x
+D2,0402,1,1N4148WT,mouser,x
+D5,D_SOD-123,1,D_Schottky_Filled,mouser,x
+"G1, G2, G3, G4, G5, G6, G7, G8, G9",LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B,9,XL-1010RGBC-WS2812B,lcsc,X
+J1,TE_1-2328702-0,1,1-2328702-0,mouser,x
+"Q1, Q4",SOT-23,2,AO3400A,mouser,x
+Q2,SOT-23,1,AO3401A,mouser,x
+Q3,SOT-323_SC-70,1,BC847W,mouser,x
+"R1, R9",0402,2,5.1k,digikey,x
+"R10, R15, R5",0402,3,220,digikey,x
+R11,0402,1,500,digikey,x
+"R12, R14, R17, R3, R4",0402,6,10k,digikey,x
+TH1,0402,1,10k,digikey,x
+R13,0402,1,1k,digikey,x
+R2,0402,1,3K3,digikey,x
+R6,0402,1,100K,digikey,x
+R8,0402,1,27k,digikey,x
+RN1,SOIC-16_3.9x9.9mm_P1.27mm,1,8x4.7k,mouser,x
+S1,KEY-SMD_TS-1101VS-C-A-A,1,TS-1101VS-C-A-A,lcsc,X
+U1,ESP32-S3-WROOM-1,1,ESP32-S3-WROOM-1,mouser,x
+U10,IC_BNO085,1,BNO085,digikey,x
+U11,USB-C-SMD_HYCW275-USBC24-050B,1,HYCW275-USBC24-050B,lcsc,x
+U12,SON65P200X200X65-7N,1,OPT3001DNPR,mouser,x
+U13,SOT23-5,1,RT9193-18GB,lcsc,X
+U14,LGA-8_L8.0-W6.0-P1.27-TL_ZDSD02GLGEAG,1,ZDSD02GLGEAG,lcsc,X
+U15,SOT-666,1,USBLC6-2P6,mouser,x
+U2,VREG_NCP167BMX330TBG,1,NCP167BMX330TBG,mouser,x
+U3,SON50P200X200X80-9N,1,MAX17048G_T10,lcsc,x
+U4,MicroCrystal_C7_SON-8_1.5x3.2mm_P0.9mm,1,RV-3028-C7,digikey,x
+U5,Maxim_OLGA-14_3.3x5.6mm_P0.8mm,1,MAX30102,mouser,x
+U6,Bosch_LGA-8_3x3mm_P0.8mm_ClockwisePinNumbering,1,BME690,mouser,x
+U7,SW-SMD_TM-2025A,1,TM-2025A,lcsc,X
+U8,SON50P200X200X80-9N,1,BQ25170DSGR,lcsc,X
+U9,SOT23-5,1,RT9193-28GB,lcsc,X
+Y2,Crystal_SMD_3215-2Pin_3.2x1.5mm,1,32.768,digikey,x
+
+Mouser list, https://www.mouser.ch/api/CrossDomain/GetContext?syncDomains=www&returnUrl=https%3a%2f%2fwww.mouser.com%2fde%2fTools%2fProject%2fShare%3fAccessID%3d3914319cc2&async=False&setPrefSub=False&clearPrefSub=False
+DigiKey list, https://www.digikey.ch/de/mylists/list/ZAE84SNSN8
+LCSC list, upload the LCSC-bOM.xls to LCSC to order the cooresponding parts
