@@ -35,3 +35,7 @@
 #define INT_HR 5
 #define INT_DOF 2
 #define ALERT 4
+
+// Charging & USB Detection
+#define USB_DETECT 12
+#define BAT_STAT 11
