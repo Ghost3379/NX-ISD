@@ -35,11 +35,12 @@ void setup() {
   pinMode(TFT_PWM, OUTPUT);
   digitalWrite(TFT_PWM, HIGH); 
   
-  // Initialize Buttons
+  // Initialize internal pullups for buttons & ALERT
   pinMode(BTN, INPUT_PULLUP);
   pinMode(LEVER_LEFT, INPUT_PULLUP);
   pinMode(LEVER_PUSH, INPUT_PULLUP);
   pinMode(LEVER_RIGHT, INPUT_PULLUP);
+  pinMode(ALERT, INPUT_PULLUP);
   
   delay(100);
 
