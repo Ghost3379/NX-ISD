@@ -4029,7 +4029,7 @@
 		)
 		(uuid "8b044126-256f-4e46-8aa4-5c022251e040")
 	)
-	(hierarchical_label "!INT_H"
+	(hierarchical_label "!INT_DOF"
 		(shape input)
 		(at 29.21 53.34 180)
 		(effects

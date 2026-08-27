@@ -2111,7 +2111,7 @@
 				(justify left)
 			)
 		)
-		(pin "!INT_H" input
+		(pin "!INT_DOF" input
 			(at 104.14 67.31 180)
 			(uuid "e66a3758-cd26-43f3-ba38-8a2f91dcb4d7")
 			(effects
@@ -2226,7 +2226,7 @@
 				(justify right)
 			)
 		)
-		(pin "!INT_H" output
+		(pin "!INT_DOF" output
 			(at 38.1 67.31 0)
 			(uuid "39e158e6-6cdd-4806-9b43-07f3af56d1c3")
 			(effects
