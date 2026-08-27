@@ -12044,7 +12044,7 @@
 			(size 1.95 0.6)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
-			(net "/Logic section/!INT_H")
+			(net "/Logic section/!INT_DOF")
 			(pinfunction "R6.1_6")
 			(pintype "passive")
 			(uuid "4c05e1f7-3953-4345-b167-f4321cd1c24b")
@@ -17474,7 +17474,7 @@
 			(at 1.75 1.5625)
 			(size 0.25 0.675)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net "/Logic section/!INT_H")
+			(net "/Logic section/!INT_DOF")
 			(pinfunction "~{H_INT}_14")
 			(pintype "output")
 			(solder_mask_margin 0.102)
@@ -21282,7 +21282,7 @@
 			(at 8.75 -2.72)
 			(size 1.5 0.9)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net "/Logic section/!INT_H")
+			(net "/Logic section/!INT_DOF")
 			(pinfunction "IO2_38")
 			(pintype "bidirectional")
 			(uuid "23ac110a-d654-492c-bad6-7976114fa6d0")
@@ -34314,7 +34314,7 @@
 		(end 174.85 98.15)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "1c272782-5cc2-4163-ad5c-2e05cc37c201")
 	)
 	(segment
@@ -34322,7 +34322,7 @@
 		(end 173.734314 104.9)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "1f168622-1257-43bc-9647-ef5e49c59917")
 	)
 	(segment
@@ -34330,7 +34330,7 @@
 		(end 178.1 97)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "59f5b330-87fb-47ce-a6cd-d1e942015b20")
 	)
 	(segment
@@ -34338,7 +34338,7 @@
 		(end 172.35 104.9)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "6cec7b4c-dbea-478d-8546-1b3ccb084ec1")
 	)
 	(segment
@@ -34346,7 +34346,7 @@
 		(end 178.1 94.325)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "6ecf6690-562b-4c3f-bf01-edad3c134415")
 	)
 	(segment
@@ -34354,7 +34354,7 @@
 		(end 175.2 103.434314)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "71344d38-8d50-4c85-b645-19bd715cc23a")
 	)
 	(segment
@@ -34362,7 +34362,7 @@
 		(end 171.895 105.355)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "72406c0e-ea1b-4b50-b9ea-114dc71f5218")
 	)
 	(segment
@@ -34370,7 +34370,7 @@
 		(end 174.5 96.65)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "749f9a9e-bdf6-4ab2-a30a-9554743a092f")
 	)
 	(segment
@@ -34378,7 +34378,7 @@
 		(end 176.95 98.15)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "82a4406b-68da-49fa-a885-e7cc3b06777b")
 	)
 	(segment
@@ -34386,7 +34386,7 @@
 		(end 175.2 98.15)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "e0259226-0be1-49ec-b538-dfb42c0bdda5")
 	)
 	(segment
@@ -34394,7 +34394,7 @@
 		(end 146.44 88.64)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "e74e4f68-5c21-45a9-9e0f-c4d52b545f90")
 	)
 	(segment
@@ -34402,7 +34402,7 @@
 		(end 175.2 98.15)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "ee33b1b8-bc3d-4d7a-ae66-eee10df4a8d2")
 	)
 	(segment
@@ -34410,7 +34410,7 @@
 		(end 174.5 97.8)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "ef1d563e-740c-43ee-a727-aebdb1e9295f")
 	)
 	(segment
@@ -34418,7 +34418,7 @@
 		(end 147.1 89.3)
 		(width 0.2)
 		(layer "F.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "f89e9051-22ac-46a3-8496-7d02870e910d")
 	)
 	(via
@@ -34426,7 +34426,7 @@
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "0b684dcb-2c0b-4404-821e-1aaefd475859")
 	)
 	(via
@@ -34434,7 +34434,7 @@
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "27bd286f-e981-48c5-bb03-264b9ec5e8bb")
 	)
 	(segment
@@ -34442,7 +34442,7 @@
 		(end 174.05 96.2)
 		(width 0.2)
 		(layer "B.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "21cbfdc0-3fff-4b5c-9263-d7e894181776")
 	)
 	(segment
@@ -34450,7 +34450,7 @@
 		(end 171.85 91)
 		(width 0.2)
 		(layer "B.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "25a22419-34c8-4ed8-b4ab-29c110cdbc60")
 	)
 	(segment
@@ -34458,7 +34458,7 @@
 		(end 171.85 95.45)
 		(width 0.2)
 		(layer "B.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "85da5888-4ae5-467c-80f3-20ee75203490")
 	)
 	(segment
@@ -34466,7 +34466,7 @@
 		(end 147.45 90.3)
 		(width 0.2)
 		(layer "B.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "908e518a-761e-4178-b81c-701e4400dda2")
 	)
 	(segment
@@ -34474,7 +34474,7 @@
 		(end 172.6 96.2)
 		(width 0.2)
 		(layer "B.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "a908977f-75f1-404e-a014-63381f306a1f")
 	)
 	(segment
@@ -34482,7 +34482,7 @@
 		(end 171.15 90.3)
 		(width 0.2)
 		(layer "B.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "cb5b195b-5016-4408-8789-75d774ecb67f")
 	)
 	(segment
@@ -34490,7 +34490,7 @@
 		(end 147.1 89.95)
 		(width 0.2)
 		(layer "B.Cu")
-		(net "/Logic section/!INT_H")
+		(net "/Logic section/!INT_DOF")
 		(uuid "e8741bc4-45f8-4363-879c-ef98f5bcca6e")
 	)
 	(segment
