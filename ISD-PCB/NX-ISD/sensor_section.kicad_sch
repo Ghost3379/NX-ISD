@@ -5157,7 +5157,7 @@
 		)
 		(uuid "cd03327f-b103-4925-bf43-184ab08c9b22")
 	)
-	(hierarchical_label "!INT_DOF"
+	(hierarchical_label "!INT_H"
 		(shape output)
 		(at 152.4 59.69 180)
 		(effects
