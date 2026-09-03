@@ -5039,6 +5039,17 @@
 		)
 		(uuid "0911fa8b-fdca-49d7-8ca6-4e8f3890b8bf")
 	)
+	(text "-> Connects to 1S Lipo\nPKCELL\n3.7 V, 1200 mAh"
+		(exclude_from_sim no)
+		(at 139.7 79.248 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "15407483-e4fd-46bb-95ed-8439449e9747")
+	)
 	(text "[0603]"
 		(exclude_from_sim no)
 		(at 218.44 52.07 0)
@@ -6052,7 +6063,7 @@
 	)
 	(wire
 		(pts
-			(xy 109.22 77.47) (xy 113.03 77.47)
+			(xy 104.14 77.47) (xy 100.33 77.47)
 		)
 		(stroke
 			(width 0)
@@ -6192,7 +6203,7 @@
 	)
 	(wire
 		(pts
-			(xy 109.22 80.01) (xy 113.03 80.01)
+			(xy 104.14 80.01) (xy 100.33 80.01)
 		)
 		(stroke
 			(width 0)
@@ -6502,7 +6513,7 @@
 	)
 	(wire
 		(pts
-			(xy 113.03 73.66) (xy 113.03 77.47)
+			(xy 100.33 73.66) (xy 100.33 77.47)
 		)
 		(stroke
 			(width 0)
@@ -6522,7 +6533,7 @@
 	)
 	(wire
 		(pts
-			(xy 113.03 82.55) (xy 113.03 80.01)
+			(xy 100.33 82.55) (xy 100.33 80.01)
 		)
 		(stroke
 			(width 0)
@@ -8033,7 +8044,8 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 113.03 82.55 0)
+		(at 100.33 82.55 0)
+		(mirror y)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -8044,7 +8056,7 @@
 		(fields_autoplaced yes)
 		(uuid "351c80e5-6e95-4a3d-9a22-2102d5476b00")
 		(property "Reference" "#PWR013"
-			(at 113.03 88.9 0)
+			(at 100.33 88.9 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8055,7 +8067,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 113.03 87.63 0)
+			(at 100.33 87.63 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -8065,7 +8077,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 113.03 82.55 0)
+			(at 100.33 82.55 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8076,7 +8088,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 113.03 82.55 0)
+			(at 100.33 82.55 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8087,7 +8099,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 113.03 82.55 0)
+			(at 100.33 82.55 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10492,8 +10504,7 @@
 	)
 	(symbol
 		(lib_id "S2B-PH-SM4-TB:S2B-PH-SM4-TB")
-		(at 104.14 78.74 0)
-		(mirror y)
+		(at 109.22 78.74 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -10503,7 +10514,7 @@
 		(dnp no)
 		(uuid "9feabf8c-3bf3-4f4d-b6f4-bbdde966800d")
 		(property "Reference" "P1"
-			(at 101.346 73.66 0)
+			(at 112.014 73.66 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10514,7 +10525,7 @@
 			)
 		)
 		(property "Value" "S2B-PH-SM4-TB"
-			(at 110.236 84.836 0)
+			(at 103.124 84.836 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10525,7 +10536,7 @@
 			)
 		)
 		(property "Footprint" "Global Footprints:JST_S2B-PH-SM4-TB"
-			(at 104.14 78.74 0)
+			(at 109.22 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10537,7 +10548,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 104.14 78.74 0)
+			(at 109.22 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10548,7 +10559,7 @@
 			)
 		)
 		(property "Description" ""
-			(at 104.14 78.74 0)
+			(at 109.22 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10559,7 +10570,7 @@
 			)
 		)
 		(property "MF" "JST Sales"
-			(at 104.14 78.74 0)
+			(at 109.22 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10571,7 +10582,7 @@
 			)
 		)
 		(property "Description_1" "Connector Header Surface Mount, Right Angle 2 position 0.079 (2.00mm)"
-			(at 104.14 78.74 0)
+			(at 109.22 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10583,7 +10594,7 @@
 			)
 		)
 		(property "Package" "None"
-			(at 104.14 78.74 0)
+			(at 109.22 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10595,7 +10606,7 @@
 			)
 		)
 		(property "Price" "None"
-			(at 104.14 78.74 0)
+			(at 109.22 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10607,7 +10618,7 @@
 			)
 		)
 		(property "Check_prices" "https://www.snapeda.com/parts/S2B-PH-SM4-TB/JST/view-part/?ref=eda"
-			(at 104.14 78.74 0)
+			(at 109.22 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10619,7 +10630,7 @@
 			)
 		)
 		(property "SnapEDA_Link" "https://www.snapeda.com/parts/S2B-PH-SM4-TB/JST/view-part/?ref=snap"
-			(at 104.14 78.74 0)
+			(at 109.22 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10631,7 +10642,7 @@
 			)
 		)
 		(property "MP" "S2B-PH-SM4-TB"
-			(at 104.14 78.74 0)
+			(at 109.22 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10643,7 +10654,7 @@
 			)
 		)
 		(property "Availability" "In Stock"
-			(at 104.14 78.74 0)
+			(at 109.22 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10655,7 +10666,7 @@
 			)
 		)
 		(property "MANUFACTURER" "JST"
-			(at 104.14 78.74 0)
+			(at 109.22 78.74 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10927,7 +10938,8 @@
 	)
 	(symbol
 		(lib_id "power:VBUS")
-		(at 113.03 73.66 0)
+		(at 100.33 73.66 0)
+		(mirror y)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -10938,7 +10950,7 @@
 		(fields_autoplaced yes)
 		(uuid "b0c559a4-e495-409c-99cf-b55ac311b6bc")
 		(property "Reference" "#PWR0101"
-			(at 113.03 77.47 0)
+			(at 100.33 77.47 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10949,7 +10961,7 @@
 			)
 		)
 		(property "Value" "VBAT"
-			(at 113.03 68.58 0)
+			(at 100.33 68.58 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10959,7 +10971,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 113.03 73.66 0)
+			(at 100.33 73.66 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10970,7 +10982,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 113.03 73.66 0)
+			(at 100.33 73.66 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10981,7 +10993,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"VBUS\""
-			(at 113.03 73.66 0)
+			(at 100.33 73.66 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
