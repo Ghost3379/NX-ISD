@@ -37,15 +37,18 @@ N X - I S D
 * **Timing:** RV-3028-C7 Real-Time Clock (RTC)
 
 ### Power Management
-* **Charging:** USB-C (BQ25170 LiPo Charger)
+* **Charging:** USB-C (BQ25170 LiPo Charger, 1200mAh form factor)
 * **Monitoring:** MAX17048 Fuel Gauge
-* **Voltage:** Dedicated LDOs (RT9193-18GB/28GB & NCP167) for clean 1.8V, 2.8V, and 3.3V rails
+* **Voltage Regulation:** Synchronous step-down buck converter (TLV62568, ~95% efficiency) for 3.3V system rail; dedicated low-noise LDOs (RT9193-18GB/28GB) for 1.8V and 2.8V sensor rails
 
 ### Peripherals & I/O
 * **Display:** 10-Pin 0.5mm FPC connector for SPI displays
-* **LEDs:** 9x WS2812B NeoPixel Matrix (XL-1010RGBC)
+* **LEDs:** 16x WS2812B NeoPixel 4×4 Serpentine Matrix (XL-1010RGBC) with PMOS high-side power cutoff
 * **Audio:** Onboard SMD Buzzer
 * **Input:** Multi-Directional Lever-Switch and Push-Button
+
+## Features & Mathematical Modeling Roadmap
+See [FEATURE_LIST.md](FEATURE_LIST.md) for detailed documentation on our planned sensor fusion algorithms, Software Energy Accounting, variometer, and biometric modeling.
 
 ## Software
 The board is programmed via **PlatformIO** (Arduino Framework) and is optimized to run the custom **ISD-Core** firmware.

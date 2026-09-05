@@ -114,22 +114,28 @@ public:
       delay(150);
     }
 
-    // Lever Left (Up in menu)
+    // Lever Left (Up in menu or Prev Animation in LED page)
     if (lft == LOW && lastLeftState == HIGH) {
       buzzer.playClick();
       if (state == STATE_MENU) {
         menuIndex = (menuIndex - 1 + menuCount) % menuCount;
         menuNeedsRedraw = true;
+      } else if (state == STATE_LED) {
+        neoPixel.prevAnimation();
+        subscreenInit = true; // Redraw labels
       }
       delay(150);
     }
 
-    // Lever Right (Down in menu)
+    // Lever Right (Down in menu or Next Animation in LED page)
     if (rgt == LOW && lastRightState == HIGH) {
       buzzer.playClick();
       if (state == STATE_MENU) {
         menuIndex = (menuIndex + 1) % menuCount;
         menuNeedsRedraw = true;
+      } else if (state == STATE_LED) {
+        neoPixel.nextAnimation();
+        subscreenInit = true; // Redraw labels
       }
       delay(150);
     }
@@ -343,11 +349,11 @@ private:
 
   // 2. Display & LEDs
   void drawLEDTest(bool periodicUpdate, const SensorState &stateData) {
-    drawHeader("2. DISPLAY & NEOPixels", stateData);
+    drawHeader("2. DISPLAY & 4x4 MATRIX", stateData);
     
     tft.setTextSize(1);
     tft.setTextColor(TFT_ORANGE, TFT_BLACK);
-    tft.drawString("Test Screen Color & WS2812B Matrix", 5, 25);
+    tft.drawString("Screen Test & WS2812B 4x4 Glyphs", 5, 25);
     
     if (actionTriggered) {
       actionTriggered = false;
@@ -366,32 +372,44 @@ private:
     }
 
     tft.setTextColor(TFT_ORANGE, TFT_BLACK);
-    tft.drawString("1. NeoPixel matrix power PWR_NPM = ON", 10, 50);
-    tft.drawString("2. Toggling NeoPixel colors (RGB Wheel)", 10, 65);
-    tft.drawString("3. Push Lever to cycle screen test colors:", 10, 80);
+    tft.drawString("Active FX Mode:", 10, 42);
+    tft.setTextColor(TFT_CYAN, TFT_BLACK);
+    char animStr[40];
+    snprintf(animStr, sizeof(animStr), "[%d/6] %s", neoPixel.currentMode + 1, neoPixel.getAnimName());
+    tft.drawString(animStr, 105, 42);
 
-    const char* colorNames[6] = {"Normal Black", "Red Fill", "Green Fill", "Blue Fill", "White Fill", "Normal Black"};
-    tft.drawString("   Current: ", 10, 105);
-    tft.setTextColor(TFT_GREEN, TFT_BLACK);
-    tft.drawString(colorNames[ledColorIdx], 80, 105);
+    tft.setTextColor(tft.color565(160, 160, 160), TFT_BLACK);
+    tft.drawString("Controls: Tilt Lever L/R to switch FX", 10, 56);
+    tft.drawString("          Push Lever for LCD RGB Fill", 10, 68);
 
     if (!neoPixel.powered) {
       neoPixel.begin();
     }
     
-    ledRainbowStep += 4;
-    neoPixel.runColorCycle(ledRainbowStep);
+    // Update live 4x4 NeoPixel animation!
+    neoPixel.updateAnimation();
 
-    tft.drawRect(20, 135, 200, 70, TFT_ORANGE);
-    tft.setTextColor(TFT_ORANGE, TFT_BLACK);
-    tft.drawString("WS2812B NeoPixel Grid (9 LEDs):", 30, 145);
+    // Graphical 4x4 visualizer on TFT mirroring the physical matrix
+    tft.drawRoundRect(68, 84, 104, 104, 6, TFT_ORANGE);
+    for (uint8_t y = 0; y < 4; y++) {
+      for (uint8_t x = 0; x < 4; x++) {
+        uint16_t pixIdx = NeoPixelTest::xy(x, y);
+        uint32_t c = neoPixel.pixels ? neoPixel.pixels->getPixelColor(pixIdx) : 0;
+        uint8_t r = (c >> 16) & 0xFF;
+        uint8_t g = (c >> 8) & 0xFF;
+        uint8_t b = c & 0xFF;
+        uint16_t color565 = tft.color565(r, g, b);
+        tft.fillRoundRect(73 + x * 24, 89 + y * 24, 20, 20, 4, color565);
+      }
+    }
+
+    tft.drawFastHLine(0, 195, 240, TFT_ORANGE);
     tft.setTextColor(TFT_GREEN, TFT_BLACK);
-    tft.drawString("Powered (PWR_NPM Pin 17 = HIGH)", 30, 165);
-    tft.drawString("Colors cycling...", 30, 180);
+    tft.drawString("16x WS2812B Serpentine Matrix | PMOS (Pin 17)", 5, 202);
 
-    tft.drawFastHLine(0, 220, 240, TFT_ORANGE);
+    tft.drawFastHLine(0, 218, 240, TFT_ORANGE);
     tft.setTextColor(TFT_ORANGE, TFT_BLACK);
-    tft.drawString("Push: Test Screen  BTN: Exit", 10, 225);
+    tft.drawString("Tilt L/R: FX  Push: LCD  BTN: Exit", 10, 224);
   }
 
   // 3. Real-Time Clock
