@@ -1,5 +1,8 @@
 # NX-ISD
 
+## Overview
+The **NX-ISD** is a custom, highly integrated wearable and embedded development board inspired by the Artemis Watch. It serves as the hardware foundation for the **ISD-Core** operating system.
+
 <p align="center">
   <img src="docs/images/nx_isd_v1p3_top.png" alt="NX-ISD v1p3 Top Component View" width="49%">
   <img src="docs/images/nx_isd_v1p3_bottom.png" alt="NX-ISD v1p3 Bottom Silkscreen View" width="49%">
@@ -7,9 +10,6 @@
 <p align="center">
   <em>NX-ISD Hardware Revision v1p3 (KiCad 3D Render) — No Battery & No Display mounted</em>
 </p>
-
-## Overview
-The **NX-ISD** is a custom, highly integrated wearable and embedded development board inspired by the Artemis Watch. It serves as the hardware foundation for the **ISD-Core** operating system.
 
 ## Naming & Structure
 
