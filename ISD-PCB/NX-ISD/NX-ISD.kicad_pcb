@@ -6706,15 +6706,15 @@
 			(uuid "efcf221a-a32d-4ab0-9060-af88f6c896c1")
 		)
 		(embedded_fonts no)
-		(model "${KICAD10_3DMODEL_DIR}/Package_LGA.3dshapes/Bosch_LGA-8_3x3mm_P0.8mm_ClockwisePinNumbering.step"
+		(model "G:/My Drive/10-Gotham Project/15-Tools/156-Tool Librarys/KiCad/Global 3Dmodels/BME280.STEP"
 			(offset
 				(xyz 0 0 0)
 			)
 			(scale
-				(xyz 1 1 1)
+				(xyz 1.2 1.2 1.2)
 			)
 			(rotate
-				(xyz 0 0 0)
+				(xyz -90 -0 -90)
 			)
 		)
 	)
@@ -15280,6 +15280,7 @@
 		(property "Reference" "J2"
 			(at -2.075 -11.025 90)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "514988f3-291e-470d-94c5-a7c97a13c4fa")
 			(effects
 				(font
@@ -23751,7 +23752,7 @@
 		(uuid "d77ae324-fde2-40cf-abee-0ec1f97f6b4d")
 		(at 186.45 103.101472 -90)
 		(property "Reference" "U12"
-			(at 0.54 -2.008 270)
+			(at 0.54 -2.008 90)
 			(layer "F.SilkS")
 			(hide yes)
 			(uuid "b23ffb88-afa4-4977-9898-9235eae45fcd")
@@ -23763,7 +23764,7 @@
 			)
 		)
 		(property "Value" "OPT3001DNPR"
-			(at 7.652 2.008 270)
+			(at 7.652 2.008 90)
 			(layer "F.Fab")
 			(uuid "75758267-c43c-49fd-8ace-c6713c4b8268")
 			(effects
@@ -23774,7 +23775,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 0 0 270)
+			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "bfff08db-b16f-404a-95ed-14eb112f808e")
@@ -23785,7 +23786,7 @@
 			)
 		)
 		(property "Description" "Digital ambient light sensor (ALS) with high-precision human-eye response"
-			(at 0 0 270)
+			(at 0 0 90)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "1ed38021-51e6-4325-b753-25e1fee790ce")
@@ -24212,6 +24213,17 @@
 			(uuid "27b8e6c8-f653-4fa7-a6c0-29ebdde899e1")
 		)
 		(embedded_fonts no)
+		(model "G:/My Drive/10-Gotham Project/15-Tools/156-Tool Librarys/KiCad/Global 3Dmodels/OPT3001DNPR.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz -90 -0 -0)
+			)
+		)
 	)
 	(footprint "Global Footprints:BUZ-SMD_4P-L8.5-W8.5-BR-1"
 		(layer "F.Cu")
