@@ -7396,7 +7396,7 @@
 				)
 			)
 		)
-		(property "Footprint" "NX-AW-footprints:SON65P200X200X65-7N"
+		(property "Footprint" "Global Footprints:SON65P200X200X65-7N"
 			(at 156.21 129.54 0)
 			(hide yes)
 			(show_name no)

@@ -164,7 +164,7 @@ Inspired by high-precision industrial metrology, we derive rich multi-variable i
 * [x] **BNO085 Pull-ups:** Added 10k pull-ups `R18` and `R19` to `+3V3`.
 * [x] **MAX30102 Filtering:** Added 100nF decoupling capacitor `C18` on `+1V8` rail.
 * [x] **BOOT Jumper:** Added `JP3` solder jumper to pull GPIO 0 low for manual flashing.
-* [ ] **Power Architecture Rework:**
+* [x] **Power Architecture Rework:**
   * Replace tiny NCP167 LDO with **TLV62568** synchronous step-down buck converter (SOT-23 / SOT-563, $\approx 95\%$ efficiency).
   * Select compact shielded power inductor ($1.0\text{--}1.5\,\mu\text{H}$, $I_{sat} \ge 1.5\,\text{A}$).
   * Accommodate 1200mAh LiPo battery form factor on PCB layout.

@@ -131,12 +131,15 @@ void setup()
   pinMode(TFT_PWM, OUTPUT);
   digitalWrite(TFT_PWM, HIGH); // Backlight HIGH
 
-  // Initialize internal pullups for inputs
+  // Initialize internal pullups for push buttons / lever
   pinMode(BTN, INPUT_PULLUP);
   pinMode(LEVER_LEFT, INPUT_PULLUP);
   pinMode(LEVER_PUSH, INPUT_PULLUP);
   pinMode(LEVER_RIGHT, INPUT_PULLUP);
-  pinMode(ALERT, INPUT_PULLUP);
+
+  // Hardware interrupt inputs (external pull-ups present on PCB)
+  pinMode(ALERT, INPUT);
+  pinMode(INT_HR, INPUT);
 
   delay(100);
 

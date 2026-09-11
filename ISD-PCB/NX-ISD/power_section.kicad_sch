@@ -8981,7 +8981,7 @@
 				)
 			)
 		)
-		(property "Footprint" "NX-AW-footprints:SAMESKY_UJ20-C-H-G-SMT-1-P16-TR"
+		(property "Footprint" "Global Footprints:SAMESKY_UJ20-C-H-G-SMT-1-P16-TR"
 			(at 30.48 55.88 0)
 			(hide yes)
 			(show_name no)
