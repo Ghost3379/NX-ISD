@@ -7374,10 +7374,9 @@
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "511f646b-ce0b-415e-8005-4d2b4c47457b")
 		(property "Reference" "U12"
-			(at 156.21 111.76 0)
+			(at 156.21 141.732 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7387,7 +7386,7 @@
 			)
 		)
 		(property "Value" "OPT3001DNPR"
-			(at 156.21 114.3 0)
+			(at 156.21 144.272 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10576,10 +10575,9 @@
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "c8694cef-58c4-4e0e-8e43-1d32f496fbf1")
 		(property "Reference" "U6"
-			(at 59.69 107.95 0)
+			(at 59.69 129.794 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10589,7 +10587,7 @@
 			)
 		)
 		(property "Value" "BME690"
-			(at 59.69 110.49 0)
+			(at 59.69 132.334 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects

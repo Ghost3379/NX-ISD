@@ -5074,7 +5074,7 @@
 		)
 		(uuid "d0fe6430-2b1e-4a7f-8cff-5a13e22515d8")
 	)
-	(text "Formula R_ISET: 300/ I_OUT(in Amperes)\n\nCharge Current | Calculated R_ISET\n--------- | -------------\n50 mA	      |   6000 Ω\n100 mA        |   3000 Ω\n150 mA		 |   2000 Ω\n200 mA		 |   1500 Ω\n300 mA	      |   1000 Ω\n400 mA 	      |    750 Ω\n500 mA	      |    600 Ω\n600 mA	      |    500 Ω\n800 mA	      |    375 Ω"
+	(text "Formula R_ISET: 300/ I_OUT(in Amperes)\n\nCharge Current | Calculated R_ISET\n--------- | -------------\n50 mA	      |   6000 Ω\n100 mA         |   3000 Ω\n150 mA		 |   2000 Ω\n200 mA		 |   1500 Ω\n300 mA	      |   1000 Ω\n400 mA 	      |    750 Ω\n500 mA	      |    600 Ω\n600 mA	      |    500 Ω\n800 mA	      |    375 Ω"
 		(exclude_from_sim no)
 		(at 206.502 96.774 0)
 		(effects
