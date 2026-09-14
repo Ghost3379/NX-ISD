@@ -2251,6 +2251,12 @@
 		(path "/24102161-ffc9-4a9f-904b-68376e8a4e16/0ca8e363-b686-4114-a08d-54a924033489")
 		(sheetname "/Peripherie/")
 		(sheetfile "peripherie.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "4" "3" "2" "1")
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -10800,6 +10806,12 @@
 		(path "/24102161-ffc9-4a9f-904b-68376e8a4e16/e9d59df7-fb1c-4b78-90f9-5875b620fce0")
 		(sheetname "/Peripherie/")
 		(sheetfile "peripherie.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "4" "3" "2" "1")
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -11357,6 +11369,12 @@
 		(path "/24102161-ffc9-4a9f-904b-68376e8a4e16/14072a4a-7628-4ed6-979a-2c14b8a2a396")
 		(sheetname "/Peripherie/")
 		(sheetfile "peripherie.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "4" "3" "2" "1")
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -15766,7 +15784,7 @@
 				)
 			)
 		)
-		(property "Value" "220"
+		(property "Value" "10"
 			(at 0 1.17 90)
 			(layer "F.Fab")
 			(uuid "397d1f6e-8c7a-4381-a3aa-5c3299ca6da4")
@@ -17164,6 +17182,12 @@
 		(path "/24102161-ffc9-4a9f-904b-68376e8a4e16/57272492-94f8-45db-b3be-301071a66867")
 		(sheetname "/Peripherie/")
 		(sheetfile "peripherie.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "4" "3" "2" "1")
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -23867,6 +23891,12 @@
 		(path "/ee3cc36f-3407-4ced-ab39-9e80004a94ee/511f646b-ce0b-415e-8005-4d2b4c47457b")
 		(sheetname "/Sersor section/")
 		(sheetfile "sensor_section.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "1" "4" "6" "5" "2" "7" "3")
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -25223,6 +25253,12 @@
 		(path "/24102161-ffc9-4a9f-904b-68376e8a4e16/77341f5a-ba5e-4993-b1a1-f5f179f3a8e3")
 		(sheetname "/Peripherie/")
 		(sheetfile "peripherie.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "4" "3" "2" "1")
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -26863,6 +26899,12 @@
 		(path "/24102161-ffc9-4a9f-904b-68376e8a4e16/549472dc-c26c-423b-9d42-c329d66f132d")
 		(sheetname "/Peripherie/")
 		(sheetfile "peripherie.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "4" "3" "2" "1")
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -27882,6 +27924,12 @@
 		(path "/24102161-ffc9-4a9f-904b-68376e8a4e16/4a6c23ea-5847-44a8-8f91-988b72468ccd")
 		(sheetname "/Peripherie/")
 		(sheetfile "peripherie.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "4" "3" "2" "1")
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
