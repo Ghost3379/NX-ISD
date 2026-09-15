@@ -35,7 +35,7 @@ N X - I S D
 
 ### Core & Storage
 * **Microcontroller:** ESP32-S3 N16R8
-* **Storage:** Additional Onboard NAND-SD (ZDSD32GLGEAG)
+* **Storage:** Additional Onboard NAND-SD (ZDSD02GLGEAG -> 2 Gbit = 250 MByte)
 
 ### Sensors
 * **Motion/IMU:** BNO085 (9-DOF Motion Co-Processor)

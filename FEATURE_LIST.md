@@ -46,7 +46,7 @@ Inspired by high-precision industrial metrology, we derive rich multi-variable i
 ---
 
 ### [ ] Autonomic Stress Index & Heart Rate Variability (HRV)
-* **Sensors Involved:** MAX30102 (Optical PPG) + RV-3028 (1 ppm TCXO RTC).
+* **Sensors Involved:** MAX30102 (Optical PPG) + RV-3028 (RTC).
 * **Principle:** 
   * Microsecond timestamping of peak-to-peak Inter-Beat Intervals ($IBI$ / $R\text{-}R$ intervals).
   * Calculate RMSSD (Root Mean Square of Successive Differences):

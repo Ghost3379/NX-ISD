@@ -3528,7 +3528,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "ESP32-S3-WROOM-1_N16R8"
+		(property "Value" "ESP32-S3-WROOM-1-N16R8"
 			(at 73.2633 40.64 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3562,6 +3562,17 @@
 			)
 		)
 		(property "Description" "RF Module, ESP32-S3 SoC, Wi-Fi 802.11b/g/n, Bluetooth, BLE, 32-bit, 3.3V, onboard antenna, SMD"
+			(at 71.12 68.58 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "ESP32-S3-WROOM-1-N16R8"
 			(at 71.12 68.58 0)
 			(hide yes)
 			(show_name no)
