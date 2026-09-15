@@ -6,3 +6,4 @@
 ".vscode" 
 .history
 NX-ISD-backups
+*.lck
