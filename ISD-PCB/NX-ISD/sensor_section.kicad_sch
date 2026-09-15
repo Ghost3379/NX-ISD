@@ -3875,6 +3875,16 @@
 		)
 		(uuid "4ade78ac-0ed6-4a8a-87c2-f08b0e1cd9af")
 	)
+	(text "[0603]"
+		(exclude_from_sim no)
+		(at 31.242 176.53 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "72bcaa9a-636c-429a-b608-c89c1adf4b71")
+	)
 	(junction
 		(at 266.7 63.5)
 		(diameter 0)
@@ -9442,7 +9452,7 @@
 		(dnp no)
 		(uuid "80ab4877-5081-42c8-aadd-2b8205443187")
 		(property "Reference" "C16"
-			(at 86.36 63.246 0)
+			(at 86.868 60.706 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9453,7 +9463,7 @@
 			)
 		)
 		(property "Value" "1u"
-			(at 86.868 66.04 0)
+			(at 88.138 65.786 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9759,7 +9769,7 @@
 		(dnp no)
 		(uuid "884d37f9-d2fa-46f5-a278-1483fc5146af")
 		(property "Reference" "C15"
-			(at 44.704 174.498 90)
+			(at 43.18 169.418 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9770,7 +9780,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 51.816 174.752 90)
+			(at 42.926 175.006 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -11643,7 +11653,7 @@
 		(dnp no)
 		(uuid "ec0ff097-9a61-4a7b-a8c1-3160f0b6ed98")
 		(property "Reference" "C14"
-			(at 34.544 174.498 90)
+			(at 33.528 169.672 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -11653,8 +11663,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100n"
-			(at 41.656 174.752 90)
+		(property "Value" "1u"
+			(at 34.798 175.26 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -11664,7 +11674,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 39.0652 176.53 0)
 			(hide yes)
 			(show_name no)

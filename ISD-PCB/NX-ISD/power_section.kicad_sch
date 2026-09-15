@@ -8697,7 +8697,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "10k"
+		(property "Value" "10k NTC"
 			(at 209.55 72.7074 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8719,7 +8719,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.murata.com/-/media/webrenewal/products/thermistor/ntc/ncu/ncu15-s.ashx?la=en-us&cvid=20230317010443000000"
 			(at 207.01 69.85 0)
 			(hide yes)
 			(show_name no)
@@ -8731,6 +8731,17 @@
 			)
 		)
 		(property "Description" "Temperature dependent resistor, negative temperature coefficient"
+			(at 207.01 71.12 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer part number" "NCU15XH103D60RC"
 			(at 207.01 71.12 0)
 			(hide yes)
 			(show_name no)
