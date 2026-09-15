@@ -2690,7 +2690,7 @@
 				)
 			)
 			(property "Footprint" "OptoDevice:Maxim_OLGA-14_3.3x5.6mm_P0.8mm"
-				(at 0 -2.54 0)
+				(at 0 -14.478 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(hide yes)
@@ -2701,7 +2701,7 @@
 				)
 			)
 			(property "Datasheet" "https://datasheets.maximintegrated.com/en/ds/MAX30102.pdf"
-				(at 0 0 0)
+				(at 0.762 14.986 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(hide yes)
@@ -2920,7 +2920,7 @@
 					)
 				)
 				(pin power_in line
-					(at -12.7 2.54 0)
+					(at -12.7 1.27 0)
 					(length 2.54)
 					(name "VLED+"
 						(effects
@@ -2937,10 +2937,9 @@
 						)
 					)
 				)
-				(pin passive line
-					(at 0 12.7 270)
+				(pin power_in line
+					(at -12.7 3.81 0)
 					(length 2.54)
-					(hide yes)
 					(name "VLED+"
 						(effects
 							(font
@@ -3883,6 +3882,12 @@
 		(uuid "0a525a85-4f97-4148-b8e2-e71ade22ef9a")
 	)
 	(junction
+		(at 54.61 168.91)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "21f476e0-fdd2-4657-8f11-965843859833")
+	)
+	(junction
 		(at 123.19 62.23)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3911,6 +3916,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "63e55907-fbbe-4836-984c-de44116e15c6")
+	)
+	(junction
+		(at 247.65 54.61)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "7fabde5c-63ac-4124-bec2-cc8e69a7bb6a")
 	)
 	(junction
 		(at 142.24 64.77)
@@ -3961,6 +3972,12 @@
 		(uuid "b1deb134-cccc-4533-aac0-881f9ca1680d")
 	)
 	(junction
+		(at 247.65 52.07)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "b69272e7-28a8-4b57-a9cb-3a7630847bc2")
+	)
+	(junction
 		(at 173.99 134.62)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4003,16 +4020,8 @@
 		(uuid "fffb6a26-c71b-46ce-9ee1-6603b23b4d05")
 	)
 	(no_connect
-		(at 223.52 52.07)
-		(uuid "4315db65-b818-470a-881b-9c6c7e663d20")
-	)
-	(no_connect
 		(at 259.08 128.27)
 		(uuid "ad47f771-27ee-46d5-ae95-e38886a950fd")
-	)
-	(no_connect
-		(at 223.52 54.61)
-		(uuid "fcdaf698-d37c-4df1-9f3b-04b4616f83c1")
 	)
 	(wire
 		(pts
@@ -4316,6 +4325,26 @@
 	)
 	(wire
 		(pts
+			(xy 247.65 54.61) (xy 247.65 60.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2c154b7a-6a85-4edf-b511-d75a27418a9e")
+	)
+	(wire
+		(pts
+			(xy 62.23 171.45) (xy 54.61 171.45)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2d1b60c4-c294-4ca3-8252-10ec23b95fe7")
+	)
+	(wire
+		(pts
 			(xy 43.18 111.76) (xy 43.18 114.3)
 		)
 		(stroke
@@ -4466,16 +4495,6 @@
 	)
 	(wire
 		(pts
-			(xy 62.23 170.18) (xy 54.61 170.18)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "53d7635f-4a20-4d81-841d-9c4cfc7f273d")
-	)
-	(wire
-		(pts
 			(xy 266.7 74.93) (xy 266.7 76.2)
 		)
 		(stroke
@@ -4576,7 +4595,7 @@
 	)
 	(wire
 		(pts
-			(xy 54.61 162.56) (xy 54.61 170.18)
+			(xy 54.61 162.56) (xy 54.61 168.91)
 		)
 		(stroke
 			(width 0)
@@ -4666,7 +4685,7 @@
 	)
 	(wire
 		(pts
-			(xy 233.68 60.96) (xy 237.49 60.96)
+			(xy 240.03 60.96) (xy 247.65 60.96)
 		)
 		(stroke
 			(width 0)
@@ -4736,7 +4755,7 @@
 	)
 	(wire
 		(pts
-			(xy 223.52 60.96) (xy 226.06 60.96)
+			(xy 223.52 60.96) (xy 232.41 60.96)
 		)
 		(stroke
 			(width 0)
@@ -4773,6 +4792,16 @@
 			(type default)
 		)
 		(uuid "95e178cf-2cd8-40f8-b6b0-71b48770bda7")
+	)
+	(wire
+		(pts
+			(xy 223.52 54.61) (xy 232.41 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9884859c-5a49-433f-8de0-98e5801b9cd6")
 	)
 	(wire
 		(pts
@@ -5006,6 +5035,16 @@
 	)
 	(wire
 		(pts
+			(xy 223.52 52.07) (xy 232.41 52.07)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c964cf2c-0c1c-4e33-9038-842c91793585")
+	)
+	(wire
+		(pts
 			(xy 71.12 48.26) (xy 91.44 48.26)
 		)
 		(stroke
@@ -5096,6 +5135,16 @@
 	)
 	(wire
 		(pts
+			(xy 54.61 168.91) (xy 54.61 171.45)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d739db60-da5b-49bd-aa54-8468d0564c7b")
+	)
+	(wire
+		(pts
 			(xy 254 130.81) (xy 261.62 130.81)
 		)
 		(stroke
@@ -5113,6 +5162,16 @@
 			(type default)
 		)
 		(uuid "d7cf6c7b-c216-44c0-9e90-18f0219e2967")
+	)
+	(wire
+		(pts
+			(xy 240.03 52.07) (xy 247.65 52.07)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "da962b94-a8d1-43c3-b9f9-4cf9559a033e")
 	)
 	(wire
 		(pts
@@ -5163,6 +5222,16 @@
 			(type default)
 		)
 		(uuid "e11c8470-3aaf-42a8-b94e-b007299d81d1")
+	)
+	(wire
+		(pts
+			(xy 247.65 52.07) (xy 247.65 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e2441969-5f63-4e7d-af86-079f83ea1990")
 	)
 	(wire
 		(pts
@@ -5306,6 +5375,26 @@
 	)
 	(wire
 		(pts
+			(xy 54.61 168.91) (xy 62.23 168.91)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f7af750b-c267-4de2-b8eb-b5c39ec56ba7")
+	)
+	(wire
+		(pts
+			(xy 240.03 54.61) (xy 247.65 54.61)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f87a7844-168a-4556-9435-a18e210a2fa3")
+	)
+	(wire
+		(pts
 			(xy 24.13 58.42) (xy 35.56 58.42)
 		)
 		(stroke
@@ -5336,7 +5425,7 @@
 	)
 	(wire
 		(pts
-			(xy 237.49 58.42) (xy 237.49 60.96)
+			(xy 247.65 43.18) (xy 247.65 52.07)
 		)
 		(stroke
 			(width 0)
@@ -5641,7 +5730,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "074a7590-410a-46aa-ae82-86d874374ad8")
-		(property "Reference" "#PWR019"
+		(property "Reference" "#PWR046"
 			(at 43.18 115.57 0)
 			(hide yes)
 			(show_name no)
@@ -5701,7 +5790,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR019")
+					(reference "#PWR046")
 					(unit 1)
 				)
 			)
@@ -5719,7 +5808,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "08c3b5b7-ed71-4bab-95c3-f8779dd8eedc")
-		(property "Reference" "#PWR073"
+		(property "Reference" "#PWR068"
 			(at 139.7 59.69 0)
 			(hide yes)
 			(show_name no)
@@ -5780,7 +5869,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR073")
+					(reference "#PWR068")
 					(unit 1)
 				)
 			)
@@ -5797,7 +5886,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "0b81f979-bdad-4b0a-8ecb-96a30c1960a6")
-		(property "Reference" "C30"
+		(property "Reference" "C19"
 			(at 136.144 48.768 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5861,7 +5950,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C30")
+					(reference "C19")
 					(unit 1)
 				)
 			)
@@ -5879,7 +5968,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "11c3fc7b-d229-4b39-bd4d-9757da8c85f4")
-		(property "Reference" "#PWR0103"
+		(property "Reference" "#PWR069"
 			(at 139.7 121.92 0)
 			(hide yes)
 			(show_name no)
@@ -5939,7 +6028,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR0103")
+					(reference "#PWR069")
 					(unit 1)
 				)
 			)
@@ -5956,7 +6045,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "1df50a8a-c81e-451e-8509-1e8b0519e57b")
-		(property "Reference" "U5"
+		(property "Reference" "U8"
 			(at 74.93 181.61 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5978,7 +6067,7 @@
 			)
 		)
 		(property "Footprint" "OptoDevice:Maxim_OLGA-14_3.3x5.6mm_P0.8mm"
-			(at 74.93 175.26 0)
+			(at 74.93 187.198 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5989,7 +6078,7 @@
 			)
 		)
 		(property "Datasheet" "https://datasheets.maximintegrated.com/en/ds/MAX30102.pdf"
-			(at 74.93 172.72 0)
+			(at 75.692 157.734 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6055,7 +6144,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "U5")
+					(reference "U8")
 					(unit 1)
 				)
 			)
@@ -6073,7 +6162,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "1e7fa9a2-50cc-46be-bd17-854460e0a990")
-		(property "Reference" "#PWR0133"
+		(property "Reference" "#PWR048"
 			(at 48.26 166.37 0)
 			(hide yes)
 			(show_name no)
@@ -6133,7 +6222,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR0133")
+					(reference "#PWR048")
 					(unit 1)
 				)
 			)
@@ -6151,7 +6240,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "1f3a66fc-da57-4703-ba60-d4d5d3887ce8")
-		(property "Reference" "#PWR0102"
+		(property "Reference" "#PWR064"
 			(at 124.46 142.24 0)
 			(hide yes)
 			(show_name no)
@@ -6212,7 +6301,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR0102")
+					(reference "#PWR064")
 					(unit 1)
 				)
 			)
@@ -6230,7 +6319,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "1f6d9f2c-5d0d-448f-af62-bfbf762317de")
-		(property "Reference" "#PWR068"
+		(property "Reference" "#PWR060"
 			(at 107.95 163.83 0)
 			(hide yes)
 			(show_name no)
@@ -6290,7 +6379,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR068")
+					(reference "#PWR060")
 					(unit 1)
 				)
 			)
@@ -6308,7 +6397,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "1fa7678f-508d-4a81-aa21-1215cf70be72")
-		(property "Reference" "#PWR069"
+		(property "Reference" "#PWR061"
 			(at 116.84 163.83 0)
 			(hide yes)
 			(show_name no)
@@ -6368,7 +6457,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR069")
+					(reference "#PWR061")
 					(unit 1)
 				)
 			)
@@ -6386,7 +6475,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "208856ea-6e2a-4684-81e6-abda4fe9ce05")
-		(property "Reference" "#PWR070"
+		(property "Reference" "#PWR081"
 			(at 254 82.55 0)
 			(hide yes)
 			(show_name no)
@@ -6447,7 +6536,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR070")
+					(reference "#PWR081")
 					(unit 1)
 				)
 			)
@@ -6465,7 +6554,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2d420e9d-6d18-4101-9c2f-94e401e1d7d5")
-		(property "Reference" "#PWR072"
+		(property "Reference" "#PWR079"
 			(at 238.76 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -6526,7 +6615,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR072")
+					(reference "#PWR079")
 					(unit 1)
 				)
 			)
@@ -6544,7 +6633,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "33fee274-9a26-4794-b5e3-60117ab8f238")
-		(property "Reference" "#PWR0146"
+		(property "Reference" "#PWR055"
 			(at 76.2 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -6605,7 +6694,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR0146")
+					(reference "#PWR055")
 					(unit 1)
 				)
 			)
@@ -6623,7 +6712,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3acb2661-7231-49d2-b61e-492219ce06b7")
-		(property "Reference" "#PWR067"
+		(property "Reference" "#PWR065"
 			(at 129.54 163.83 0)
 			(hide yes)
 			(show_name no)
@@ -6683,7 +6772,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR067")
+					(reference "#PWR065")
 					(unit 1)
 				)
 			)
@@ -6701,7 +6790,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3bcfe087-70f3-4fb7-9bb4-581c2d418368")
-		(property "Reference" "#PWR023"
+		(property "Reference" "#PWR083"
 			(at 267.97 146.05 0)
 			(hide yes)
 			(show_name no)
@@ -6762,7 +6851,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR023")
+					(reference "#PWR083")
 					(unit 1)
 				)
 			)
@@ -6780,7 +6869,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "41e294e7-ac55-413c-b9b3-b818149b4188")
-		(property "Reference" "#PWR029"
+		(property "Reference" "#PWR075"
 			(at 220.98 128.27 0)
 			(hide yes)
 			(show_name no)
@@ -6840,7 +6929,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR029")
+					(reference "#PWR075")
 					(unit 1)
 				)
 			)
@@ -6857,7 +6946,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "43a4af79-47a6-4d72-8e07-8f91c4d05ecb")
-		(property "Reference" "C12"
+		(property "Reference" "C18"
 			(at 120.904 131.318 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6921,7 +7010,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C12")
+					(reference "C18")
 					(unit 1)
 				)
 			)
@@ -6938,7 +7027,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "4712c6e8-ee0e-41ae-a89a-69175a8c81d9")
-		(property "Reference" "U4"
+		(property "Reference" "U12"
 			(at 241.3 142.748 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7020,7 +7109,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "U4")
+					(reference "U12")
 					(unit 1)
 				)
 			)
@@ -7038,7 +7127,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4889054c-b556-47e6-bd4c-0582d882f6eb")
-		(property "Reference" "#PWR021"
+		(property "Reference" "#PWR054"
 			(at 76.2 115.57 0)
 			(hide yes)
 			(show_name no)
@@ -7098,7 +7187,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR021")
+					(reference "#PWR054")
 					(unit 1)
 				)
 			)
@@ -7116,7 +7205,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "496192e6-679b-41fb-9721-25b5a3981ab8")
-		(property "Reference" "U11"
+		(property "Reference" "U9"
 			(at 134.2233 189.23 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7198,7 +7287,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "U11")
+					(reference "U9")
 					(unit 1)
 				)
 			)
@@ -7216,7 +7305,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4af61191-496b-404c-a9d1-b5e9434b9fb4")
-		(property "Reference" "#PWR020"
+		(property "Reference" "#PWR047"
 			(at 43.18 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -7277,7 +7366,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR020")
+					(reference "#PWR047")
 					(unit 1)
 				)
 			)
@@ -7294,7 +7383,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "507a02bf-4fad-4a83-b71b-aed1e6006fce")
-		(property "Reference" "C28"
+		(property "Reference" "C22"
 			(at 248.92 68.834 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7358,7 +7447,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C28")
+					(reference "C22")
 					(unit 1)
 				)
 			)
@@ -7375,7 +7464,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "511f646b-ce0b-415e-8005-4d2b4c47457b")
-		(property "Reference" "U12"
+		(property "Reference" "U10"
 			(at 156.21 141.732 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7634,7 +7723,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "U12")
+					(reference "U10")
 					(unit 1)
 				)
 			)
@@ -7651,7 +7740,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "541f835e-703b-4893-835a-e4fdf96dc19e")
-		(property "Reference" "R23"
+		(property "Reference" "R11"
 			(at 105.664 170.688 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7715,7 +7804,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "R23")
+					(reference "R11")
 					(unit 1)
 				)
 			)
@@ -7733,7 +7822,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "54b6069e-3209-42f3-ad2e-a8ced102308c")
-		(property "Reference" "#PWR06"
+		(property "Reference" "#PWR067"
 			(at 139.7 38.1 0)
 			(hide yes)
 			(show_name no)
@@ -7793,7 +7882,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR06")
+					(reference "#PWR067")
 					(unit 1)
 				)
 			)
@@ -7810,7 +7899,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "54fdf6de-31b3-4bfc-9ba6-bf5b28f09cfd")
-		(property "Reference" "R19"
+		(property "Reference" "R14"
 			(at 132.842 70.358 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7874,7 +7963,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "R19")
+					(reference "R14")
 					(unit 1)
 				)
 			)
@@ -7892,7 +7981,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5563cef8-dd86-44c3-bd0c-4f5351fa3fac")
-		(property "Reference" "#PWR076"
+		(property "Reference" "#PWR070"
 			(at 142.24 81.28 0)
 			(hide yes)
 			(show_name no)
@@ -7953,7 +8042,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR076")
+					(reference "#PWR070")
 					(unit 1)
 				)
 			)
@@ -7970,7 +8059,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "57b99bd7-6a07-41d5-a20e-56d306096d86")
-		(property "Reference" "C1"
+		(property "Reference" "C13"
 			(at 30.734 123.698 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8034,7 +8123,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C1")
+					(reference "C13")
 					(unit 1)
 				)
 			)
@@ -8052,7 +8141,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5a3c17d4-dfda-4c85-aa45-598201468005")
-		(property "Reference" "#PWR04"
+		(property "Reference" "#PWR077"
 			(at 228.6 128.27 0)
 			(hide yes)
 			(show_name no)
@@ -8112,7 +8201,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR04")
+					(reference "#PWR077")
 					(unit 1)
 				)
 			)
@@ -8130,7 +8219,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5ef27555-3b17-477d-8997-4c43009014fc")
-		(property "Reference" "#PWR026"
+		(property "Reference" "#PWR042"
 			(at 34.29 115.57 0)
 			(hide yes)
 			(show_name no)
@@ -8190,7 +8279,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR026")
+					(reference "#PWR042")
 					(unit 1)
 				)
 			)
@@ -8207,7 +8296,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "6072290c-74e9-43d3-ab5c-e33bf404d44d")
-		(property "Reference" "C29"
+		(property "Reference" "C21"
 			(at 230.632 35.814 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8271,7 +8360,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C29")
+					(reference "C21")
 					(unit 1)
 				)
 			)
@@ -8289,7 +8378,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6432d5ae-fd28-4fec-9b69-4352bd37c721")
-		(property "Reference" "#PWR0100"
+		(property "Reference" "#PWR063"
 			(at 124.46 123.19 0)
 			(hide yes)
 			(show_name no)
@@ -8349,7 +8438,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR0100")
+					(reference "#PWR063")
 					(unit 1)
 				)
 			)
@@ -8367,7 +8456,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6858c709-a5d4-472e-80a1-da66a226d936")
-		(property "Reference" "Y2"
+		(property "Reference" "Y1"
 			(at 260.35 55.88 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8377,7 +8466,7 @@
 				)
 			)
 		)
-		(property "Value" "32.768"
+		(property "Value" "32.768 kHz"
 			(at 260.35 58.42 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8398,7 +8487,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/5561/JWT3215%20Tunning%20Fork%20Spec.pdf"
 			(at 260.35 63.5 0)
 			(hide yes)
 			(show_name no)
@@ -8420,6 +8509,50 @@
 				)
 			)
 		)
+		(property "Tolerance" " ±20ppm"
+			(at 260.35 63.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Capacity" "12,5pF"
+			(at 260.35 63.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ESR" "70 kOhms"
+			(at 260.35 63.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacterer part number" "DH2032K768C5T1521011"
+			(at 260.35 63.5 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "2"
 			(uuid "d16e4c9a-c897-46c3-838c-2b6913951eab")
 		)
@@ -8429,7 +8562,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "Y2")
+					(reference "Y1")
 					(unit 1)
 				)
 			)
@@ -8447,7 +8580,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6967967a-14e7-4df7-9403-43f80bd9e603")
-		(property "Reference" "#PWR036"
+		(property "Reference" "#PWR074"
 			(at 173.99 144.78 0)
 			(hide yes)
 			(show_name no)
@@ -8508,7 +8641,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR036")
+					(reference "#PWR074")
 					(unit 1)
 				)
 			)
@@ -8526,7 +8659,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "6d4136bd-ce64-47b9-9d27-e1bf6d9193a2")
-		(property "Reference" "R24"
+		(property "Reference" "R15"
 			(at 151.638 159.004 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8590,7 +8723,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "R24")
+					(reference "R15")
 					(unit 1)
 				)
 			)
@@ -8608,7 +8741,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6f32336f-698a-4a8c-94fa-8904f290258a")
-		(property "Reference" "U10"
+		(property "Reference" "U11"
 			(at 170.18 27.432 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8893,7 +9026,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "U10")
+					(reference "U11")
 					(unit 1)
 				)
 			)
@@ -8910,7 +9043,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "7c26a062-631c-4d4c-b331-c9f6fda291f7")
-		(property "Reference" "R6"
+		(property "Reference" "R10"
 			(at 21.844 65.278 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8974,7 +9107,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "R6")
+					(reference "R10")
 					(unit 1)
 				)
 			)
@@ -8992,7 +9125,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7c4aed85-a3d9-4646-a609-c53e44a5a72a")
-		(property "Reference" "#PWR059"
+		(property "Reference" "#PWR073"
 			(at 160.02 97.79 0)
 			(hide yes)
 			(show_name no)
@@ -9053,7 +9186,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR059")
+					(reference "#PWR073")
 					(unit 1)
 				)
 			)
@@ -9061,7 +9194,7 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 237.49 58.42 0)
+		(at 247.65 43.18 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -9071,8 +9204,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7eb25d01-9096-4e19-86d0-52d7ce5866f2")
-		(property "Reference" "#PWR015"
-			(at 237.49 62.23 0)
+		(property "Reference" "#PWR080"
+			(at 247.65 46.99 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9083,7 +9216,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 237.49 53.34 0)
+			(at 247.65 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9093,7 +9226,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 237.49 58.42 0)
+			(at 247.65 43.18 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9104,7 +9237,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 237.49 58.42 0)
+			(at 247.65 43.18 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9115,7 +9248,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3V3\""
-			(at 237.49 58.42 0)
+			(at 247.65 43.18 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9131,7 +9264,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR015")
+					(reference "#PWR080")
 					(unit 1)
 				)
 			)
@@ -9149,7 +9282,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7f5fc5da-ed06-4d67-a9c7-5fce385d389b")
-		(property "Reference" "#PWR032"
+		(property "Reference" "#PWR059"
 			(at 102.87 68.58 0)
 			(hide yes)
 			(show_name no)
@@ -9210,7 +9343,88 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR032")
+					(reference "#PWR059")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 236.22 52.07 270)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "7fea60d6-c953-4c0e-a1a6-efb830fab93d")
+		(property "Reference" "R16"
+			(at 242.824 50.8 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "10k"
+			(at 237.998 52.07 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 236.22 50.292 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 236.22 52.07 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 236.22 52.07 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "e9e60111-fe53-4f57-a988-52c0d9a26469")
+		)
+		(pin "2"
+			(uuid "5fc0bcaa-e1c8-4244-a6a5-0dc3e915ed42")
+		)
+		(instances
+			(project "NX-ISD"
+				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
+					(reference "R16")
 					(unit 1)
 				)
 			)
@@ -9227,7 +9441,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "80ab4877-5081-42c8-aadd-2b8205443187")
-		(property "Reference" "C4"
+		(property "Reference" "C16"
 			(at 86.36 63.246 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9291,7 +9505,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C4")
+					(reference "C16")
 					(unit 1)
 				)
 			)
@@ -9309,7 +9523,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "80e09f26-a2e4-47b8-bcd9-effe5b69115f")
-		(property "Reference" "#PWR071"
+		(property "Reference" "#PWR082"
 			(at 266.7 82.55 0)
 			(hide yes)
 			(show_name no)
@@ -9370,7 +9584,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR071")
+					(reference "#PWR082")
 					(unit 1)
 				)
 			)
@@ -9388,7 +9602,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "83ed32da-e642-41e6-8fbf-29599f458704")
-		(property "Reference" "#PWR014"
+		(property "Reference" "#PWR078"
 			(at 228.6 147.32 0)
 			(hide yes)
 			(show_name no)
@@ -9449,7 +9663,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR014")
+					(reference "#PWR078")
 					(unit 1)
 				)
 			)
@@ -9467,7 +9681,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "86ebf550-7646-4741-bf82-43769c5aacd5")
-		(property "Reference" "#PWR047"
+		(property "Reference" "#PWR057"
 			(at 91.44 81.28 0)
 			(hide yes)
 			(show_name no)
@@ -9527,7 +9741,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR047")
+					(reference "#PWR057")
 					(unit 1)
 				)
 			)
@@ -9544,7 +9758,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "884d37f9-d2fa-46f5-a278-1483fc5146af")
-		(property "Reference" "C18"
+		(property "Reference" "C15"
 			(at 44.704 174.498 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9608,7 +9822,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C18")
+					(reference "C15")
 					(unit 1)
 				)
 			)
@@ -9625,7 +9839,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "88dd7d22-3fe8-436c-9661-d34ce9b59e2c")
-		(property "Reference" "#PWR016"
+		(property "Reference" "#PWR050"
 			(at 54.61 166.37 0)
 			(hide yes)
 			(show_name no)
@@ -9685,7 +9899,88 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR016")
+					(reference "#PWR050")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 236.22 54.61 270)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "9794baf4-7f26-4020-bf4c-b479185f6cd0")
+		(property "Reference" "R17"
+			(at 242.824 53.34 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "10k"
+			(at 237.998 54.61 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 236.22 52.832 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 236.22 54.61 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 236.22 54.61 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "a4c611d7-4a67-45e6-9924-05798a0f3c04")
+		)
+		(pin "2"
+			(uuid "ee19b573-5ff2-47f7-9275-ca614d59a88b")
+		)
+		(instances
+			(project "NX-ISD"
+				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
+					(reference "R17")
 					(unit 1)
 				)
 			)
@@ -9703,7 +9998,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "97f0c462-c092-4393-9c50-45f73bfcd4e8")
-		(property "Reference" "#PWR0134"
+		(property "Reference" "#PWR049"
 			(at 48.26 185.42 0)
 			(hide yes)
 			(show_name no)
@@ -9764,7 +10059,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR0134")
+					(reference "#PWR049")
 					(unit 1)
 				)
 			)
@@ -9782,7 +10077,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "986ec518-8725-479c-b8ba-0b3de1471e3f")
-		(property "Reference" "#PWR017"
+		(property "Reference" "#PWR051"
 			(at 59.69 186.69 0)
 			(hide yes)
 			(show_name no)
@@ -9843,7 +10138,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR017")
+					(reference "#PWR051")
 					(unit 1)
 				)
 			)
@@ -9860,7 +10155,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "9a35c664-ca86-4f15-9fa5-014781951f75")
-		(property "Reference" "C27"
+		(property "Reference" "C23"
 			(at 267.716 68.834 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9924,7 +10219,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C27")
+					(reference "C23")
 					(unit 1)
 				)
 			)
@@ -9942,7 +10237,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a1567450-f6f9-4d56-93b1-1f9420c1391f")
-		(property "Reference" "#PWR0148"
+		(property "Reference" "#PWR041"
 			(at 24.13 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -10003,7 +10298,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR0148")
+					(reference "#PWR041")
 					(unit 1)
 				)
 			)
@@ -10020,7 +10315,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a1f2ad5a-0996-4e70-aaa9-83da677f2cab")
-		(property "Reference" "R18"
+		(property "Reference" "R13"
 			(at 132.842 60.198 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10084,7 +10379,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "R18")
+					(reference "R13")
 					(unit 1)
 				)
 			)
@@ -10102,7 +10397,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b0da2314-bd36-40cc-a65e-5d18341c76de")
-		(property "Reference" "#PWR025"
+		(property "Reference" "#PWR043"
 			(at 34.29 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -10163,7 +10458,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR025")
+					(reference "#PWR043")
 					(unit 1)
 				)
 			)
@@ -10181,7 +10476,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b4892e75-ea86-4758-b8d7-b33c6fc165ee")
-		(property "Reference" "#PWR075"
+		(property "Reference" "#PWR072"
 			(at 157.48 81.28 0)
 			(hide yes)
 			(show_name no)
@@ -10242,7 +10537,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR075")
+					(reference "#PWR072")
 					(unit 1)
 				)
 			)
@@ -10259,7 +10554,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "baf359f0-177b-46b5-8d49-6f5375fa02fa")
-		(property "Reference" "#PWR048"
+		(property "Reference" "#PWR053"
 			(at 73.66 63.5 0)
 			(hide yes)
 			(show_name no)
@@ -10319,7 +10614,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR048")
+					(reference "#PWR053")
 					(unit 1)
 				)
 			)
@@ -10327,7 +10622,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 229.87 60.96 270)
+		(at 236.22 60.96 270)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -10336,8 +10631,8 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "bc821fc9-d047-4bc8-aa73-9c832ab438ee")
-		(property "Reference" "R17"
-			(at 231.902 58.928 90)
+		(property "Reference" "R18"
+			(at 242.824 59.436 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10348,7 +10643,7 @@
 			)
 		)
 		(property "Value" "10k"
-			(at 231.648 63.246 90)
+			(at 238.252 60.96 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10359,7 +10654,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
-			(at 229.87 59.182 90)
+			(at 236.22 59.182 90)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10370,7 +10665,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 229.87 60.96 0)
+			(at 236.22 60.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10381,7 +10676,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 229.87 60.96 0)
+			(at 236.22 60.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10400,7 +10695,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "R17")
+					(reference "R18")
 					(unit 1)
 				)
 			)
@@ -10418,7 +10713,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "bd6f78db-4a40-4714-a2bb-4aeb28329939")
-		(property "Reference" "#PWR03"
+		(property "Reference" "#PWR056"
 			(at 91.44 49.53 0)
 			(hide yes)
 			(show_name no)
@@ -10478,7 +10773,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR03")
+					(reference "#PWR056")
 					(unit 1)
 				)
 			)
@@ -10495,7 +10790,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "c38894f8-f8ab-436b-8931-027af3aa1135")
-		(property "Reference" "C2"
+		(property "Reference" "C12"
 			(at 20.574 123.698 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10559,7 +10854,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C2")
+					(reference "C12")
 					(unit 1)
 				)
 			)
@@ -10576,7 +10871,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "c8694cef-58c4-4e0e-8e43-1d32f496fbf1")
-		(property "Reference" "U6"
+		(property "Reference" "U7"
 			(at 59.69 129.794 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10656,7 +10951,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "U6")
+					(reference "U7")
 					(unit 1)
 				)
 			)
@@ -10674,7 +10969,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "c986045f-8794-491f-99e3-e87387932614")
-		(property "Reference" "#PWR0147"
+		(property "Reference" "#PWR040"
 			(at 24.13 115.57 0)
 			(hide yes)
 			(show_name no)
@@ -10734,7 +11029,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR0147")
+					(reference "#PWR040")
 					(unit 1)
 				)
 			)
@@ -10830,7 +11125,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "d0f99dea-e7db-4c7f-8f55-c7e2192c6a35")
-		(property "Reference" "C7"
+		(property "Reference" "C17"
 			(at 99.314 57.658 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10894,7 +11189,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C7")
+					(reference "C17")
 					(unit 1)
 				)
 			)
@@ -10912,7 +11207,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d5cf65de-4fa4-4695-bf1c-95e88178cf89")
-		(property "Reference" "#PWR044"
+		(property "Reference" "#PWR052"
 			(at 60.96 166.37 0)
 			(hide yes)
 			(show_name no)
@@ -10972,7 +11267,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR044")
+					(reference "#PWR052")
 					(unit 1)
 				)
 			)
@@ -10990,7 +11285,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "decf0c0e-4def-40b1-b9bc-62879306d7ca")
-		(property "Reference" "#PWR028"
+		(property "Reference" "#PWR045"
 			(at 38.1 185.42 0)
 			(hide yes)
 			(show_name no)
@@ -11051,7 +11346,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR028")
+					(reference "#PWR045")
 					(unit 1)
 				)
 			)
@@ -11068,7 +11363,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "e283068c-b953-434d-a8cd-a3a4321df506")
-		(property "Reference" "C6"
+		(property "Reference" "C20"
 			(at 217.424 136.398 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11132,7 +11427,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C6")
+					(reference "C20")
 					(unit 1)
 				)
 			)
@@ -11150,7 +11445,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e881f5fb-d163-40c3-83b0-686b1f8f9cff")
-		(property "Reference" "U3"
+		(property "Reference" "U6"
 			(at 53.34 38.1 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11330,7 +11625,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "U3")
+					(reference "U6")
 					(unit 1)
 				)
 			)
@@ -11347,7 +11642,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "ec0ff097-9a61-4a7b-a8c1-3160f0b6ed98")
-		(property "Reference" "C5"
+		(property "Reference" "C14"
 			(at 34.544 174.498 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11411,7 +11706,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C5")
+					(reference "C14")
 					(unit 1)
 				)
 			)
@@ -11429,7 +11724,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f14902b9-42fc-420d-8c66-5dbd2b579337")
-		(property "Reference" "#PWR027"
+		(property "Reference" "#PWR044"
 			(at 38.1 166.37 0)
 			(hide yes)
 			(show_name no)
@@ -11489,7 +11784,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR027")
+					(reference "#PWR044")
 					(unit 1)
 				)
 			)
@@ -11506,7 +11801,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f2cb543f-efee-4c65-b2fd-9c49d87edec5")
-		(property "Reference" "#PWR07"
+		(property "Reference" "#PWR039"
 			(at 24.13 77.47 0)
 			(hide yes)
 			(show_name no)
@@ -11566,7 +11861,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR07")
+					(reference "#PWR039")
 					(unit 1)
 				)
 			)
@@ -11584,7 +11879,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f486eba2-f4e8-4e3c-9433-6ef04951724d")
-		(property "Reference" "#PWR0145"
+		(property "Reference" "#PWR071"
 			(at 154.94 163.83 0)
 			(hide yes)
 			(show_name no)
@@ -11644,7 +11939,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR0145")
+					(reference "#PWR071")
 					(unit 1)
 				)
 			)
@@ -11661,7 +11956,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f5551965-16b2-4cb3-9117-990351473d96")
-		(property "Reference" "R22"
+		(property "Reference" "R12"
 			(at 114.554 170.688 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11725,7 +12020,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "R22")
+					(reference "R12")
 					(unit 1)
 				)
 			)
@@ -11743,7 +12038,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "fd02b6f9-2812-4971-8071-e51f305c221d")
-		(property "Reference" "#PWR030"
+		(property "Reference" "#PWR076"
 			(at 220.98 147.32 0)
 			(hide yes)
 			(show_name no)
@@ -11804,7 +12099,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR030")
+					(reference "#PWR076")
 					(unit 1)
 				)
 			)
@@ -11822,7 +12117,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "fd433a64-321d-4919-b584-2a8af7d28ea8")
-		(property "Reference" "#PWR031"
+		(property "Reference" "#PWR058"
 			(at 102.87 49.53 0)
 			(hide yes)
 			(show_name no)
@@ -11882,7 +12177,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR031")
+					(reference "#PWR058")
 					(unit 1)
 				)
 			)
@@ -11900,7 +12195,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "fdde339f-26a3-43df-b2a6-059d87e72d0e")
-		(property "Reference" "#PWR0135"
+		(property "Reference" "#PWR062"
 			(at 123.19 62.23 0)
 			(hide yes)
 			(show_name no)
@@ -11960,7 +12255,7 @@
 		(instances
 			(project "NX-ISD"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "#PWR0135")
+					(reference "#PWR062")
 					(unit 1)
 				)
 			)
