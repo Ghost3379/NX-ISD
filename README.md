@@ -26,7 +26,7 @@ N X - I S D
       ▼
   ISD-Core
       │
-      ├─► Custom Operating System
+      ├─► Custom Operating System (FreeRTOS based)
       └─► Built on PlatformIO / Arduino Framework
 ```
 

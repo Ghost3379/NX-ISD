@@ -137,8 +137,8 @@ void setup()
   pinMode(LEVER_PUSH, INPUT_PULLUP);
   pinMode(LEVER_RIGHT, INPUT_PULLUP);
 
-  // Hardware interrupt inputs (external pull-ups present on PCB)
-  pinMode(ALERT, INPUT);
+  // Hardware interrupt inputs; ALERT also uses the ESP32 internal pull-up
+  pinMode(ALERT, INPUT_PULLUP);
   pinMode(INT_HR, INPUT);
 
   delay(100);
