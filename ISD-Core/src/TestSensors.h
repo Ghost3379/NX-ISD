@@ -67,7 +67,7 @@ public:
   bool initialized = false;
 
   bool begin() {
-    // 0x76 is BME680 default I2C address
+    // 0x76 is BME690 default I2C address
     sensor.begin(0x76, Wire);
     // Configure for forced mode (one shot reading)
     sensor.setTPH(BME68X_OS_2X, BME68X_OS_16X, BME68X_OS_1X);

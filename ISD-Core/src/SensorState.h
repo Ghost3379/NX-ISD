@@ -10,7 +10,7 @@ struct SensorState {
   // ALS (OPT3001)
   float lightLux = 0.0f;
 
-  // Env (BME680)
+  // Env (BME690)
   float temp = 0.0f;
   float hum = 0.0f;
   float press = 0.0f;

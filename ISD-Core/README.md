@@ -22,45 +22,40 @@ The current firmware provides a hardware bring-up and diagnostics console for th
 ## Software Architecture
 
 ```text
-+--------------------------------------------------------------------------+
-|                              ISD-Core                                   |
-|                                                                          |
-|  +---------------------+        +-------------------------------+       |
-|  | Boot and self-check |        | FreeRTOS runtime               |       |
-|  |                     |        |                               |       |
-|  | - I2C / SPI setup   |        | +---------------------------+ |       |
-|  | - TFT startup       |        | | vUITask                   | |       |
-|  | - sensor init       |        | | Core 1, about 50 Hz       | |       |
-|  | - peripheral tests  |        | | menu, input, display       | |       |
-|  +----------+----------+        | +-------------+-------------+ |       |
-|             |                   |               |               |       |
-|             |                   | +-------------v-------------+ |       |
-|             |                   | | Shared SensorState         | |       |
-|             |                   | | mutex protected            | |       |
-|             |                   | +-------------^-------------+ |       |
-|             |                   |               |               |       |
-|             |                   | +-------------+-------------+ |       |
-|             |                   | | vFastSensorTask           | |       |
-|             |                   | | Core 0, about 50 Hz       | |       |
-|             |                   | | BNO085 and MAX30102       | |       |
-|             |                   | +---------------------------+ |       |
-|             |                   |                               |       |
-|             |                   | +---------------------------+ |       |
-|             |                   | | vSlowSensorTask           | |       |
-|             |                   | | Core 0, about 1 Hz        | |       |
-|             |                   | | battery, light, climate  | |       |
-|             |                   | +---------------------------+ |       |
-|             |                   +-------------------------------+       |
-|             |                                                          |
-|             +--------------------------+-------------------------------+
-|                                        |
-|                                        v
-|  +--------------------------------------------------------------------+
-|  | Sensors and peripherals                                             |
-|  | BNO085 | MAX30102 | BME690 | OPT3001 | MAX17048 | RV-3028 | SD | TFT |
-|  | NeoPixel matrix | buzzer | buttons | lever switch                  |
-|  +--------------------------------------------------------------------+
-+--------------------------------------------------------------------------+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                  ISD-Core                                   │
+│                                                                             │
+│  ┌─────────────────────────┐          ┌──────────────────────────────────┐  │
+│  │   Boot & Self-Check     │          │         FreeRTOS Runtime         │  │
+│  ├─────────────────────────┤          ├──────────────────────────────────┤  │
+│  │ • Power-Rail Enable     │          │   CORE 1 (APP CPU)               │  │
+│  │ • I2C & SPI Bus Init    │          │   ┌──────────────────────────┐   │  │
+│  │ • Display Splash Screen │          │   │ vUITask (~50 Hz)         │   │  │
+│  │ • Sensor Self-Tests     │          │   │ Menu • Screen • Controls │   │  │
+│  └────────────┬────────────┘          │   └────────────┬─────────────┘   │  │
+│               │                       │                │ (Read)          │  │
+│               │                       │   ┌────────────▼─────────────┐   │  │
+│               │ Hand-off              │   │   Shared `SensorState`   │   │  │
+│               │ to Runtime            │   │ (Mutex-Protected Bridge) │   │  │
+│               │                       │   └────────────▲─────────────┘   │  │
+│               │                       │                │ (Write)         │  │
+│               │                       │   CORE 0 (PRO CPU)               │  │
+│               │                       │   ┌──────────────────────────┐   │  │
+│               │                       │   │ Sensor Tasks (1 - 50 Hz) │   │  │
+│               │                       │   │ Fast Motion • Biometrics │   │  │
+│               │                       │   │ Climate • Battery Gauge  │   │  │
+│               │                       │   └──────────────────────────┘   │  │
+│               │                       └─────────────────┬────────────────┘  │
+│               │                                         │                   │
+│               └────────────────────┬────────────────────┘                   │
+│                                    │                                        │
+│                                    ▼                                        │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │                         Hardware Layer                                │  │
+│  │  Sensors:  BNO085 • BME690 • MAX30102 • OPT3001 • MAX17048 • RV-3028  │  │
+│  │  I/O:      ST7789 Display • 4x4 NeoPixels • NAND-SD • Lever & Buzzer  │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Boot sequence
@@ -188,6 +183,7 @@ Planned software work includes:
 - Filtering and quality scoring for biometric measurements
 - Sensor fusion for motion and contextual data
 - More power-aware sampling and peripheral control
+- Integrated self-diagnostics and in-situ hardware proof-testing (NX-SDS)
 - Persistent data logging and analysis
 - Expanded automated tests for hardware interfaces and data processing
 

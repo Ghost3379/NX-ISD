@@ -26,8 +26,12 @@ N X - I S D
       ▼
   ISD-Core
       │
-      ├─► Custom Operating System (FreeRTOS based)
-      └─► Built on PlatformIO / Arduino Framework
+      ├─► Custom Operating System (Dual-Core FreeRTOS based)
+      ├─► Built on PlatformIO / Arduino Framework
+      │
+      ├──► NX-MSF: Mathematical Sensor Fusion (Physics Models & Kalman Filters)
+      ├──► NX-AIS: Advanced Information System (Contextual Advisory Engine)
+      └──► NX-SDS: Self-Diagnostic System (Hardware Integrity & Proof-Testing)
 ```
 
 
@@ -55,11 +59,16 @@ N X - I S D
 * **Audio:** Onboard SMD Buzzer
 * **Input:** Multi-Directional Lever-Switch and Push-Button
 
-## Features & Mathematical Modeling Roadmap
-See [FEATURE_LIST.md](FEATURE_LIST.md) for detailed documentation on our planned sensor fusion algorithms, Software Energy Accounting, variometer, and biometric modeling.
+## Software & Core Systems
+The board is programmed via **PlatformIO** (Arduino Framework) and is optimized to run the custom **ISD-Core** operating system. The software stack is composed of three core modular systems:
 
-## Software
-The board is programmed via **PlatformIO** (Arduino Framework) and is optimized to run the custom **ISD-Core** firmware.
+* **[ISD-Core](ISD-Core/):** The core dual-core FreeRTOS firmware layer handling task scheduling (Core 1 UI @ 50Hz, Core 0 Sensors @ 50Hz/1Hz), thread-safe `SensorState` telemetry, and peripheral drivers. See [`ISD-Core/README.md`](ISD-Core/README.md) for the software architecture diagram and build guide.
+* **NX-MSF (Mathematical Sensor Fusion):** The analytical physics and math engine executing 1D Kalman filter variometer tracking, Magnus-Tetens dew point calculation, barometric storm gradients, RMSSD heart rate variability, and software energy accounting.
+* **NX-AIS (Advanced Information System):** The autonomous on-device contextual advisor translating raw multi-sensor telemetry into proactive health, environmental, and tactical notifications.
+* **NX-SDS (Self-Diagnostic System):** The internal hardware integrity and health assurance engine providing continuous I2C bus recovery, on-demand in-situ proof-testing, and predictive battery/sensor aging analytics.
+
+## Features & Mathematical Modeling Roadmap
+See [FEATURE_LIST.md](FEATURE_LIST.md) for the comprehensive technical specifications, mathematical formulas, and implementation roadmap for **NX-MSF**, **NX-AIS**, and **NX-SDS**.
 
 ## License
 The software/firmware in the [ISD-Core] directory is licensed under the GNU General Public License v3.0 (GPLv3).

@@ -4,9 +4,9 @@ This document tracks planned, in-progress, and completed software features, algo
 
 ---
 
-## 1. Mathematical Modeling & Sensor Fusion ("Coriolis" Engine)
+## 1. NX-MSF — Mathematical Sensor Fusion
 
-Inspired by high-precision industrial metrology, we derive rich multi-variable insights by mathematically fusing the onboard sensors rather than adding extra physical hardware:
+Inspired by high-precision industrial metrology and physics modeling, **NX-MSF** derives rich multi-variable insights by mathematically fusing the onboard sensors rather than requiring extra dedicated physical hardware:
 
 ### [ ] Software Energy Accounting & Power Estimation
 * **Sensors Involved:** FreeRTOS State Machine + MAX17048 Fuel Gauge + RV-3028 RTC.
@@ -155,7 +155,60 @@ Inspired by high-precision industrial metrology, we derive rich multi-variable i
 
 ---
 
-## 3. Hardware Revision Tracking (v1.1 Rework)
+## 3. NX-SDS — Self-Diagnostic System (Hardware Integrity & Proof-Testing)
+
+Inspired by high-reliability industrial instrumentation architectures (such as automated in-situ proof testing and continuous self-diagnosis), **NX-SDS** serves as the internal health, safety, and hardware integrity engine for **ISD-Core**. 
+
+While **NX-AIS** observes external environmental and physiological context, **NX-SDS** looks inward at silicon status, bus stability, reference voltages, and sensor degradation.
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                          NX-SDS (Self-Diagnostic System)                               │
+├───────────────────────────────┬────────────────────────────────┬───────────────────────┤
+│ 1. Continuous Diagnostics     │ 2. In-Situ Verification        │ 3. Predictive Trends  │
+│ (Passive Background Sentinel) │ (On-Demand Proof-Testing)      │ (Long-Term Aging Log) │
+├───────────────────────────────┼────────────────────────────────┼───────────────────────┤
+│ • Bus ACK & lockup recovery   │ • BNO085 Silicon self-test     │ • Battery SoH & R_int │
+│ • RTC Oscillator Stop Flag    │ • BME690 MOX heater audit      │ • MOX baseline drift  │
+│ • MAX30102 photodiode dark cur│ • Cell Internal Resistance     │ • Bus retry trends    │
+│ • FreeRTOS stack watermarks   │ • PMOS high-side leakage check │ • Flash wear metrics  │
+└───────────────────────────────┴────────────────────────────────┴───────────────────────┘
+```
+
+### The Three Operational Pillars:
+
+1. **Continuous Diagnostics (Passive Background Sentinel):**
+   * *Execution:* Runs non-intrusively in `vSlowSensorTask` (~1 Hz) and bus error handlers.
+   * *I2C Bus Hang Recovery:* Detects bus lockup (e.g. slave holding SDA low). Automatically generates a 9-clock SCL cycling pulse train to restore the bus without requiring a full system reboot.
+   * *Oscillator Integrity:* Monitors the RV-3028-C7 Oscillator Stop Flag (`OSF`) to catch supply rail dips, crystal stalling, or time invalidation.
+   * *RTOS Stack Watermark:* Calls `uxTaskGetStackHighWaterMark()` on `vUITask`, `vFastSensorTask`, and `vSlowSensorTask` to detect stack exhaustion before hard faults occur.
+   * *Thermal & Voltage Bounds:* Flags out-of-range battery voltages ($V_{\text{cell}} < 3.2\text{V}$) or board temperatures ($T > 65^\circ\text{C}$).
+
+2. **In-Situ Verification (On-Demand Deep Proof-Test):**
+   * *Execution:* User-initiated from the Diagnostic Menu or automated during dock charging.
+   * *Silicon Audit:* Queries hardware revision and `WHO_AM_I` registers across all 6 I2C ICs (`0x4A`, `0x57`, `0x76`, `0x45`, `0x36`, `0x52`).
+   * *Heater Health Test:* Powers the BME690 gas heater through a calibrated step-profile; validates that target resistance and temperature ($320^\circ\text{C}$) are attained within the specified rise time.
+   * *Optical Cross-Talk Test:* Reads MAX30102 photodiode dark-current with LEDs off; flags contaminated, scratched, or improperly seated glass.
+   * *Battery Internal Resistance ($R_{\text{int}}$):* Strobe test pulsed via the 16-LED NeoPixel matrix for 50ms. Calculates instantaneous cell impedance:
+     $$R_{\text{int}} = \frac{V_{\text{idle}} - V_{\text{load}}}{I_{\text{pulse}}}$$
+   * *PMOS Cutoff Test:* Gates `PWR_NPM` (`IO17`) off and verifies quiescent current drops to nominal baseline.
+   * *Storage Verification:* Performs a non-destructive block write/read/CRC pass on a dedicated NAND-SD diagnostic sector.
+   * *Traceable Certificate:* Formats an audit report and appends it to `/sds/audit_log.txt` on NAND flash.
+
+3. **Predictive Monitoring & Aging Trends:**
+   * *Battery State-of-Health (SoH):* Compares actual loaded discharge curves against the ideal 1200mAh LiPo model to estimate capacity degradation over time.
+   * *Gas Sensor Baseline Tracking:* Tracks long-term clean-air resistance ($R_0$) drift on the BME690 to preserve VOC/eCO2 calibration accuracy across months of wear.
+   * *Flash Endurance Accounting:* Monitors write cycle counts and bad blocks on the ZDSD NAND chip.
+
+### Standardized Status Categories (Inspired by NAMUR NE 107):
+* 🟢 **SDS_OK (All Nominal):** 100% hardware subsystems verified operational.
+* 🔵 **SDS_MAINTENANCE:** Maintenance advised (e.g. Magnetometer recalibration required, sensor optical window requires cleaning).
+* 🟡 **SDS_OUT_OF_SPEC:** Operational boundaries exceeded (ambient temperature or supply sag).
+* 🔴 **SDS_FAULT:** Hardware failure (I2C device unacknowledged, open-circuit heater, or storage CRC error).
+
+---
+
+## 4. Hardware Revision Tracking (v1p3 Production)
 
 * [x] **NeoPixel Matrix:** Upgraded from 3×3 (9 LEDs) to 4×4 serpentine matrix (16 LEDs: `G1..G16`).
 * [x] **PMOS Polarity:** Fixed high-side PMOS circuit for 0µA sleep on matrix.
@@ -172,7 +225,7 @@ Inspired by high-precision industrial metrology, we derive rich multi-variable i
 
 ---
 
-## 4. Firmware Implementation Checklist (ISD-Core)
+## 5. Firmware Implementation Checklist (ISD-Core)
 
 * [x] FreeRTOS Multi-Tasking Core (`vUITask`, `vFastSensorTask`, `vSlowSensorTask`).
 * [x] Thread-Safe Mutex-protected `SensorState` telemetry buffer.
@@ -180,8 +233,11 @@ Inspired by high-precision industrial metrology, we derive rich multi-variable i
 * [x] 6 Interactive Matrix Animations (`CYBER RADAR`, `GLYPH BREATH`, `QUANTUM RIPPLE`, `NEON TRACER`, `MATRIX RAIN`, `SPECTRUM PLASMA`).
 * [x] Live 104×104 pixel TFT visualizer for NeoPixel matrix with Lever Left/Right cycling.
 * [ ] Implement `NX-AIS` rule evaluation engine and settings toggle (`ENABLED / SUBTLE / OFF`).
+* [ ] Implement `NX-SDS` core engine (I2C 9-clock recovery, silicon audit, and battery internal resistance probe).
+* [ ] Add `NX-SDS` in-situ proof-test UI page and NAND-SD certificate generation.
 * [ ] Implement `PowerEstimator` class tracking active states against MAX17048.
 * [ ] Implement BME690 + BNO085 1D Kalman Filter for altitude/variometer.
 * [ ] Implement Magnus-Tetens dew point and 3-hour barometric storm gradient.
 * [ ] Implement MAX30102 $R\text{-}R$ peak detector and RMSSD stress score.
 * [ ] Implement BNO085 wrist-flip wake interrupt routine.
+

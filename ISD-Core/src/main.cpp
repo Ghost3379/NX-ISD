@@ -78,7 +78,7 @@ void vFastSensorTask(void *parameter)
 }
 
 // 3. Low-Frequency Sensor Polling (Core 0, Low Priority)
-// Reads BME680 Env, OPT3001 Light, and MAX17048 Fuel Gauge
+// Reads BME690 Env, OPT3001 Light, and MAX17048 Fuel Gauge
 void vSlowSensorTask(void *parameter)
 {
   for (;;)
