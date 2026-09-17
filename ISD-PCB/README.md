@@ -59,7 +59,9 @@ This directory contains the schematic design, PCB layout, fabrication outputs, a
   │                                       ├─► BME690 Environmental (U7)
   │                                       ├─► OPT3001 Ambient Light (U10)
   │                                       ├─► RV-3028-C7 RTC (U12)
-  │                                       └─► ZDSD02GLGEAG NAND Flash (U14)
+  │                                       ├─► ZDSD02GLGEAG NAND Flash (U14)
+  │                                       ├─► ST7789 Backlight PWM (via Q4)
+  │                                       └─► Buzzer B1 (via Q3)
   │
   ├──► RT9193-18GB LDO (U1) ──────────► +1V8 (Ultra-Low-Noise Sensor Rail)
   │    (Ultra-Low Noise, 300mA)           └─► MAX30102 PPG / Biometrics (U8)
@@ -68,7 +70,7 @@ This directory contains the schematic design, PCB layout, fabrication outputs, a
   │    (Low Noise, 300mA)                 ├─► ST7789 IPS Display Logic (J2)
   │                                       └─► TXB0106 Level Shifter (U15)
   │
-  └──► AO3401A PMOS Gate (Q2) ────────► VN   (Switched Matrix Power)
+  └──► AO3401A PMOS Gate (Q2) ────────► VN   (Switched VBAT Rail, 3.0V - 4.2V)
        (Driven by IO17 via BC847W Q1)     └─► 16x NeoPixel Matrix (G1..G16)
                                               [Guarantees 0µA standby draw]
 ```
@@ -78,15 +80,98 @@ This directory contains the schematic design, PCB layout, fabrication outputs, a
 | Rail | Nominal Voltage | Regulator / Source | Max Current | Consumers |
 | :--- | :--- | :--- | :--- | :--- |
 | **`VBUS`** | 5.0 V (4.75–5.25V) | USB Type-C Receptacle (`J1`) | 1.5 A | BQ25170 Charger, USB detect divider |
-| **`VBAT`** | 3.7 V (3.0–4.2V) | 1S LiPo via JST PH (`P1`) | 2.0 A peak | Buck converter, LDOs, Fuel Gauge |
-| **`+3V3`** | 3.3 V (±1.5%) | TLV62568DBV Synchronous Buck (`U3`)| 1.0 A | ESP32-S3, BNO085, BME690, OPT3001, RTC, NAND-SD |
+| **`VBAT`** | 3.7 V (3.0–4.2V) | 1S LiPo via JST PH (`P1`) | 2.0 A peak | Buck converter, LDOs, Fuel Gauge, VN PMOS switch |
+| **`+3V3`** | 3.3 V (±1.5%) | TLV62568DBV Synchronous Buck (`U3`)| 1.0 A | ESP32-S3, BNO085, BME690, OPT3001, RTC, NAND-SD, Backlight, Buzzer |
 | **`+1V8`** | 1.8 V (±2.0%) | RT9193-18GB Low-Noise LDO (`U1`) | 300 mA | MAX30102 logic core, PCA9306 low-side |
 | **`+2V8`** | 2.8 V (±2.0%) | RT9193-28GB Low-Noise LDO (`U4`) | 300 mA | ST7789 display VDD, TXB0106 B-port |
-| **`VN`** | Switched `+3V3` | AO3401A High-Side PMOS (`Q2`) | 1.0 A | 16x XL-1010RGBC NeoPixels (0µA cutoff) |
+| **`VN`** | Switched `VBAT` | AO3401A High-Side PMOS (`Q2`) | 1.0 A | 16x XL-1010RGBC NeoPixels (0µA cutoff) |
 
 ---
 
-## 3. Primary Component & IC Roster
+## 3. Power Consumption Budget & Battery Calculation
+
+Comprehensive current consumption analysis across operating states, accounting for conversion efficiencies and real-world loads:
+
+### 1. Subsystem Current Breakdown
+
+#### A. 16× NeoPixel RGB Matrix (`G1`–`G16`, on Switched `VN` / `VBAT`)
+* **Driver Constant-Current Sink:** $5.0\,\text{mA}$ per color channel (R, G, B).
+* **Per LED at 100% White:** $(3 \times 5.0\,\text{mA}) + 0.35\,\text{mA}$ (internal logic) $\approx \mathbf{15.35\,\text{mA}}$.
+* **100% White Matrix Stress Test (16 LEDs):** $16 \times 15.35\,\text{mA} \approx \mathbf{245.6\,\text{mA}}$ (drawn directly from `VBAT` through PMOS `Q2`).
+* **Dynamic Cyberpunk Animations (`CYBER RADAR`, `NEON TRACER`, etc.):** 2 to 5 active LEDs at 30–60% intensity $\approx \mathbf{15\text{ to }35\,\text{mA}}$ average.
+* **Standby / Off State (`PWR_NPM` = LOW):** High-side PMOS `Q2` is gated off by pull-up $\implies \mathbf{0.00\,\mu\text{A}}$ (completely eliminates NeoPixel quiescent leakage).
+
+#### B. ESP32-S3 Dual-Core Microcontroller (`U13`, on `+3V3`)
+* **Active Wi-Fi TX (Max power + Dual-Core processing):** $\approx 240\text{ to }350\,\text{mA}$ (transient peaks up to $\approx 450\,\text{mA}$).
+* **Active BLE Connected / Advertising:** $\approx 35\text{ to }55\,\text{mA}$.
+* **Normal Dual-Core Processing (No RF, 240 MHz):** $\approx 40\text{ to }65\,\text{mA}$.
+* **Frequency-Scaled Run (80 MHz / 160 MHz):** $\approx 20\text{ to }35\,\text{mA}$.
+* **FreeRTOS Light-Sleep (Between 50Hz/1Hz sensor ticks):** $\approx 1.5\text{ to }3.0\,\text{mA}$.
+* **Deep-Sleep (ULP / RTC wake only):** $\approx 15\text{ to }25\,\mu\text{A}$.
+
+#### C. ST7789 IPS Display (`J2`, on `+3V3` & `+2V8`)
+* **Backlight LEDs (via `+3V3` switched by N-MOSFET `Q4`):**
+  * 100% Brightness: $\approx 35\text{ to }45\,\text{mA}$.
+  * 40% Indoor Brightness: $\approx 15\text{ to }20\,\text{mA}$.
+* **Display Controller Logic (via `+2V8` LDO `U4`):** $\approx 5\text{ to }10\,\text{mA}$.
+* **Display Sleep Mode (`SLPIN` command):** $< 20\,\mu\text{A}$.
+* **Total Display Active:** $\approx 20\text{ to }55\,\text{mA}$.
+
+#### D. Sensors, Audio & Storage Peripherals
+* **MAX30102 Biometrics (`U8`, on `+1V8` LDO `U1`):**
+  * Time-averaged optical pulse current (Red + IR LEDs @ 50–100 Hz): $\approx 10\text{ to }18\,\text{mA}$ (peaks of $50\,\text{mA}$ during $400\,\mu\text{s}$ pulses).
+  * Standby / Shutdown: $< 1\,\mu\text{A}$.
+* **BNO085 9-DOF IMU (`U11`, on `+3V3`):**
+  * Active 9-axis sensor fusion (internal ARM Cortex-M0+ running at 100 Hz): $\approx 15\text{ to }18\,\text{mA}$.
+  * Low-power tap / step-detector only: $\approx 0.8\text{ to }1.5\,\text{mA}$.
+* **BME690 Environmental (`U7`, on `+3V3`):**
+  * Base climate sampling (T/P/H): $< 1\,\text{mA}$.
+  * MOX Gas Heater Pulse (heats to $320^\circ\text{C}$ for $\approx 30\,\text{ms}$): $\mathbf{+12\text{ to }14\,\text{mA}}$ transient burst.
+* **B1 Electromagnetic Buzzer (`B1`, on `+3V3` via `Q3`):**
+  * $16\,\Omega$ coil impedance at $3.3\,\text{V}$: Peak current $\approx 206\,\text{mA}$.
+  * 50% PWM Duty Cycle acoustic tone: $\approx \mathbf{80\text{ to }100\,\text{mA}}$ average (only when sounding alert/alarm).
+* **ZDSD02GLGEAG SPI NAND Flash (`U14`, on `+3V3`):**
+  * Standby: $\approx 10\,\mu\text{A}$.
+  * High-speed SPI Read/Write bursts: $\approx 15\text{ to }25\,\text{mA}$.
+* **OPT3001 Ambient Light (`U10`, on `+3V3`):** $\approx 2\text{ to }4\,\mu\text{A}$ (quiescent).
+* **RV-3028-C7 RTC (`U12`, on `+3V3`):** $\approx 45\,\text{nA}$ (running continuously).
+* **LDO Quiescent Currents (`U1`, `U4`):** $\approx 90\,\mu\text{A}$ each.
+
+---
+
+### 2. Supply Rail Power Budget & Buck Efficiency
+
+#### `+3V3` System Rail (TLV62568 Synchronous Buck `U3`):
+* **Normal Operation (Display on, sensors active, Wi-Fi off):** $\approx 80\text{ to }130\,\text{mA}$.
+* **Full Load (Wi-Fi TX active, display 100%, all sensors active, BME690 heater):** $\approx \mathbf{320\text{ to }460\,\text{mA}}$.
+* **Absolute Worst-Case Transient (+ Buzzer beeping):** $\approx 550\text{ to }640\,\text{mA}$.
+* **Regulator Headroom:** TLV62568 is rated for **$1.0\,\text{A}$** continuous current $\implies$ **$> 35\%\text{--}50\%$ thermal and electrical safety margin** under simultaneous peak load.
+
+#### Effective Battery Draw (from 1S LiPo, $V_{\text{BAT}} \approx 3.7\,\text{V}$):
+The TLV62568 buck operates at $\approx 90\text{--}95\%$ efficiency ($\eta$):
+$$P_{\text{in}} = \frac{V_{\text{out}} \times I_{\text{out}}}{\eta} \implies I_{\text{BAT,buck}} \approx \frac{3.3\,\text{V} \times I_{\text{3V3}}}{3.7\,\text{V} \times 0.92} \approx 0.97 \times I_{\text{3V3}}$$
+
+* **Buck Current from Battery:** $\approx 310\text{ to }445\,\text{mA}$ (during Wi-Fi TX).
+* **Matrix Current from Battery:** $\approx 245\,\text{mA}$ (100% white stress test).
+* **LDOs from Battery (+1V8 and +2V8):** $\approx 15\text{ to }25\,\text{mA}$.
+* **Total Battery Current at 100% Synthetic Stress Test:** $\mathbf{\approx 570\text{ to }715\,\text{mA}}$ (short peaks up to $\approx 780\,\text{mA}$ with buzzer).
+* **Battery Health Assessment:** On a **1200 mAh 1S LiPo**, $715\,\text{mA}$ represents a discharge rate of only $\approx \mathbf{0.6\text{ C}}$ (standard 1S LiPo cells tolerate $1.0\text{ C}$ continuous / $2.0\text{ C}$ pulse), ensuring zero risk of excessive cell heating or premature degradation.
+
+---
+
+### 3. Realistic Operating Profiles & Expected Battery Life (1200 mAh LiPo)
+
+| Profile | Description / Active Subsystems | Average Battery Current | Estimated Runtime |
+| :--- | :--- | :--- | :--- |
+| **Profile 1: Synthetic Stress Test** | 100% White Matrix, Wi-Fi TX active, Display 100%, all sensors | $\approx 650\,\text{mA}$ | **$\approx 1.8\text{ Hours}$** |
+| **Profile 2: Continuous "Cyberpunk" Active** | Display 60% (~18mA), 4×4 Matrix dynamic animation (~25mA), BNO085 fusion, PPG pulse, BLE advertising | $\approx 95\text{ to }130\,\text{mA}$ | **$\approx 9\text{ to }12.5\text{ Hours}$** (Continuous screen-on) |
+| **Profile 3: Daily Smartwatch Wear** | Display auto-off after 10s, Matrix off, Raise-to-wake active (BNO085), background pedometer & climate logging, periodic BLE sync | $\approx 15\text{ to }25\,\text{mA}$ | **$\approx 48\text{ to }80\text{ Hours}$** (2 to 3.5 Days) |
+| **Profile 4: Low-Power Standby / Sleep** | Screen & Matrix off ($0\,\mu\text{A}$), ESP32 light-sleep, RTC active, low-power sensor interrupt monitoring | $\approx 2.0\text{ to }3.5\,\text{mA}$ | **$\approx 340\text{ to }600\text{ Hours}$** (14 to 25 Days) |
+| **Profile 5: Shelf Storage (Deep-Sleep)** | Display unpowered, Matrix unpowered, ESP32 deep-sleep, RV-3028 RTC running | $< 35\,\mu\text{A}$ | **$> 3\text{ Years}$** |
+
+---
+
+## 4. Primary Component & IC Roster
 
 | Designator | Component | Package | Function | LCSC Part # |
 | :--- | :--- | :--- | :--- | :--- |
@@ -115,7 +200,7 @@ This directory contains the schematic design, PCB layout, fabrication outputs, a
 
 ---
 
-## 4. Hardware Interfaces & Address Map
+## 5. Hardware Interfaces & Address Map
 
 ### I2C Bus (`Wire`, 400 kHz Fast Mode)
 * **SDA:** `GPIO 8` (10k pull-up to `+3V3`)
@@ -142,7 +227,7 @@ This directory contains the schematic design, PCB layout, fabrication outputs, a
 
 ---
 
-## 5. Complete GPIO Pinout Matrix
+## 6. Complete GPIO Pinout Matrix
 
 Centralized in [`ISD-Core/src/pins.h`](../ISD-Core/src/pins.h):
 
@@ -175,7 +260,7 @@ Centralized in [`ISD-Core/src/pins.h`](../ISD-Core/src/pins.h):
 
 ---
 
-## 6. Manufacturing & Assembly Resources
+## 7. Manufacturing & Assembly Resources
 
 * **Production Package:** [`ISD-PCB/NX-ISD/production/NX-ISD_v1p3.zip`](NX-ISD/production/NX-ISD_v1p3.zip) (Contains RS-274X Gerbers and Excellon drill files ready for JLCPCB / PCBWay).
 * **Interactive HTML BOM:** [`ISD-PCB/NX-ISD/bom/ibom.html`](NX-ISD/bom/ibom.html) (Searchable, interactive visual assembly tool showing component locations per reference designator).
@@ -185,6 +270,6 @@ Centralized in [`ISD-Core/src/pins.h`](../ISD-Core/src/pins.h):
 
 ---
 
-## 7. Hardware Licensing
+## 8. Hardware Licensing
 
 The hardware design files in this directory are licensed under the **CERN Open Hardware Licence Version 2 - Strongly Reciprocal (CERN-OHL-S)**. See the root `LICENSE` file for full terms and conditions.
