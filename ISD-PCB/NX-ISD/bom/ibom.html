@@ -1022,6 +1022,265 @@ a {
   color: #FF5E00;
 }
 
+
+/* --- CYBERPUNK TOOLBAR & BUTTON ICON OVERHAUL --- */
+.dark .button-container {
+  filter: none !important;
+}
+
+.dark .statsbtn,
+.dark .savebtn,
+.dark .menubtn,
+.dark .iobtn,
+.dark .visbtn {
+  filter: none !important;
+}
+
+.dark .button-container button {
+  background-size: 32px 32px !important;
+  background-position: 5px 5px !important;
+  background-repeat: no-repeat !important;
+  background-color: #0E121A !important;
+  border: 1px solid #1E232E !important;
+  color: #CBD5E1 !important;
+  filter: none !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+.dark .button-container button:hover {
+  border-color: #FF5E00 !important;
+  color: #FF5E00 !important;
+}
+
+.dark .button-container button.depressed {
+  background-color: #FF5E00 !important;
+  border-color: #FF5E00 !important;
+  color: #07080B !important;
+  font-weight: 700 !important;
+}
+
+.dark .left-most-button {
+  border-top-left-radius: 4px !important;
+  border-bottom-left-radius: 4px !important;
+  border-right: 0 !important;
+}
+
+.dark .middle-button {
+  border-right: 0 !important;
+  border-radius: 0 !important;
+}
+
+.dark .right-most-button {
+  border-top-right-radius: 4px !important;
+  border-bottom-right-radius: 4px !important;
+}
+
+/* Layer Buttons F, FB, B */
+.dark #fl-btn,
+.dark #fb-btn,
+.dark #bl-btn {
+  font-family: 'Share Tech Mono', Consolas, monospace !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #CBD5E1 !important;
+}
+
+.dark #fl-btn.depressed,
+.dark #fb-btn.depressed,
+.dark #bl-btn.depressed {
+  background-color: #FF5E00 !important;
+  color: #07080B !important;
+  border-color: #FF5E00 !important;
+}
+
+/* Layout Button: BOM Only */
+.dark button#bom-btn {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8.47 8.47'%3E%3Crect transform='translate(0 -288.53)' ry='1.17' y='288.8' x='.27' height='7.94' width='7.94' fill='%230E121A'/%3E%3Cg transform='translate(0 -288.53)' fill='none' stroke='%23CBD5E1' stroke-width='.4'%3E%3Crect width='7.94' height='7.94' x='.27' y='288.8' ry='1.17' stroke-linejoin='round'/%3E%3Cpath d='M1.59 290.12h5.29M1.59 291.45h5.33M1.59 292.75h5.33M1.59 294.09h5.33M1.59 295.41h5.33'/%3E%3C/g%3E%3C/svg%3E") !important;
+}
+
+.dark button#bom-btn.depressed {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8.47 8.47'%3E%3Crect transform='translate(0 -288.53)' ry='1.17' y='288.8' x='.27' height='7.94' width='7.94' fill='%23FF5E00'/%3E%3Cg transform='translate(0 -288.53)' fill='none' stroke='%2307080B' stroke-width='.5'%3E%3Crect width='7.94' height='7.94' x='.27' y='288.8' ry='1.17' stroke-linejoin='round'/%3E%3Cpath d='M1.59 290.12h5.29M1.59 291.45h5.33M1.59 292.75h5.33M1.59 294.09h5.33M1.59 295.41h5.33'/%3E%3C/g%3E%3C/svg%3E") !important;
+}
+
+/* Layout Button: Left-Right */
+.dark button#lr-btn {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8.47 8.47'%3E%3Crect transform='translate(0 -288.53)' ry='1.17' y='288.8' x='.27' height='7.94' width='7.94' fill='%230E121A'/%3E%3Cg transform='translate(0 -288.53)'%3E%3Crect width='7.94' height='7.94' x='.27' y='288.8' ry='1.17' fill='none' stroke='%23CBD5E1' stroke-width='.4' stroke-linejoin='round'/%3E%3Cpath d='M1.06 290.12H3.7m-2.64 1.33H3.7m-2.64 1.32H3.7m-2.64 1.3H3.7m-2.64 1.33H3.7' fill='none' stroke='%23CBD5E1' stroke-width='.4'/%3E%3Cpath d='M4.37 288.8v7.94m0-4.11h3.96' fill='none' stroke='%23CBD5E1' stroke-width='.3'/%3E%3Ctext font-weight='700' font-size='3.17' font-family='sans-serif' fill='%23CBD5E1'%3E%3Ctspan x='5.11' y='291.96'%3EF%3C/tspan%3E%3Ctspan x='5.03' y='295.68'%3EB%3C/tspan%3E%3C/text%3E%3C/g%3E%3C/svg%3E") !important;
+}
+
+.dark button#lr-btn.depressed {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8.47 8.47'%3E%3Crect transform='translate(0 -288.53)' ry='1.17' y='288.8' x='.27' height='7.94' width='7.94' fill='%23FF5E00'/%3E%3Cg transform='translate(0 -288.53)'%3E%3Crect width='7.94' height='7.94' x='.27' y='288.8' ry='1.17' fill='none' stroke='%2307080B' stroke-width='.5' stroke-linejoin='round'/%3E%3Cpath d='M1.06 290.12H3.7m-2.64 1.33H3.7m-2.64 1.32H3.7m-2.64 1.3H3.7m-2.64 1.33H3.7' fill='none' stroke='%2307080B' stroke-width='.5'/%3E%3Cpath d='M4.37 288.8v7.94m0-4.11h3.96' fill='none' stroke='%2307080B' stroke-width='.4'/%3E%3Ctext font-weight='700' font-size='3.17' font-family='sans-serif' fill='%2307080B'%3E%3Ctspan x='5.11' y='291.96'%3EF%3C/tspan%3E%3Ctspan x='5.03' y='295.68'%3EB%3C/tspan%3E%3C/text%3E%3C/g%3E%3C/svg%3E") !important;
+}
+
+/* Layout Button: Top-Bottom */
+.dark button#tb-btn {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8.47 8.47'%3E%3Crect transform='translate(0 -288.53)' ry='1.17' y='288.8' x='.27' height='7.94' width='7.94' fill='%230E121A'/%3E%3Cg transform='translate(0 -288.53)'%3E%3Crect width='7.94' height='7.94' x='.27' y='288.8' ry='1.17' fill='none' stroke='%23CBD5E1' stroke-width='.4' stroke-linejoin='round'/%3E%3Cpath d='M1.32 290.12h5.82M1.32 291.45h5.82' fill='none' stroke='%23CBD5E1' stroke-width='.4'/%3E%3Cpath d='M4.37 292.5v4.23M.26 292.63H8.2' fill='none' stroke='%23CBD5E1' stroke-width='.3'/%3E%3Ctext font-weight='700' font-size='3.17' font-family='sans-serif' fill='%23CBD5E1'%3E%3Ctspan x='1.35' y='295.73'%3EF%3C/tspan%3E%3Ctspan x='5.03' y='295.68'%3EB%3C/tspan%3E%3C/text%3E%3C/g%3E%3C/svg%3E") !important;
+}
+
+.dark button#tb-btn.depressed {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8.47 8.47'%3E%3Crect transform='translate(0 -288.53)' ry='1.17' y='288.8' x='.27' height='7.94' width='7.94' fill='%23FF5E00'/%3E%3Cg transform='translate(0 -288.53)'%3E%3Crect width='7.94' height='7.94' x='.27' y='288.8' ry='1.17' fill='none' stroke='%2307080B' stroke-width='.5' stroke-linejoin='round'/%3E%3Cpath d='M1.32 290.12h5.82M1.32 291.45h5.82' fill='none' stroke='%2307080B' stroke-width='.5'/%3E%3Cpath d='M4.37 292.5v4.23M.26 292.63H8.2' fill='none' stroke='%2307080B' stroke-width='.4'/%3E%3Ctext font-weight='700' font-size='3.17' font-family='sans-serif' fill='%2307080B'%3E%3Ctspan x='1.35' y='295.73'%3EF%3C/tspan%3E%3Ctspan x='5.03' y='295.68'%3EB%3C/tspan%3E%3C/text%3E%3C/g%3E%3C/svg%3E") !important;
+}
+
+/* BOM Mode: Grouped */
+.dark button#bom-grouped-btn {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cg stroke='%23CBD5E1' stroke-linejoin='round' class='layer'%3E%3Crect width='29' height='29' x='1.5' y='1.5' stroke-width='2' fill='%230E121A' rx='5' ry='5'/%3E%3Cpath stroke-linecap='square' stroke-width='2' d='M6 10h4m4 0h5m4 0h3M6.1 22h3m3.9 0h5m4 0h4m-16-8h4m4 0h4'/%3E%3Cpath stroke-linecap='null' d='M5 17.5h22M5 26.6h22M5 5.5h22'/%3E%3C/g%3E%3C/svg%3E") !important;
+}
+
+.dark button#bom-grouped-btn.depressed {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cg stroke='%2307080B' stroke-linejoin='round' class='layer'%3E%3Crect width='29' height='29' x='1.5' y='1.5' stroke-width='2' fill='%23FF5E00' rx='5' ry='5'/%3E%3Cpath stroke-linecap='square' stroke-width='2' d='M6 10h4m4 0h5m4 0h3M6.1 22h3m3.9 0h5m4 0h4m-16-8h4m4 0h4'/%3E%3Cpath stroke-linecap='null' d='M5 17.5h22M5 26.6h22M5 5.5h22'/%3E%3C/g%3E%3C/svg%3E") !important;
+}
+
+/* BOM Mode: Ungrouped */
+.dark button#bom-ungrouped-btn {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cg stroke='%23CBD5E1' stroke-linejoin='round' class='layer'%3E%3Crect width='29' height='29' x='1.5' y='1.5' stroke-width='2' fill='%230E121A' rx='5' ry='5'/%3E%3Cpath stroke-linecap='square' stroke-width='2' d='M6 10h4m-4 8h3m-3 8h4'/%3E%3Cpath stroke-linecap='null' d='M5 13.5h22m-22 8h22M5 5.5h22'/%3E%3C/g%3E%3C/svg%3E") !important;
+}
+
+.dark button#bom-ungrouped-btn.depressed {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cg stroke='%2307080B' stroke-linejoin='round' class='layer'%3E%3Crect width='29' height='29' x='1.5' y='1.5' stroke-width='2' fill='%23FF5E00' rx='5' ry='5'/%3E%3Cpath stroke-linecap='square' stroke-width='2' d='M6 10h4m-4 8h3m-3 8h4'/%3E%3Cpath stroke-linecap='null' d='M5 13.5h22m-22 8h22M5 5.5h22'/%3E%3C/g%3E%3C/svg%3E") !important;
+}
+
+/* BOM Mode: Netlist */
+.dark button#bom-netlist-btn {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cg fill='none' stroke='%23CBD5E1' class='layer'%3E%3Crect width='29' height='29' x='1.5' y='1.5' stroke-width='2' fill='%230E121A' rx='5' ry='5'/%3E%3Cpath stroke-width='2' d='M6 26l6-6v-8m13.8-6.3l-6 6v8'/%3E%3Ccircle cx='11.8' cy='9.5' r='2.8' stroke-width='2' fill='%230E121A'/%3E%3Ccircle cx='19.8' cy='22.8' r='2.8' stroke-width='2' fill='%230E121A'/%3E%3C/g%3E%3C/svg%3E") !important;
+}
+
+.dark button#bom-netlist-btn.depressed {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cg fill='none' stroke='%2307080B' class='layer'%3E%3Crect width='29' height='29' x='1.5' y='1.5' stroke-width='2' fill='%23FF5E00' rx='5' ry='5'/%3E%3Cpath stroke-width='2' d='M6 26l6-6v-8m13.8-6.3l-6 6v8'/%3E%3Ccircle cx='11.8' cy='9.5' r='2.8' stroke-width='2' fill='%23FF5E00'/%3E%3Ccircle cx='19.8' cy='22.8' r='2.8' stroke-width='2' fill='%23FF5E00'/%3E%3C/g%3E%3C/svg%3E") !important;
+}
+
+/* Stats Button */
+.dark .statsbtn {
+  background-color: #0E121A !important;
+  border: 1px solid #1E232E !important;
+  border-radius: 4px !important;
+  background-image: url("data:image/svg+xml,%3Csvg width='36' height='36' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6h28v24H4V6zm0 8h28v8H4m9-16v24h10V5.8' fill='none' stroke='%23CBD5E1' stroke-width='2'/%3E%3C/svg%3E") !important;
+}
+
+.dark .menu:hover .statsbtn {
+  background-color: #141822 !important;
+  border-color: #FF5E00 !important;
+  background-image: url("data:image/svg+xml,%3Csvg width='36' height='36' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6h28v24H4V6zm0 8h28v8H4m9-16v24h10V5.8' fill='none' stroke='%23FF5E00' stroke-width='2'/%3E%3C/svg%3E") !important;
+}
+
+/* Import / Export (IO) Button */
+.dark .iobtn {
+  background-color: #0E121A !important;
+  border: 1px solid #1E232E !important;
+  border-radius: 4px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Cpath fill='none' stroke='%23CBD5E1' stroke-width='2' d='M3 33v-7l6.8-7h16.5l6.7 7v7H3zM3.2 26H33M21 9l5-5.9 5 6h-2.5V15h-5V9H21zm-4.9 0l-5 6-5-6h2.5V3h5v6h2.5z'/%3E%3Cpath fill='none' stroke='%23CBD5E1' d='M6.1 29.5H10'/%3E%3C/svg%3E") !important;
+}
+
+.dark .menu:hover .iobtn {
+  background-color: #141822 !important;
+  border-color: #FF5E00 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Cpath fill='none' stroke='%23FF5E00' stroke-width='2' d='M3 33v-7l6.8-7h16.5l6.7 7v7H3zM3.2 26H33M21 9l5-5.9 5 6h-2.5V15h-5V9H21zm-4.9 0l-5 6-5-6h2.5V3h5v6h2.5z'/%3E%3Cpath fill='none' stroke='%23FF5E00' d='M6.1 29.5H10'/%3E%3C/svg%3E") !important;
+}
+
+/* Settings Menu (Gear) Button */
+.dark .menubtn {
+  background-color: #0E121A !important;
+  border: 1px solid #1E232E !important;
+  border-radius: 4px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 20 20'%3E%3Cpath fill='none' d='M0 0h20v20H0V0z'/%3E%3Cpath fill='%23CBD5E1' d='M15.95 10.78c.03-.25.05-.51.05-.78s-.02-.53-.06-.78l1.69-1.32c.15-.12.19-.34.1-.51l-1.6-2.77c-.1-.18-.31-.24-.49-.18l-1.99.8c-.42-.32-.86-.58-1.35-.78L12 2.34c-.03-.2-.2-.34-.4-.34H8.4c-.2 0-.36.14-.39.34l-.3 2.12c-.49.2-.94.47-1.35.78l-1.99-.8c-.18-.07-.39 0-.49.18l-1.6 2.77c-.1.18-.06.39.1.51l1.69 1.32c-.04.25-.07.52-.07.78s.02.53.06.78L2.37 12.1c-.15.12-.19.34-.1.51l1.6 2.77c.1.18.31.24.49.18l1.99-.8c.42.32.86.58 1.35.78l.3 2.12c.04.2.2.34.4.34h3.2c.2 0 .37-.14.39-.34l.3-2.12c.49-.2.94-.47 1.35-.78l1.99.8c.18.07.39 0 .49-.18l1.6-2.77c.1-.18.06-.39-.1-.51l-1.67-1.32zM10 13c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z'/%3E%3C/svg%3E") !important;
+}
+
+.dark .menu:hover .menubtn {
+  background-color: #141822 !important;
+  border-color: #FF5E00 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 20 20'%3E%3Cpath fill='none' d='M0 0h20v20H0V0z'/%3E%3Cpath fill='%23FF5E00' d='M15.95 10.78c.03-.25.05-.51.05-.78s-.02-.53-.06-.78l1.69-1.32c.15-.12.19-.34.1-.51l-1.6-2.77c-.1-.18-.31-.24-.49-.18l-1.99.8c-.42-.32-.86-.58-1.35-.78L12 2.34c-.03-.2-.2-.34-.4-.34H8.4c-.2 0-.36.14-.39.34l-.3 2.12c-.49.2-.94.47-1.35.78l-1.99-.8c-.18-.07-.39 0-.49.18l-1.6 2.77c-.1.18-.06.39.1.51l1.69 1.32c-.04.25-.07.52-.07.78s.02.53.06.78L2.37 12.1c-.15.12-.19.34-.1.51l1.6 2.77c.1.18.31.24.49.18l1.99-.8c.42.32.86.58 1.35.78l.3 2.12c.04.2.2.34.4.34h3.2c.2 0 .37-.14.39-.34l.3-2.12c.49-.2.94-.47 1.35-.78l1.99.8c.18.07.39 0 .49-.18l1.6-2.77c.1-.18.06-.39-.1-.51l-1.67-1.32zM10 13c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z'/%3E%3C/svg%3E") !important;
+}
+
+/* Copy BOM Button */
+.dark button#copy {
+  background-color: #0E121A !important;
+  border: 1px solid #1E232E !important;
+  border-radius: 4px !important;
+  background-image: url("data:image/svg+xml,%3Csvg height='48' viewBox='0 0 48 48' width='48' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h48v48h-48z' fill='none'/%3E%3Cpath fill='%23CBD5E1' d='M32 2h-24c-2.21 0-4 1.79-4 4v28h4v-28h24v-4zm6 8h-22c-2.21 0-4 1.79-4 4v28c0 2.21 1.79 4 4 4h22c2.21 0 4-1.79 4-4v-28c0-2.21-1.79-4-4-4zm0 32h-22v-28h22v28z'/%3E%3C/svg%3E") !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: 24px 24px !important;
+  height: 40px !important;
+  width: 40px !important;
+}
+
+.dark button#copy:hover {
+  border-color: #FF5E00 !important;
+  background-image: url("data:image/svg+xml,%3Csvg height='48' viewBox='0 0 48 48' width='48' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h48v48h-48z' fill='none'/%3E%3Cpath fill='%23FF5E00' d='M32 2h-24c-2.21 0-4 1.79-4 4v28h4v-28h24v-4zm6 8h-22c-2.21 0-4 1.79-4 4v28c0 2.21 1.79 4 4 4h22c2.21 0 4-1.79 4-4v-28c0-2.21-1.79-4-4-4zm0 32h-22v-28h22v28z'/%3E%3C/svg%3E") !important;
+}
+
+/* Divider & Expand / Collapse Toggle */
+.dark #topdivider {
+  border-bottom: 1px solid #1E232E !important;
+}
+
+.dark #toptoggle {
+  border: 1px solid #1E232E !important;
+  background-color: #0E121A !important;
+  color: #FF5E00 !important;
+  transition: all 0.2s ease !important;
+}
+
+.dark #toptoggle:hover {
+  border-color: #FF5E00 !important;
+  background-color: #141822 !important;
+}
+
+/* Sortmark in BOM Header */
+.dark .bom th .sortmark {
+  border-color: transparent transparent #FF5E00 transparent !important;
+  filter: none !important;
+}
+
+/* Menu Dropdown Contents */
+.dark .menu-content {
+  background-color: #07080B !important;
+  border: 1px solid #FF5E00 !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255, 94, 0, 0.2) !important;
+  border-radius: 4px !important;
+}
+
+.dark .menu-label {
+  border: 1px solid #1E232E !important;
+  background-color: #0A0C10 !important;
+  color: #CBD5E1 !important;
+}
+
+.dark .menu-label:hover {
+  background-color: #141822 !important;
+  color: #FF5E00 !important;
+}
+
+.dark .menu-textbox {
+  background-color: #07080B !important;
+  border: 1px solid #1E232E !important;
+  color: #00F0FF !important;
+}
+
+.dark .savebtn {
+  background-color: #141822 !important;
+  border: 1px solid #1E232E !important;
+  color: #CBD5E1 !important;
+  border-radius: 4px !important;
+}
+
+.dark .savebtn:hover {
+  border-color: #FF5E00 !important;
+  color: #FF5E00 !important;
+  background-color: #1A202C !important;
+}
+
+.dark .savebtn:active {
+  background-color: #FF5E00 !important;
+  color: #07080B !important;
+}
+
+.dark .stats {
+  background-color: #07080B !important;
+  color: #CBD5E1 !important;
+}
+
+.dark .stats td {
+  border: 1px solid #1E232E !important;
+}
 </style>
   <script type="text/javascript" >
 ///////////////////////////////////////////////
