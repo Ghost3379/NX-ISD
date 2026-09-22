@@ -37,14 +37,28 @@ body {
 }
 
 .dark.topmostdiv {
-  --pcb-edge-color: #eee;
-  --pad-color: #808080;
-  --pin1-outline-color: #ffa800;
-  --pin1-outline-color-highlight: #ccff00;
-  --track-color: #42524f;
-  --zone-color: #42524f;
-  background-color: #252c30;
-  color: #eee;
+  --pcb-edge-color: #FF5E00;
+  --pad-color: #556275;
+  --pad-hole-color: #07080B;
+  --pad-color-highlight: #FF5E00;
+  --pad-color-highlight-both: #FFB800;
+  --pad-color-highlight-marked: #00F0FF;
+  --pin1-outline-color: #FF5E00;
+  --pin1-outline-color-highlight: #00F0FF;
+  --pin1-outline-color-highlight-both: #FFB800;
+  --pin1-outline-color-highlight-marked: #00F0FF;
+  --silkscreen-edge-color: #00F0FF;
+  --silkscreen-polygon-color: #00F0FF;
+  --silkscreen-text-color: #E2E8F0;
+  --fabrication-edge-color: #3B4554;
+  --fabrication-polygon-color: #232A35;
+  --fabrication-text-color: #717F94;
+  --track-color: #242D3D;
+  --track-color-highlight: #FF5E00;
+  --zone-color: #171E2B;
+  --zone-color-highlight: rgba(255, 94, 0, 0.4);
+  background-color: #07080B;
+  color: #E0E4EB;
 }
 
 button {
@@ -895,7 +909,120 @@ a {
   padding: 0;
 }
 
-  </style>
+  
+
+/* Cyberpunk Ground Station UI Overrides */
+.dark .fileinfo {
+  background-color: #090B0F;
+  border-bottom: 1px solid #1E232E;
+}
+
+.dark .fileinfo .title {
+  color: #FF5E00 !important;
+  font-family: 'Oxanium', sans-serif;
+  letter-spacing: 1px;
+}
+
+.dark .bom {
+  background-color: #07080B;
+  border: 1px solid #1E232E;
+  font-family: 'Share Tech Mono', Consolas, monospace;
+}
+
+.dark .bom th {
+  background-color: #0E121A;
+  color: #FF5E00;
+  border: 1px solid #1E232E;
+  font-family: 'Oxanium', monospace;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.dark .bom td {
+  border: 1px solid #141822;
+  font-family: 'Share Tech Mono', Consolas, monospace;
+}
+
+.dark .bom tr:nth-child(even) {
+  background-color: #0B0E14;
+}
+
+.dark .bom tr:nth-child(odd) {
+  background-color: #07080B;
+}
+
+.dark .bom tr:hover {
+  background-color: #151C28;
+}
+
+.dark .bom tr.highlighted:nth-child(n) {
+  background-color: rgba(255, 94, 0, 0.22) !important;
+  color: #FFFFFF !important;
+  font-weight: bold;
+  border-left: 3px solid #FF5E00;
+}
+
+.dark .bom tr.checked {
+  color: #10B981 !important;
+}
+
+.dark .gutter {
+  background-color: #141822;
+}
+
+.dark .searchbox {
+  background-color: #0B0E14;
+  border: 1px solid #1E232E;
+  color: #FFFFFF;
+  border-radius: 2px;
+}
+
+.dark .searchbox:focus {
+  border-color: #FF5E00;
+  background-color: #111622;
+}
+
+.dark .searchbox::placeholder {
+  color: #64748B;
+}
+
+.dark button {
+  background-color: #0E121A;
+  border: 1px solid #1E232E;
+  color: #CBD5E1;
+  border-radius: 2px;
+}
+
+.dark button:hover {
+  border-color: #FF5E00;
+  color: #FF5E00;
+}
+
+.dark button.depressed {
+  background-color: #FF5E00 !important;
+  color: #07080B !important;
+  border-color: #FF5E00 !important;
+  font-weight: bold;
+}
+
+.dark .menu-content {
+  background-color: #0E121A;
+  border: 1px solid #FF5E00;
+  color: #E2E8F0;
+}
+
+.dark .menu-label {
+  border: 1px solid #1E232E;
+  background-color: #0A0C10;
+  color: #CBD5E1;
+}
+
+.dark .menu-label:hover {
+  background-color: #151C28;
+  color: #FF5E00;
+}
+
+</style>
   <script type="text/javascript" >
 ///////////////////////////////////////////////
 /*
@@ -1474,7 +1601,7 @@ var settings = {
   bommode: "grouped",
   checkboxes: [],
   checkboxStoredRefs: {},
-  darkMode: false,
+  darkMode: true,
   highlightpin1: "none",
   redrawOnDrag: true,
   boardRotation: 0,
