@@ -7,6 +7,10 @@ struct SensorState {
   float batPercent = 0.0f;
   float batChangeRate = 0.0f;
 
+  // RTC (RV-3028)
+  char rtcTime[16] = "--:--:--";
+  char rtcDate[16] = "--/--/----";
+
   // ALS (OPT3001)
   float lightLux = 0.0f;
 
@@ -26,11 +30,16 @@ struct SensorState {
   float az = 0.0f;
   bool imuDataReady = false;
 
-  // BPM (MAX30102)
+  // BPM & SpO2 (MAX30102)
   uint32_t bpmRed = 0;
   uint32_t bpmIR = 0;
+  float heartRate = 0.0f;
+  float spo2 = 0.0f;
+  bool fingerDetected = false;
+  bool beatDetected = false;
 };
 
 // Declared as extern; will be defined in main.cpp
 extern SensorState sharedState;
 extern SemaphoreHandle_t stateMutex;
+extern SemaphoreHandle_t i2cMutex;

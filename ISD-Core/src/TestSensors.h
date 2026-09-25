@@ -7,28 +7,70 @@
 #include <ClosedCube_OPT3001.h>
 #include <bme68xLibrary.h>
 #include <MAX30105.h>
+#include <heartRate.h>
 #include <Adafruit_BNO08x.h>
 
 class FuelGaugeTest {
 public:
   Adafruit_MAX17048 sensor;
   bool initialized = false;
+  float lastValidVoltage = 3.85f;
+  float lastValidPercent = 80.0f;
+  float lastValidChangeRate = 0.0f;
+  bool hasValidReading = false;
 
   bool begin() {
     initialized = sensor.begin(&Wire);
+    if (initialized) {
+      // MAX17048 requires 125ms after reset/quickStart for first ADC conversion
+      delay(150);
+      float v = sensor.cellVoltage();
+      float p = sensor.cellPercent();
+      if (!isnan(v) && !isinf(v) && v >= 2.5f && v <= 4.5f) {
+        lastValidVoltage = v;
+        hasValidReading = true;
+      }
+      if (!isnan(p) && !isinf(p) && p >= 0.0f && p <= 100.0f) {
+        lastValidPercent = p;
+      }
+    }
     return initialized;
   }
 
   float getVoltage() {
-    return initialized ? sensor.cellVoltage() : 0.0f;
+    if (!initialized) return lastValidVoltage;
+    float v = sensor.cellVoltage();
+    // 0xFFFFFFFF * 78.125 / 1000000 = ~335544.3V on failed I2C read
+    if (isnan(v) || isinf(v) || v < 2.5f || v > 4.5f) {
+      return lastValidVoltage;
+    }
+    lastValidVoltage = v;
+    hasValidReading = true;
+    return v;
   }
 
   float getPercent() {
-    return initialized ? sensor.cellPercent() : 0.0f;
+    if (!initialized) return lastValidPercent;
+    float p = sensor.cellPercent();
+    // 0xFFFFFFFF / 256.0f = 16777216.0f on failed I2C read (-1 from Adafruit BusIO)
+    // Filter out 16777216%, NAN, Inf, negative values, and values over 100%
+    if (isnan(p) || isinf(p) || p < 0.0f || p > 105.0f || p >= 16000000.0f) {
+      return lastValidPercent;
+    }
+    if (p > 100.0f) p = 100.0f;
+    lastValidPercent = p;
+    hasValidReading = true;
+    return p;
   }
 
   float getChangeRate() {
-    return initialized ? sensor.chargeRate() : 0.0f;
+    if (!initialized) return lastValidChangeRate;
+    float r = sensor.chargeRate();
+    if (isnan(r) || isinf(r) || r < -100.0f || r > 100.0f || r >= 1000.0f) {
+      return lastValidChangeRate;
+    }
+    lastValidChangeRate = r;
+    return r;
   }
 };
 
@@ -76,12 +118,19 @@ public:
     return initialized;
   }
 
-  bool readData(float &temp, float &hum, float &press, float &gas) {
+  bool triggerMeasurement() {
     if (!initialized) return false;
-    
     sensor.setOpMode(BME68X_FORCED_MODE);
-    delay(sensor.getMeasDur() / 1000 + 10); // Wait for measurement to complete
-    
+    return true;
+  }
+
+  uint32_t getWaitMs() {
+    if (!initialized) return 50;
+    return (sensor.getMeasDur() / 1000 + 10);
+  }
+
+  bool collectData(float &temp, float &hum, float &press, float &gas) {
+    if (!initialized) return false;
     uint8_t nFields = sensor.fetchData();
     if (nFields > 0) {
       sensor.getData(data);
@@ -93,32 +142,156 @@ public:
     }
     return false;
   }
+
+  bool readData(float &temp, float &hum, float &press, float &gas) {
+    if (!triggerMeasurement()) return false;
+    delay(getWaitMs());
+    return collectData(temp, hum, press, gas);
+  }
 };
 
 class HeartRateSensorTest {
 public:
   MAX30105 sensor;
   bool initialized = false;
+  bool isAwake = false;
+
+  // Pulse & SpO2 state tracking
+  unsigned long lastBeat = 0;
+  float avgBpm = 0.0f;
+  float currentSpO2 = 0.0f;
+  float rates[4] = {0, 0, 0, 0};
+  uint8_t rateSpot = 0;
+
+  // AC/DC calculation for SpO2
+  uint32_t irMin = 0xFFFFFFFF, irMax = 0;
+  uint32_t redMin = 0xFFFFFFFF, redMax = 0;
+  uint64_t irSum = 0, redSum = 0;
+  uint32_t sampleCount = 0;
 
   bool begin() {
-    // MAX30102 shares same address (0x57) and register set with MAX30105
     initialized = sensor.begin(Wire, I2C_SPEED_FAST);
     if (initialized) {
-      // Default setup: LED Power = 12.4mA (0x24), Sample Rate = 400, Led Mode = 2 (Red+IR)
-      sensor.setup(0x24, 4, 2, 400, 411, 4096);
+      sensor.setup(0, 4, 2, 400, 411, 4096); // 0mA LED power
+      sensor.setPulseAmplitudeRed(0);
+      sensor.setPulseAmplitudeIR(0);
+      sensor.shutDown(); // Hardware low-power shutdown
+      isAwake = false;
     }
     return initialized;
   }
 
-  void getSample(uint32_t &red, uint32_t &ir) {
-    if (!initialized) {
-      red = 0;
-      ir = 0;
-      return;
+  void sleep() {
+    if (!initialized) return;
+    sensor.setPulseAmplitudeRed(0);
+    sensor.setPulseAmplitudeIR(0);
+    sensor.shutDown();
+    isAwake = false;
+  }
+
+  void wake() {
+    if (!initialized || isAwake) return;
+    sensor.wakeUp();
+    sensor.setup(0x24, 4, 2, 400, 411, 4096);
+    sensor.setPulseAmplitudeRed(0x24);
+    sensor.setPulseAmplitudeIR(0x24);
+    isAwake = true;
+    sampleCount = 0;
+    irMin = 0xFFFFFFFF; irMax = 0;
+    redMin = 0xFFFFFFFF; redMax = 0;
+    irSum = 0; redSum = 0;
+    avgBpm = 0.0f;
+    currentSpO2 = 0.0f;
+  }
+
+  bool update(uint32_t &outRed, uint32_t &outIR, float &outBPM, float &outSpO2, bool &fingerOn, bool &beat) {
+    beat = false;
+    if (!initialized || !isAwake) {
+      outRed = 0;
+      outIR = 0;
+      outBPM = 0;
+      outSpO2 = 0;
+      fingerOn = false;
+      return false;
     }
-    // Get raw sensor readings
-    red = sensor.getRed();
-    ir = sensor.getIR();
+
+    outRed = sensor.getRed();
+    outIR = sensor.getIR();
+
+    // Check if finger is placed on sensor
+    if (outIR < 20000) {
+      fingerOn = false;
+      outBPM = 0;
+      outSpO2 = 0;
+      sampleCount = 0;
+      return false;
+    }
+
+    fingerOn = true;
+
+    // Heart beat detection using SparkFun algorithm
+    if (checkForBeat((int32_t)outIR)) {
+      beat = true;
+      unsigned long now = millis();
+      unsigned long delta = now - lastBeat;
+      lastBeat = now;
+
+      if (delta > 250 && delta < 2000) {
+        float instantBpm = 60000.0f / (float)delta;
+        if (instantBpm >= 45.0f && instantBpm <= 185.0f) {
+          rates[rateSpot++] = instantBpm;
+          rateSpot %= 4;
+
+          float sum = 0;
+          int count = 0;
+          for (int i = 0; i < 4; i++) {
+            if (rates[i] > 0) {
+              sum += rates[i];
+              count++;
+            }
+          }
+          if (count > 0) {
+            avgBpm = sum / count;
+          }
+        }
+      }
+    }
+
+    // AC/DC measurement for SpO2 calculation
+    sampleCount++;
+    if (outIR < irMin) irMin = outIR;
+    if (outIR > irMax) irMax = outIR;
+    if (outRed < redMin) redMin = outRed;
+    if (outRed > redMax) redMax = outRed;
+    irSum += outIR;
+    redSum += outRed;
+
+    // Calculate SpO2 every ~80 samples (~1.6 seconds)
+    if (sampleCount >= 80) {
+      float irAC = (float)(irMax - irMin);
+      float redAC = (float)(redMax - redMin);
+      float irDC = (float)(irSum / sampleCount);
+      float redDC = (float)(redSum / sampleCount);
+
+      if (irDC > 0 && redDC > 0 && irAC > 0) {
+        float ratio = (redAC / redDC) / (irAC / irDC);
+        // Standard empirical SpO2 ratio formula
+        float calcSpO2 = 110.0f - (25.0f * ratio);
+        if (calcSpO2 >= 88.0f && calcSpO2 <= 100.0f) {
+          if (currentSpO2 == 0.0f) currentSpO2 = calcSpO2;
+          else currentSpO2 = (currentSpO2 * 0.7f) + (calcSpO2 * 0.3f); // Exponential filter
+        }
+      }
+
+      sampleCount = 0;
+      irMin = 0xFFFFFFFF; irMax = 0;
+      redMin = 0xFFFFFFFF; redMax = 0;
+      irSum = 0; redSum = 0;
+    }
+
+    outBPM = avgBpm;
+    outSpO2 = currentSpO2;
+    return true;
   }
 };
 

@@ -1,6 +1,6 @@
 #pragma once
 #include <Arduino.h>
-#include <TFT_eSPI.h>
+#include "DisplayConfig.h"
 #include "pins.h"
 #include "TestSensors.h"
 #include "TestPeripherals.h"
@@ -16,7 +16,7 @@ extern RTCTest rtcClock;
 extern SDCardTest sdCard;
 extern NeoPixelTest neoPixel;
 extern BuzzerTest buzzer;
-extern TFT_eSPI tft;
+extern LGFX tft;
 
 enum DiagnosticState {
   STATE_MENU,
@@ -87,7 +87,12 @@ public:
     
     // Clear Bio graph history
     for (int i = 0; i < graphWidth; i++) ppgHistory[i] = 0;
+    if (xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+      heartRate.sleep(); // Ensure LEDs are completely off on menu start
+      xSemaphoreGive(i2cMutex);
+    }
     
+    // Configure standard Arduino internal pull-ups (Active-LOW when shorted to GND)
     pinMode(BTN, INPUT_PULLUP);
     pinMode(LEVER_LEFT, INPUT_PULLUP);
     pinMode(LEVER_PUSH, INPUT_PULLUP);
@@ -102,16 +107,32 @@ public:
     bool rgt = digitalRead(LEVER_RIGHT);
     bool psh = digitalRead(LEVER_PUSH);
 
-    // Main BTN (active low) exits back to main menu
+    // Live serial logging on any button transition
+    if (btn != lastBtnState || lft != lastLeftState || rgt != lastRightState || psh != lastPushState) {
+      Serial.printf("[INPUT] BTN(13):%d | LFT(14):%d | PSH(15):%d | RGT(16):%d\n",
+                    btn, lft, psh, rgt);
+    }
+
+    // Main BTN (active low): cycle menu if in STATE_MENU, or exit back to main menu
     if (btn == LOW && lastBtnState == HIGH) {
       buzzer.playClick();
       if (state != STATE_MENU) {
+        if (state == STATE_BIO) {
+          if (xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+            heartRate.sleep(); // Shut off sensor LEDs when leaving Biometrics!
+            xSemaphoreGive(i2cMutex);
+          }
+        }
         state = STATE_MENU;
         tft.fillScreen(TFT_BLACK);
         menuNeedsRedraw = true;
         neoPixel.powerDown(); // Shut off NeoPixels when leaving LED page
+      } else {
+        // Fallback navigation in menu if lever rocker isn't working
+        menuIndex = (menuIndex + 1) % menuCount;
+        menuNeedsRedraw = true;
       }
-      delay(150);
+      delay(100);
     }
 
     // Lever Left (Up in menu or Prev Animation in LED page)
@@ -124,7 +145,7 @@ public:
         neoPixel.prevAnimation();
         subscreenInit = true; // Redraw labels
       }
-      delay(150);
+      delay(100);
     }
 
     // Lever Right (Down in menu or Next Animation in LED page)
@@ -137,7 +158,7 @@ public:
         neoPixel.nextAnimation();
         subscreenInit = true; // Redraw labels
       }
-      delay(150);
+      delay(100);
     }
 
     // Lever Push (Select or trigger action)
@@ -147,10 +168,16 @@ public:
         state = (DiagnosticState)(menuIndex + 1);
         tft.fillScreen(TFT_BLACK);
         subscreenInit = true;
+        if (state == STATE_BIO) {
+          if (xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+            heartRate.wake(); // Wake up MAX30102 LEDs when entering Biometrics!
+            xSemaphoreGive(i2cMutex);
+          }
+        }
       } else {
         actionTriggered = true;
       }
-      delay(150);
+      delay(100);
     }
 
     lastBtnState = btn;
@@ -169,6 +196,22 @@ public:
       if (menuNeedsRedraw) {
         drawMenu();
         menuNeedsRedraw = false;
+      } else if (periodicUpdate) {
+        lastUpdate = now;
+        // Redraw real-time button indicator line without full screen refresh
+        tft.fillRect(0, 222, 240, 18, TFT_BLACK);
+        tft.setTextSize(1);
+        tft.setCursor(4, 225);
+        tft.setTextColor(TFT_DARKGREY, TFT_BLACK);
+        tft.print("IN:");
+        tft.setTextColor((digitalRead(BTN) == LOW) ? TFT_GREEN : TFT_DARKGREY, TFT_BLACK);
+        tft.printf(" B13:%d", digitalRead(BTN));
+        tft.setTextColor((digitalRead(LEVER_LEFT) == LOW) ? TFT_GREEN : TFT_DARKGREY, TFT_BLACK);
+        tft.printf(" L14:%d", digitalRead(LEVER_LEFT));
+        tft.setTextColor((digitalRead(LEVER_PUSH) == LOW) ? TFT_GREEN : TFT_DARKGREY, TFT_BLACK);
+        tft.printf(" P15:%d", digitalRead(LEVER_PUSH));
+        tft.setTextColor((digitalRead(LEVER_RIGHT) == LOW) ? TFT_GREEN : TFT_DARKGREY, TFT_BLACK);
+        tft.printf(" R16:%d", digitalRead(LEVER_RIGHT));
       }
     } else {
       drawSubscreen(periodicUpdate);
@@ -189,8 +232,11 @@ private:
     // Draw battery fuel gauge reading
     char batStr[24];
     if (fuelGauge.initialized) {
-      snprintf(batStr, sizeof(batStr), "BAT: %02d%% %.2fV", 
-               (int)stateData.batPercent, stateData.batVoltage);
+      float v = stateData.batVoltage;
+      if (isnan(v) || v < 2.5f || v > 4.5f) v = fuelGauge.lastValidVoltage;
+      int p = (int)stateData.batPercent;
+      if (p <= 0 || p > 100) p = (int)fuelGauge.lastValidPercent;
+      snprintf(batStr, sizeof(batStr), "BAT: %02d%% %.2fV", p, v);
     } else {
       snprintf(batStr, sizeof(batStr), "BAT: FAIL");
     }
@@ -208,9 +254,19 @@ private:
     tft.setTextSize(1);
     tft.setTextColor(TFT_ORANGE, TFT_BLACK);
     
-    // Instructions at bottom
+    // Draw real-time button states at bottom
     tft.drawFastHLine(0, 220, 240, TFT_ORANGE);
-    tft.drawString("Lever L/R: Navigate  Push: Select", 10, 225);
+    tft.setCursor(4, 225);
+    tft.setTextColor(TFT_DARKGREY, TFT_BLACK);
+    tft.print("IN:");
+    tft.setTextColor((digitalRead(BTN) == LOW) ? TFT_GREEN : TFT_DARKGREY, TFT_BLACK);
+    tft.printf(" B13:%d", digitalRead(BTN));
+    tft.setTextColor((digitalRead(LEVER_LEFT) == LOW) ? TFT_GREEN : TFT_DARKGREY, TFT_BLACK);
+    tft.printf(" L14:%d", digitalRead(LEVER_LEFT));
+    tft.setTextColor((digitalRead(LEVER_PUSH) == LOW) ? TFT_GREEN : TFT_DARKGREY, TFT_BLACK);
+    tft.printf(" P15:%d", digitalRead(LEVER_PUSH));
+    tft.setTextColor((digitalRead(LEVER_RIGHT) == LOW) ? TFT_GREEN : TFT_DARKGREY, TFT_BLACK);
+    tft.printf(" R16:%d", digitalRead(LEVER_RIGHT));
 
     // Draw vertical scroll menu list
     for (int i = 0; i < menuCount; i++) {
@@ -330,8 +386,13 @@ private:
             continue;
           }
 
-          Wire.beginTransmission(addr);
-          if (Wire.endTransmission() == 0) {
+          bool ack = false;
+          if (xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(20)) == pdTRUE) {
+            Wire.beginTransmission(addr);
+            ack = (Wire.endTransmission() == 0);
+            xSemaphoreGive(i2cMutex);
+          }
+          if (ack) {
             tft.setTextColor(TFT_GREEN, TFT_BLACK);
             tft.drawString("X", x, y);
           } else {
@@ -420,10 +481,8 @@ private:
     tft.setTextColor(TFT_ORANGE, TFT_BLACK);
     tft.drawString("Onboard Real-Time Clock Subsystem", 5, 25);
 
-    char timeStr[32];
-    char dateStr[32];
-    rtcClock.getTimeString(timeStr, sizeof(timeStr));
-    rtcClock.getDateString(dateStr, sizeof(dateStr));
+    const char* timeStr = (stateData.rtcTime[0] != '\0') ? stateData.rtcTime : "--:--:--";
+    const char* dateStr = (stateData.rtcDate[0] != '\0') ? stateData.rtcDate : "--/--/----";
 
     tft.drawRect(15, 45, 210, 80, TFT_ORANGE);
     tft.setTextColor(TFT_ORANGE, TFT_BLACK);
@@ -446,7 +505,10 @@ private:
 
     if (actionTriggered) {
       actionTriggered = false;
-      rtcClock.setDummyTime();
+      if (xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+        rtcClock.setDummyTime();
+        xSemaphoreGive(i2cMutex);
+      }
       buzzer.playSuccessBeep();
       tft.fillRect(16, 176, 208, 33, TFT_GREEN);
       tft.setTextColor(TFT_BLACK, TFT_GREEN);
@@ -469,8 +531,11 @@ private:
     bool isCharging = (digitalRead(BAT_STAT) == LOW);
 
     float volt = stateData.batVoltage;
+    if (isnan(volt) || volt < 2.5f || volt > 4.5f) volt = fuelGauge.lastValidVoltage;
     float pct = stateData.batPercent;
+    if (isnan(pct) || pct <= 0.0f || pct > 100.0f) pct = fuelGauge.lastValidPercent;
     float rate = stateData.batChangeRate;
+    if (isnan(rate) || rate < -100.0f || rate > 100.0f) rate = fuelGauge.lastValidChangeRate;
 
     tft.setTextColor(TFT_ORANGE, TFT_BLACK);
     tft.drawString("Battery & USB Charging Status", 5, 25);
@@ -694,37 +759,75 @@ private:
     tft.drawString("Tilt watch to test accelerometer/gyro", 10, 225);
   }
 
-  // 7. Biometrics
+  // 7. Biometrics (BPM, SpO2, PPG Waveform)
   void drawBioTest(bool periodicUpdate, const SensorState &stateData) {
-    drawHeader("7. PULSE & BPM SENSOR", stateData);
-    tft.setTextSize(1);
-
-    tft.setTextColor(TFT_ORANGE, TFT_BLACK);
-    tft.drawString("MAX30102 Photoplethysmogram (PPG)", 5, 25);
+    drawHeader("7. BIOMETRICS & PPG", stateData);
 
     uint32_t red = stateData.bpmRed;
     uint32_t ir = stateData.bpmIR;
+    float bpm = stateData.heartRate;
+    float spo2 = stateData.spo2;
+    bool finger = stateData.fingerDetected;
+    bool beat = stateData.beatDetected;
 
-    tft.drawRect(10, 40, 220, 50, TFT_ORANGE);
-    tft.drawString("MAX30102 CHIP TELEMETRY (0x57)", 15, 45);
-
-    char valStr[32];
-    tft.drawString("Red Intensity:", 20, 65);
-    snprintf(valStr, sizeof(valStr), "%lu", red);
-    tft.setTextColor(heartRate.initialized ? TFT_GREEN : TFT_RED, TFT_BLACK);
-    tft.drawString(valStr, 130, 65);
-
+    // --- Row 1: Large Telemetry Display Boxes ---
+    // Heart Rate Box (BPM)
+    tft.drawRoundRect(8, 24, 108, 60, 4, TFT_ORANGE);
+    tft.setTextSize(1);
+    tft.setCursor(14, 28);
     tft.setTextColor(TFT_ORANGE, TFT_BLACK);
-    tft.drawString("IR Intensity :", 20, 75);
-    snprintf(valStr, sizeof(valStr), "%lu", ir);
-    tft.setTextColor(heartRate.initialized ? TFT_GREEN : TFT_RED, TFT_BLACK);
-    tft.drawString(valStr, 130, 75);
+    tft.print("HEART RATE");
+    if (beat) {
+      tft.setTextColor(TFT_RED, TFT_BLACK);
+      tft.print(" <3");
+    }
 
+    tft.setTextSize(3);
+    tft.setCursor(16, 42);
+    if (finger && bpm > 0) {
+      tft.setTextColor(TFT_GREEN, TFT_BLACK);
+      tft.printf("%d", (int)bpm);
+    } else {
+      tft.setTextColor(TFT_DARKGREY, TFT_BLACK);
+      tft.print("--");
+    }
+    tft.setTextSize(1);
     tft.setTextColor(TFT_ORANGE, TFT_BLACK);
-    tft.drawRect(10, 100, 220, 110, TFT_ORANGE);
-    tft.drawString("Live PPG Graph (Place Finger on Sensor):", 15, 105);
+    tft.drawString("BPM", 78, 62);
 
-    if (heartRate.initialized && ir > 20000) {
+    // Blood Oxygen Box (% SpO2)
+    tft.drawRoundRect(124, 24, 108, 60, 4, TFT_CYAN);
+    tft.setTextSize(1);
+    tft.setCursor(130, 28);
+    tft.setTextColor(TFT_CYAN, TFT_BLACK);
+    tft.print("BLOOD OXYGEN");
+
+    tft.setTextSize(3);
+    tft.setCursor(132, 42);
+    if (finger && spo2 > 0) {
+      tft.setTextColor(TFT_CYAN, TFT_BLACK);
+      tft.printf("%d", (int)spo2);
+    } else {
+      tft.setTextColor(TFT_DARKGREY, TFT_BLACK);
+      tft.print("--");
+    }
+    tft.setTextSize(1);
+    tft.setTextColor(TFT_CYAN, TFT_BLACK);
+    tft.drawString("% SpO2", 182, 62);
+
+    // --- Row 2: Live PPG Graph Frame ---
+    tft.drawRect(8, 89, 224, 116, TFT_ORANGE);
+    tft.setTextSize(1);
+    tft.setTextColor(TFT_ORANGE, TFT_BLACK);
+    tft.drawString("Live PPG Pulse Waveform:", 12, 93);
+
+    // Raw Light levels
+    char rawStr[36];
+    snprintf(rawStr, sizeof(rawStr), "R:%luk I:%luk", red / 1000, ir / 1000);
+    tft.setTextColor(tft.color565(140, 140, 140), TFT_BLACK);
+    tft.drawString(rawStr, 155, 93);
+
+    if (finger) {
       ppgHistory[ppgIdx] = ir;
       ppgIdx = (ppgIdx + 1) % graphWidth;
 
@@ -736,16 +839,13 @@ private:
         if (ppgHistory[i] > maxVal) maxVal = ppgHistory[i];
       }
 
-      if (maxVal == minVal) {
-        maxVal = minVal + 1;
-      }
+      if (maxVal <= minVal) maxVal = minVal + 1;
 
       int graphX = 30;
-      int graphY = 120;
-      int graphH = 80;
+      int graphY = 106;
+      int graphH = 76;
 
-      tft.fillRect(12, 115, 216, 92, TFT_BLACK);
-      tft.drawString("PPG Pulse Wave:", 15, 105);
+      tft.fillRect(10, 104, 220, 80, TFT_BLACK);
 
       for (int x = 0; x < graphWidth - 1; x++) {
         int idx1 = (ppgIdx + x) % graphWidth;
@@ -753,7 +853,6 @@ private:
 
         uint32_t val1 = ppgHistory[idx1];
         uint32_t val2 = ppgHistory[idx2];
-
         if (val1 == 0 || val2 == 0) continue;
 
         int y1 = graphY + graphH - (int)((val1 - minVal) * graphH / (maxVal - minVal));
@@ -761,22 +860,21 @@ private:
 
         tft.drawLine(graphX + x, y1, graphX + x + 1, y2, TFT_GREEN);
       }
+
+      tft.fillRect(10, 187, 220, 15, TFT_BLACK);
+      tft.setTextColor(TFT_GREEN, TFT_BLACK);
+      tft.drawString("[OK] FINGER DETECTED - MEASURING", 20, 190);
     } else {
-      tft.fillRect(12, 115, 216, 92, TFT_BLACK);
-      tft.drawString("Live PPG Graph (Place Finger on Sensor):", 15, 105);
-      tft.setTextColor(tft.color565(120, 80, 0), TFT_BLACK);
-      if (heartRate.initialized) {
-        tft.drawString("PLACE FINGER ON SENSOR", 50, 150);
-        tft.drawString("(Telemetries are updating live)", 30, 170);
-      } else {
-        tft.setTextColor(TFT_RED, TFT_BLACK);
-        tft.drawString("BIOMETRICS SENSOR OFFLINE", 40, 150);
-      }
+      tft.fillRect(10, 104, 220, 98, TFT_BLACK);
+      tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+      tft.drawString("PLACE FINGER ON SENSOR", 48, 138);
+      tft.setTextColor(tft.color565(130, 130, 130), TFT_BLACK);
+      tft.drawString("(Hold gently to measure Pulse & SpO2)", 15, 158);
     }
 
     tft.drawFastHLine(0, 220, 240, TFT_ORANGE);
     tft.setTextColor(TFT_ORANGE, TFT_BLACK);
-    tft.drawString("Press BTN to exit", 10, 225);
+    tft.drawString("Press BTN to exit (LED turns OFF)", 10, 225);
   }
 
   // 8. NAND-SD & Sound

@@ -148,13 +148,13 @@ public:
 
   const char* getAnimName() const {
     switch (currentMode) {
-      case 0: return "CYBER RADAR";
-      case 1: return "GLYPH BREATH";
-      case 2: return "QUANTUM RIPPLE";
-      case 3: return "NEON TRACER";
-      case 4: return "MATRIX RAIN";
-      case 5: return "SPECTRUM PLASMA";
-      default: return "CYBER RADAR";
+      case 0: return "ORANGE SNAKE";
+      case 1: return "SNAKE SPIRAL";
+      case 2: return "CYBER RADAR";
+      case 3: return "GLYPH BREATH";
+      case 4: return "NEON TRACER";
+      case 5: return "MATRIX RAIN";
+      default: return "ORANGE SNAKE";
     }
   }
 
@@ -182,14 +182,114 @@ public:
     animTick++;
 
     switch (currentMode) {
-      case 0: runRadar(animTick); break;
-      case 1: runGlyphBreath(animTick); break;
-      case 2: runQuantumRipple(animTick); break;
-      case 3: runNeonTracer(animTick); break;
-      case 4: runMatrixRain(animTick); break;
-      case 5: runSpectrumPlasma(animTick); break;
+      case 0: runOrangeSnake(animTick); break;
+      case 1: runSnakeSpiral(animTick); break;
+      case 2: runRadar(animTick); break;
+      case 3: runGlyphBreath(animTick); break;
+      case 4: runNeonTracer(animTick); break;
+      case 5: runMatrixRain(animTick); break;
     }
     pixels->show();
+  }
+
+  // 0. ORANGE SNAKE: Autonomous neon-orange cyber snake slithering through Hamiltonian cycle
+  void runOrangeSnake(uint16_t tick) {
+    // 16-step continuous Hamiltonian cycle through 4x4 grid:
+    // (0,0)->(1,0)->(2,0)->(3,0)->(3,1)->(3,2)->(3,3)->(2,3)->(2,2)->(2,1)->(1,1)->(1,2)->(1,3)->(0,3)->(0,2)->(0,1)->(0,0)
+    static const uint8_t pathX[16] = {0, 1, 2, 3, 3, 3, 3, 2, 2, 2, 1, 1, 1, 0, 0, 0};
+    static const uint8_t pathY[16] = {0, 0, 0, 0, 1, 2, 3, 3, 2, 1, 1, 2, 3, 3, 2, 1};
+
+    // Dark cyberpunk ember backdrop for unlit pixels
+    for (uint8_t y = 0; y < 4; y++) {
+      for (uint8_t x = 0; x < 4; x++) {
+        setPixelXY(x, y, 4, 1, 0);
+      }
+    }
+
+    // Step rate: advance 1 cell every 3 ticks (~60ms)
+    const uint8_t speed = 3;
+    uint8_t headIdx = (tick / speed) % 16;
+
+    // Glowing energy pellet (prey) that spawns on the cycle
+    static uint8_t foodIdx = 8;
+    static uint8_t flashCount = 0;
+
+    if (headIdx == foodIdx) {
+      foodIdx = (foodIdx + 7) % 16; // Spawn ahead on the cycle
+      flashCount = 6;              // Flash snake head upon eating
+    }
+
+    // Render pulsing cyan energy pellet for intense color contrast
+    if (flashCount == 0) {
+      float fPulse = (sinf(tick * 0.25f) + 1.0f) * 0.5f;
+      uint8_t fR = (uint8_t)(fPulse * 25.0f);
+      uint8_t fG = (uint8_t)(150.0f + fPulse * 105.0f);
+      uint8_t fB = (uint8_t)(180.0f + fPulse * 75.0f);
+      setPixelXY(pathX[foodIdx], pathY[foodIdx], fR, fG, fB);
+    }
+
+    // Render 6-segment glowing orange snake body with incandescent gradient
+    const uint8_t SNAKE_LEN = 6;
+    for (int s = SNAKE_LEN - 1; s >= 0; s--) {
+      int idx = (headIdx - s + 16) % 16;
+      uint8_t x = pathX[idx];
+      uint8_t y = pathY[idx];
+
+      uint8_t r = 0, g = 0, b = 0;
+
+      if (s == 0) {
+        // Head: Brilliant electric golden-orange (or white-gold upon eating food)
+        if (flashCount > 0) {
+          r = 255; g = 255; b = 200;
+          flashCount--;
+        } else {
+          float shimmer = sinf(tick * 0.35f);
+          r = 255;
+          g = (uint8_t)(150.0f + shimmer * 25.0f); // Living gold shimmer
+          b = 15;
+        }
+      } else if (s == 1) {
+        r = 255; g = 90; b = 0;   // Blazing safety orange
+      } else if (s == 2) {
+        r = 230; g = 50; b = 0;   // Deep neon orange
+      } else if (s == 3) {
+        r = 160; g = 25; b = 0;   // Rich sunset amber
+      } else if (s == 4) {
+        r = 90;  g = 12; b = 0;   // Glowing dark ember
+      } else {
+        r = 30;  g = 4;  b = 0;   // Fading ember tail tip
+      }
+
+      setPixelXY(x, y, r, g, b);
+    }
+  }
+
+  // 1. SNAKE SPIRAL: Coiled spiral snake winding from perimeter to center core in hot amber
+  void runSnakeSpiral(uint16_t tick) {
+    static const uint8_t spiralX[16] = {0, 1, 2, 3, 3, 3, 3, 2, 1, 0, 0, 0, 1, 2, 2, 1};
+    static const uint8_t spiralY[16] = {0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 2, 1, 1, 1, 2, 2};
+
+    for (uint8_t y = 0; y < 4; y++) {
+      for (uint8_t x = 0; x < 4; x++) {
+        setPixelXY(x, y, 4, 1, 0);
+      }
+    }
+
+    uint8_t head = (tick / 3) % 16;
+    for (uint8_t s = 0; s < 5; s++) {
+      int idx = (head - s + 16) % 16;
+      uint8_t x = spiralX[idx];
+      uint8_t y = spiralY[idx];
+
+      uint8_t r = 0, g = 0, b = 0;
+      if (s == 0) { r = 255; g = 175; b = 20; }
+      else if (s == 1) { r = 255; g = 85; b = 0; }
+      else if (s == 2) { r = 210; g = 40; b = 0; }
+      else if (s == 3) { r = 130; g = 18; b = 0; }
+      else { r = 40; g = 5; b = 0; }
+
+      setPixelXY(x, y, r, g, b);
+    }
   }
 
   void runColorCycle(uint8_t step) {
