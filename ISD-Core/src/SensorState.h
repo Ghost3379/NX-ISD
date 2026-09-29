@@ -37,6 +37,10 @@ struct SensorState {
   float spo2 = 0.0f;
   bool fingerDetected = false;
   bool beatDetected = false;
+
+  // Power & Charging Status
+  bool usbConnected = false;
+  bool isCharging = false;
 };
 
 // Declared as extern; will be defined in main.cpp

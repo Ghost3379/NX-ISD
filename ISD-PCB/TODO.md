@@ -26,6 +26,11 @@ Upcoming hardware revision tasks for the NX-ISD PCB.
 
 * [ ] Fix the version tag position on the bottom silkscreen
 * [ ] Reposition the left-side mounting hole
+* [ ] Fix Lever button wiring
+* [ ] Move FPC-connector for the display a bit to the left
+
+## v1p5
+
 * [ ] Change OPT3001 for a multispectral light sensor
 
 ## Future Ideas for a vXpY
