@@ -47,6 +47,12 @@ struct SensorState {
   bool inputLeverLeft = false;
   bool inputLeverPush = false;
   bool inputLeverRight = false;
+
+  // Discrete Navigation Click Events (Consumed on read)
+  bool evtNavLeft = false;
+  bool evtNavRight = false;
+  bool evtNavPush = false;
+  bool evtNavBtn = false;
 };
 
 // Declared as extern; will be defined in main.cpp

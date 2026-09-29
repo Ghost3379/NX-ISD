@@ -13,7 +13,7 @@
 #include "pins.h"
 #include "SensorState.h"
 
-class HardwareHAL {
+class HAL {
 public:
   static Adafruit_NeoPixel* neoPixels;
   static Adafruit_MAX17048 fuelGauge;
@@ -32,4 +32,5 @@ public:
 
   static void begin();
   static void setMatrixPower(bool on);
+  static bool readFuelGauge(float &outVolt, float &outPct, float &outRate);
 };

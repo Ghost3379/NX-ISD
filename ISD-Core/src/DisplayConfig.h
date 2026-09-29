@@ -17,7 +17,7 @@ public:
 
       cfg.spi_host   = SPI2_HOST;     // FSPI on ESP32-S3
       cfg.spi_mode   = 0;             // Mode 0
-      cfg.freq_write = 16000000;      // 16 MHz: Rock-solid through TXB0106 level shifter
+      cfg.freq_write = 40000000;      // 40 MHz: Fast hardware SPI for smooth 40+ FPS animations
       cfg.freq_read  = 10000000;
       cfg.spi_3wire  = false;
       cfg.use_lock   = true;
