@@ -41,6 +41,12 @@ struct SensorState {
   // Power & Charging Status
   bool usbConnected = false;
   bool isCharging = false;
+
+  // Buttons & Navigation Lever (Active-LOW, true when pressed)
+  bool inputBtn = false;
+  bool inputLeverLeft = false;
+  bool inputLeverPush = false;
+  bool inputLeverRight = false;
 };
 
 // Declared as extern; will be defined in main.cpp

@@ -4,9 +4,9 @@
 // ================================================================
 
 #define PIN_BTN         13
-#define PIN_LEVER_LEFT  14
+#define PIN_LEVER_LEFT  16
 #define PIN_LEVER_PUSH  15
-#define PIN_LEVER_RIGHT 16
+#define PIN_LEVER_RIGHT 14
 
 int lastBtn   = -1;
 int lastLeft  = -1;

@@ -25,9 +25,9 @@
 
 // Buttons
 #define BTN 13
-#define LEVER_LEFT 14
+#define LEVER_LEFT 16
 #define LEVER_PUSH 15
-#define LEVER_RIGHT 16
+#define LEVER_RIGHT 14
 
 // Interrupts
 #define INT_ALS 39

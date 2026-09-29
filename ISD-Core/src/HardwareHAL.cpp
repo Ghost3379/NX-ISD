@@ -46,8 +46,15 @@ void HardwareHAL::begin() {
 
   // 7. Probe sensors safely
   fuelGaugeReady = fuelGauge.begin(&Wire);
-  rtcReady = rtcClock.begin();
-  if (rtcReady) rtcClock.set24Hour();
+
+  rtcReady = rtcClock.begin(Wire);
+  if (rtcReady) {
+    rtcClock.set24Hour();
+    rtcClock.updateTime();
+    if (rtcClock.getYear() < 2024) {
+      rtcClock.setToCompilerTime();
+    }
+  }
 
   lightSensor.begin(0x44);
   OPT3001_Config optCfg;
@@ -59,6 +66,11 @@ void HardwareHAL::begin() {
 
   envSensor.begin(0x76, Wire);
   envSensorReady = (envSensor.checkStatus() == BME68X_OK);
+  if (envSensorReady) {
+    envSensor.setTPH(BME68X_OS_2X, BME68X_OS_16X, BME68X_OS_1X);
+    envSensor.setHeaterProf(300, 100);
+    envSensor.setOpMode(BME68X_FORCED_MODE);
+  }
 
   heartRateReady = heartRateSensor.begin(Wire, I2C_SPEED_FAST);
   if (heartRateReady) {
@@ -66,6 +78,9 @@ void HardwareHAL::begin() {
   }
 
   imuReady = imuSensor.begin_I2C(0x4A, &Wire);
+  if (imuReady) {
+    imuSensor.enableReport(SH2_ARVR_STABILIZED_RV, 50000);
+  }
 }
 
 void HardwareHAL::setMatrixPower(bool on) {

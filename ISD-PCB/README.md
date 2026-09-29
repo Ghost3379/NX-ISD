@@ -244,9 +244,9 @@ Centralized in [`ISD-Core/src/pins.h`](../ISD-Core/src/pins.h):
 | **GPIO 11** | `BAT_STAT` | BQ25170 Charger Status | Input | LOW = Charging, HIGH/Hi-Z = Charge Complete |
 | **GPIO 12** | `USB_DETECT`| USB 5V VBUS Presence | Input | Resistor divider from VBUS (HIGH when plugged in) |
 | **GPIO 13** | `BTN` | Main Tactile Push-Button | Input | Active LOW (external pull-up, debounced) |
-| **GPIO 14** | `LEVER_LEFT`| Navigation Lever Left | Input | Active LOW (internal pull-up enabled) |
-| **GPIO 15** | `LEVER_PUSH`| Navigation Lever Center | Input | Active LOW (internal pull-up enabled) |
-| **GPIO 16** | `LEVER_RIGHT`| Navigation Lever Right | Input | Active LOW (internal pull-up enabled) |
+| **GPIO 14** | `LEVER_RIGHT`| Navigation Lever Right | Input | Active LOW (Mirrored to GPIO 14 due to 180° U16 footprint assembly orientation on v1p3) |
+| **GPIO 15** | `LEVER_PUSH` | Navigation Lever Center | Input | Active LOW (internal pull-up enabled) |
+| **GPIO 16** | `LEVER_LEFT` | Navigation Lever Left | Input | Active LOW (Mirrored to GPIO 16 due to 180° U16 footprint assembly orientation on v1p3) |
 | **GPIO 17** | `PWR_NPM` | NeoPixel Matrix Power Gate | Output | HIGH = Turns ON PMOS `Q2`; LOW = 0µA cutoff |
 | **GPIO 18** | `NPM` | NeoPixel Serial Data | Output | 800 kHz single-wire NZR stream to `G1` |
 | **GPIO 21** | `TFT_RS` | Display Command / Data | Output | LOW = Command, HIGH = Data (via TXB0106) |
@@ -267,6 +267,15 @@ Centralized in [`ISD-Core/src/pins.h`](../ISD-Core/src/pins.h):
 * **Component Placement / CPL:** [`ISD-PCB/NX-ISD/production/NX-ISD_v1p3_positions.csv`](NX-ISD/production/NX-ISD_v1p3_positions.csv)
 * **Production BOM:** [`ISD-PCB/NX-ISD/production/NX-ISD_v1p3_bom.csv`](NX-ISD/production/NX-ISD_v1p3_bom.csv)
 * **Schematic PDF:** [`docs/circuit diagrams/NX-ISD_v1p3.pdf`](../docs/circuit%20diagrams/NX-ISD_v1p3.pdf)
+
+### 7.1 Hardware Assembly Errata & Notes (Revision v1p3)
+
+> [!NOTE]
+> **Switch U16 Physical Orientation (`TM-2025A`):**
+> On the physical v1p3 carrier board assembly, switch `U16` is mounted rotated 180° relative to the original schematic layout:
+> - **Left / Right Mirroring:** Moving the lever physically to the Left triggers `GPIO 16`, while moving to the Right triggers `GPIO 14`. Firmware in [`ISD-Core/src/pins.h`](../ISD-Core/src/pins.h) maps `#define LEVER_LEFT 16` and `#define LEVER_RIGHT 14` to ensure natural 1:1 user interaction.
+> - **Common & Push Contacts:** Common and Push contacts were inverted on early board rework.
+> - **Action Item for Revision v1p4:** Rotate `U16` footprint 180° or re-route traces on `Logic Section` to align schematic nets 1:1 with physical placement.
 
 ---
 
