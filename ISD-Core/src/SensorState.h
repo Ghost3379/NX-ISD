@@ -25,6 +25,8 @@ struct SensorState {
   float roll = 0.0f;
   float pitch = 0.0f;
   float yaw = 0.0f;
+  float heading = 0.0f;
+  uint8_t imuCalib = 0; // 0=Unreliable, 1=Low, 2=Med, 3=High
   float ax = 0.0f;
   float ay = 0.0f;
   float az = 0.0f;

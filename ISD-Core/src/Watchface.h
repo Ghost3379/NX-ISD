@@ -30,6 +30,15 @@ private:
   uint16_t COLOR_ORANGE_DIM;
   uint16_t COLOR_ORANGE_DARK;
 
+  // Quickpanel Concept State
+  int qpFocusIndex = 0;      // 0..5 focused tile
+  bool qpInTileMode = false; // whether user is navigating inside the tiles
+  bool qpEcoMode = false;
+  bool qpSilentMode = true;
+  bool qpDisplayMax = false;
+  bool qpHrmMeasuring = false;
+  uint32_t qpHrmStartMs = 0;
+
 public:
   Watchface(LGFX* tft) : canvas(tft) {}
 
@@ -37,6 +46,7 @@ public:
     currentView = v;
     targetView = v;
     isTransitioning = false;
+    qpInTileMode = false;
   }
 
   AppView getView() const {
@@ -56,10 +66,14 @@ public:
     transitionDirection = direction;
     transitionStartTime = millis();
     isTransitioning = true;
+    qpInTileMode = false;
   }
 
   void handleNavLeft() {
-    if (currentView == VIEW_QUICKPANEL) {
+    if (isTransitioning) return;
+    if (currentView == VIEW_QUICKPANEL && qpInTileMode) {
+      qpFocusIndex = (qpFocusIndex + 5) % 6;
+    } else if (currentView == VIEW_QUICKPANEL) {
       startTransition(VIEW_HOME, -1);
     } else if (currentView == VIEW_HOME) {
       startTransition(VIEW_NOTIFICATIONS, -1);
@@ -67,19 +81,70 @@ public:
   }
 
   void handleNavRight() {
-    if (currentView == VIEW_NOTIFICATIONS) {
+    if (isTransitioning) return;
+    if (currentView == VIEW_QUICKPANEL && qpInTileMode) {
+      qpFocusIndex = (qpFocusIndex + 1) % 6;
+    } else if (currentView == VIEW_NOTIFICATIONS) {
       startTransition(VIEW_HOME, 1);
     } else if (currentView == VIEW_HOME) {
       startTransition(VIEW_QUICKPANEL, 1);
     }
   }
 
-  void handleNavSelect() {
-    if (currentView == VIEW_NOTIFICATIONS) {
-      startTransition(VIEW_HOME, 1);
+  void handleNavPush() {
+    if (isTransitioning) return;
+    if (currentView == VIEW_HOME) {
+      // Pushing lever from Home slides to Quickpanel and enters it!
+      startTransition(VIEW_QUICKPANEL, 1);
+      qpInTileMode = true;
+      qpFocusIndex = 0;
     } else if (currentView == VIEW_QUICKPANEL) {
-      startTransition(VIEW_HOME, -1);
+      if (!qpInTileMode) {
+        // Enter tile navigation mode
+        qpInTileMode = true;
+        qpFocusIndex = 0;
+      } else {
+        // Toggle or activate the selected tile
+        switch (qpFocusIndex) {
+          case 0: // Settings
+            break;
+          case 1: // HRM
+            qpHrmMeasuring = !qpHrmMeasuring;
+            qpHrmStartMs = millis();
+            break;
+          case 2: // Eco Mode
+            qpEcoMode = !qpEcoMode;
+            break;
+          case 3: // Display
+            qpDisplayMax = !qpDisplayMax;
+            break;
+          case 4: // Silent
+            qpSilentMode = !qpSilentMode;
+            break;
+          case 5: // Shutdown
+            break;
+        }
+      }
+    } else if (currentView == VIEW_NOTIFICATIONS) {
+      // Enter notifications
     }
+  }
+
+  void handleNavBack() {
+    if (isTransitioning) return;
+    if (currentView == VIEW_QUICKPANEL) {
+      if (qpInTileMode) {
+        qpInTileMode = false;
+      } else {
+        startTransition(VIEW_HOME, -1);
+      }
+    } else if (currentView == VIEW_NOTIFICATIONS) {
+      startTransition(VIEW_HOME, 1);
+    }
+  }
+
+  void handleNavSelect() {
+    handleNavPush();
   }
 
   void begin() {
@@ -175,13 +240,13 @@ public:
     pushHistory("    Name: ISD-Core", COLOR_ORANGE_MID);
     redrawTerminal();
     delay(100);
-    pushHistory("    Version: v0p1", COLOR_ORANGE_MID);
+    pushHistory("    Version: v0p2", COLOR_ORANGE_MID);
     redrawTerminal();
     delay(140);
 
     // Step 4: Checking peripherals
     if (!runSpinnerTask("Checking peripherals...", " [OK]", 6)) return;
-    pushHistory("    Buses: SPI @ 40MHz | I2C0", COLOR_ORANGE_MID);
+    pushHistory("    Buses: SPI @ 24MHz | I2C0", COLOR_ORANGE_MID);
     redrawTerminal();
     delay(100);
     char sensorStr[48];
@@ -340,47 +405,118 @@ private:
     const char* timeStr = (state.rtcTime[0] != '\0' && state.rtcTime[0] != '-') ? state.rtcTime : "--:--:--";
     canvas.setTextSize(3);
     canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-    canvas.drawCenterString(timeStr, 120 + offsetX, 52);
+    canvas.drawCenterString(timeStr, 120 + offsetX, 44);
 
     // Date
     const char* dateStr = (state.rtcDate[0] != '\0' && state.rtcDate[0] != '-') ? state.rtcDate : "----/--/--";
     canvas.setTextSize(1);
     canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas.drawCenterString(dateStr, 120 + offsetX, 84);
+    canvas.drawCenterString(dateStr, 120 + offsetX, 74);
 
-    // Tactical Attitude Reticle
+    // Multipurpose Instrument Dial (Reticle + Spirit Level + Rotating Compass + Ambient Temp)
     int centerX = 120 + offsetX;
-    int centerY = 156;
-    int radius  = 30;
+    int centerY = 152;
+    int radius  = 40;
 
+    // 1. Outer Dial Ring
     canvas.drawCircle(centerX, centerY, radius, COLOR_ORANGE_DIM);
-    canvas.drawCircle(centerX, centerY, 3, COLOR_ORANGE_MID);
 
-    canvas.drawFastHLine(centerX - 12, centerY - 12, 24, COLOR_ORANGE_DARK);
-    canvas.drawFastHLine(centerX - 12, centerY + 12, 24, COLOR_ORANGE_DARK);
-    canvas.drawFastVLine(centerX, centerY - radius, 6, COLOR_ORANGE_DIM);
-    canvas.drawFastVLine(centerX, centerY + radius - 6, 6, COLOR_ORANGE_DIM);
+    // 2. Subtle Reference Lines (avionic pitch / horizon rungs)
+    canvas.drawFastHLine(centerX - 14, centerY - 14, 28, COLOR_ORANGE_DARK);
+    canvas.drawFastHLine(centerX - 14, centerY + 14, 28, COLOR_ORANGE_DARK);
 
+    // 3. Rotating Compass Axis with 'W' and 'E' Wings + North Indicator
+    float headingRad = -1.5707963f; // Default North pointing UP (-90 deg)
     if (state.imuDataReady) {
-      float rad = -state.roll * 0.0174533f;
-      int dy = (int)(state.pitch * 0.5f);
-      if (dy > 20) dy = 20;
-      if (dy < -20) dy = -20;
-
-      int halfLen = 22;
-      int x1 = centerX - (int)(cos(rad) * halfLen);
-      int y1 = (centerY + dy) - (int)(sin(rad) * halfLen);
-      int x2 = centerX + (int)(cos(rad) * halfLen);
-      int y2 = (centerY + dy) + (int)(sin(rad) * halfLen);
-
-      canvas.drawLine(x1, y1, x2, y2, COLOR_ORANGE_BRIGHT);
-      canvas.fillCircle(centerX, centerY + dy, 2, COLOR_ORANGE_BRIGHT);
-    } else {
-      canvas.drawFastHLine(centerX - 22, centerY, 44, COLOR_ORANGE_MID);
+      // Clockwise watch rotation decreases yaw, so (state.yaw - 90°) decreases angle (rotates counter-clockwise)
+      // to keep pointing to true physical North!
+      headingRad = (state.yaw - 90.0f) * 0.0174532925f;
     }
 
-    canvas.drawFastHLine(centerX - 76, centerY, 38, COLOR_ORANGE_DIM);
-    canvas.drawFastHLine(centerX + 38, centerY, 38, COLOR_ORANGE_DIM);
+    // North angle, East angle (+90° CW), and West angle (+180° opposite East)
+    float thetaN = headingRad;
+    float thetaE = headingRad + 1.5707963f;
+    float thetaW = thetaE + 3.14159265f;
+
+    float cosE = cosf(thetaE);
+    float sinE = sinf(thetaE);
+    float cosW = -cosE;
+    float sinW = -sinE;
+
+    // A single continuous line through the middle from West wing to East wing (no arrow)
+    int wx = centerX + (int)roundf(cosW * 52.0f);
+    int wy = centerY + (int)roundf(sinW * 52.0f);
+    int ex = centerX + (int)roundf(cosE * 52.0f);
+    int ey = centerY + (int)roundf(sinE * 52.0f);
+
+    // Draw the continuous line
+    canvas.drawLine(wx, wy, ex, ey, COLOR_ORANGE_MID);
+
+    // Cross-ticks at the wing ends (perpendicular to line, length 5 px)
+    float perpX = -sinE * 2.5f;
+    float perpY =  cosE * 2.5f;
+    canvas.drawLine(wx - (int)perpX, wy - (int)perpY, wx + (int)perpX, wy + (int)perpY, COLOR_ORANGE_DIM);
+    canvas.drawLine(ex - (int)perpX, ey - (int)perpY, ex + (int)perpX, ey + (int)perpY, COLOR_ORANGE_DIM);
+
+    // 'W' and 'E' markings rotating dynamically with the wings
+    int wLabelX = centerX + (int)roundf(cosW * 59.0f);
+    int wLabelY = centerY + (int)roundf(sinW * 59.0f);
+    int eLabelX = centerX + (int)roundf(cosE * 59.0f);
+    int eLabelY = centerY + (int)roundf(sinE * 59.0f);
+
+    canvas.setTextSize(1);
+    canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
+    canvas.drawCenterString("W", wLabelX, wLabelY - 3);
+    canvas.drawCenterString("E", eLabelX, eLabelY - 3);
+
+    // North Indicator: small prominent tick line crossing the circle rim where North is
+    float cosN = cosf(thetaN);
+    float sinN = sinf(thetaN);
+    int nInX  = centerX + (int)roundf(cosN * 34.0f);
+    int nInY  = centerY + (int)roundf(sinN * 34.0f);
+    int nOutX = centerX + (int)roundf(cosN * 44.0f);
+    int nOutY = centerY + (int)roundf(sinN * 44.0f);
+    canvas.drawLine(nInX, nInY, nOutX, nOutY, COLOR_ORANGE_BRIGHT);
+
+    // 4. Center Reference Hub / Level Target
+    canvas.drawCircle(centerX, centerY, 5, COLOR_ORANGE_DARK);
+
+    // 5. Active 2D Spirit Level Bubble (Tilts in 2D with IMU roll & pitch)
+    if (state.imuDataReady) {
+      float bx = state.roll * 0.75f;
+      float by = state.pitch * 0.75f;
+      float dist = sqrtf(bx * bx + by * by);
+      if (dist > 22.0f) {
+        bx = (bx / dist) * 22.0f;
+        by = (by / dist) * 22.0f;
+      }
+      int bubbleX = centerX + (int)roundf(bx);
+      int bubbleY = centerY + (int)roundf(by);
+
+      canvas.fillCircle(bubbleX, bubbleY, 3, COLOR_ORANGE_BRIGHT);
+      canvas.drawCircle(bubbleX, bubbleY, 4, COLOR_ORANGE_MID);
+    } else {
+      canvas.fillCircle(centerX, centerY, 3, COLOR_ORANGE_MID);
+    }
+
+    // 6. Ambient Temperature Readout (Cleanly embedded in lower crescent of circle)
+    char tempBuf[16];
+    if (state.envDataReady && state.temp > -40.0f) {
+      snprintf(tempBuf, sizeof(tempBuf), "%.1f", state.temp);
+    } else {
+      snprintf(tempBuf, sizeof(tempBuf), "--.-");
+    }
+
+    canvas.setTextSize(1);
+    canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
+    int tWidth = canvas.textWidth(tempBuf);
+    int totalW = tWidth + 3 + 6; // number + gap + degree symbol (3) + 'C' (6)
+    int startTx = centerX - totalW / 2;
+    int textY = centerY + 22;
+
+    canvas.drawString(tempBuf, startTx, textY);
+    canvas.drawCircle(startTx + tWidth + 2, textY + 1, 1, COLOR_ORANGE_MID);
+    canvas.drawString("C", startTx + tWidth + 5, textY);
   }
 
   void renderNotifications(const SensorState& state, int offsetX) {
@@ -394,75 +530,146 @@ private:
   void renderQuickpanel(const SensorState& state, int offsetX) {
     canvas.setTextSize(1);
 
-    // Tile 1: DISPLAY
-    canvas.drawRoundRect(10 + offsetX, 36, 106, 54, 3, COLOR_ORANGE_DIM);
-    canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas.drawString("DISPLAY", 18 + offsetX, 42);
-    canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-    canvas.drawString("ST7789 IPS", 18 + offsetX, 56);
-    canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas.drawString("Backlight 85%", 18 + offsetX, 70);
+    // 6 Concept Quick Action Tiles (Android Wear / Squircle Style)
+    // Layout: 2 rows x 3 columns
+    // Tile size: 64 x 62 px, corner radius: 8 px
+    const int tileW = 64;
+    const int tileH = 62;
+    const int startX[3] = { 14, 88, 162 };
+    const int startY[2] = { 46, 122 };
 
-    // Tile 2: AUDIO
-    canvas.drawRoundRect(124 + offsetX, 36, 106, 54, 3, COLOR_ORANGE_DIM);
-    canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas.drawString("AUDIO", 132 + offsetX, 42);
-    canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-    canvas.drawString("MUTED", 132 + offsetX, 56);
-    canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas.drawString("Silent Mode", 132 + offsetX, 70);
+    const char* tileLabels[6] = {
+      "SETTINGS",
+      qpHrmMeasuring ? "MEASURE" : "HRM",
+      qpEcoMode ? "ECO: ON" : "ECO: OFF",
+      qpDisplayMax ? "100%" : "85%",
+      qpSilentMode ? "SILENT" : "SOUND",
+      "SHUTDOWN"
+    };
 
-    // Tile 3: POWER RAIL
-    canvas.drawRoundRect(10 + offsetX, 96, 106, 54, 3, COLOR_ORANGE_DIM);
-    canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas.drawString("POWER", 18 + offsetX, 102);
-    canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-    char voltBuf[16];
-    if (state.batVoltage >= 2.0f) {
-      snprintf(voltBuf, sizeof(voltBuf), "%.2f V", state.batVoltage);
-    } else {
-      snprintf(voltBuf, sizeof(voltBuf), "--.-- V");
-    }
-    canvas.drawString(voltBuf, 18 + offsetX, 116);
-    canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    if (state.isCharging) {
-      canvas.drawString("Charging", 18 + offsetX, 130);
-    } else if (state.usbConnected) {
-      canvas.drawString("USB Power", 18 + offsetX, 130);
-    } else {
-      canvas.drawString("Battery", 18 + offsetX, 130);
+    for (int i = 0; i < 6; i++) {
+      int col = i % 3;
+      int row = i / 3;
+      int tx = startX[col] + offsetX;
+      int ty = startY[row];
+      int icx = tx + tileW / 2;
+      int icy = ty + 22;
+
+      bool isFocused = (qpInTileMode && qpFocusIndex == i);
+      bool isToggledOn = false;
+      if (i == 1 && qpHrmMeasuring) isToggledOn = true;
+      if (i == 2 && qpEcoMode)      isToggledOn = true;
+      if (i == 3 && qpDisplayMax)   isToggledOn = true;
+      if (i == 4 && qpSilentMode)   isToggledOn = true;
+
+      uint16_t borderColor = isFocused ? COLOR_ORANGE_BRIGHT : (isToggledOn ? COLOR_ORANGE_MID : COLOR_ORANGE_DIM);
+      uint16_t iconColor   = isFocused ? COLOR_ORANGE_BRIGHT : (isToggledOn ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID);
+      uint16_t textColor   = isFocused ? COLOR_ORANGE_BRIGHT : (isToggledOn ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID);
+
+      // Background fill
+      if (isToggledOn) {
+        canvas.fillRoundRect(tx + 1, ty + 1, tileW - 2, tileH - 2, 7, COLOR_ORANGE_DARK);
+      } else {
+        canvas.fillRoundRect(tx + 1, ty + 1, tileW - 2, tileH - 2, 7, COLOR_BG);
+      }
+
+      // Border outline
+      canvas.drawRoundRect(tx, ty, tileW, tileH, 8, borderColor);
+
+      // High-vis focus halo / corner brackets
+      if (isFocused) {
+        canvas.drawRoundRect(tx - 2, ty - 2, tileW + 4, tileH + 4, 10, COLOR_ORANGE_BRIGHT);
+      }
+
+      // Vector Icon Rendering
+      switch (i) {
+        case 0: { // SETTINGS (Gear)
+          canvas.drawCircle(icx, icy, 5, iconColor);
+          canvas.fillCircle(icx, icy, 2, iconColor);
+          for (int a = 0; a < 6; a++) {
+            float rad = a * 1.04719755f;
+            int x1 = icx + (int)roundf(cosf(rad) * 5.5f);
+            int y1 = icy + (int)roundf(sinf(rad) * 5.5f);
+            int x2 = icx + (int)roundf(cosf(rad) * 9.0f);
+            int y2 = icy + (int)roundf(sinf(rad) * 9.0f);
+            canvas.drawLine(x1, y1, x2, y2, iconColor);
+          }
+          break;
+        }
+
+        case 1: { // HRM (Heart with Pulse ECG Line)
+          int heartR = 4;
+          if (qpHrmMeasuring && ((millis() / 400) % 2 == 0)) {
+            heartR = 5; // Beat pulse animation
+          }
+          canvas.fillCircle(icx - heartR, icy - 2, heartR, iconColor);
+          canvas.fillCircle(icx + heartR, icy - 2, heartR, iconColor);
+          canvas.fillTriangle(icx - (heartR * 2), icy, icx + (heartR * 2), icy, icx, icy + (heartR * 2), iconColor);
+          // ECG cutout line
+          canvas.drawLine(icx - 7, icy + 1, icx - 3, icy + 1, COLOR_BG);
+          canvas.drawLine(icx - 3, icy + 1, icx - 1, icy - 4, COLOR_BG);
+          canvas.drawLine(icx - 1, icy - 4, icx + 1, icy + 4, COLOR_BG);
+          canvas.drawLine(icx + 1, icy + 4, icx + 3, icy + 1, COLOR_BG);
+          canvas.drawLine(icx + 3, icy + 1, icx + 7, icy + 1, COLOR_BG);
+          break;
+        }
+
+        case 2: { // ECO / POWER SAVE (Battery with Lightning Bolt)
+          canvas.drawRoundRect(icx - 6, icy - 9, 12, 17, 2, iconColor);
+          canvas.drawFastHLine(icx - 2, icy - 11, 4, iconColor);
+          canvas.drawLine(icx + 1, icy - 6, icx - 2, icy - 1, iconColor);
+          canvas.drawLine(icx - 2, icy - 1, icx + 2, icy - 1, iconColor);
+          canvas.drawLine(icx + 2, icy - 1, icx - 1, icy + 5, iconColor);
+          break;
+        }
+
+        case 3: { // DISPLAY (Sun / Brightness)
+          canvas.drawCircle(icx, icy, 4, iconColor);
+          canvas.fillCircle(icx, icy, 2, iconColor);
+          for (int r = 0; r < 8; r++) {
+            float rad = r * 0.785398f;
+            int x1 = icx + (int)roundf(cosf(rad) * 6.0f);
+            int y1 = icy + (int)roundf(sinf(rad) * 6.0f);
+            int x2 = icx + (int)roundf(cosf(rad) * 9.5f);
+            int y2 = icy + (int)roundf(sinf(rad) * 9.5f);
+            canvas.drawLine(x1, y1, x2, y2, iconColor);
+          }
+          break;
+        }
+
+        case 4: { // AUDIO / SILENT (Bell with Mute Slash)
+          canvas.drawCircle(icx, icy - 2, 4, iconColor);
+          canvas.drawLine(icx - 6, icy + 4, icx - 4, icy - 2, iconColor);
+          canvas.drawLine(icx + 6, icy + 4, icx + 4, icy - 2, iconColor);
+          canvas.drawFastHLine(icx - 7, icy + 4, 15, iconColor);
+          canvas.fillCircle(icx, icy + 6, 1, iconColor);
+          if (qpSilentMode) {
+            canvas.drawLine(icx - 8, icy - 8, icx + 8, icy + 8, COLOR_ORANGE_BRIGHT);
+          }
+          break;
+        }
+
+        case 5: { // POWER OFF / SHUTDOWN (Power Symbol)
+          canvas.drawCircle(icx, icy + 1, 7, iconColor);
+          canvas.fillRect(icx - 2, icy - 7, 5, 4, isToggledOn ? COLOR_ORANGE_DARK : COLOR_BG);
+          canvas.drawFastVLine(icx, icy - 7, 8, iconColor);
+          break;
+        }
+      }
+
+      // Tile Label
+      canvas.setTextColor(textColor, isToggledOn ? COLOR_ORANGE_DARK : COLOR_BG);
+      canvas.drawCenterString(tileLabels[i], tx + tileW / 2, ty + 46);
     }
 
-    // Tile 4: IMU TILT
-    canvas.drawRoundRect(124 + offsetX, 96, 106, 54, 3, COLOR_ORANGE_DIM);
+    // Bottom Navigation Context Bar
+    canvas.setTextSize(1);
     canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas.drawString("ATTITUDE", 132 + offsetX, 102);
-    canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-    char imuBuf[16];
-    snprintf(imuBuf, sizeof(imuBuf), "R:%.0f P:%.0f", state.roll, state.pitch);
-    canvas.drawString(state.imuDataReady ? imuBuf : "STANDBY", 132 + offsetX, 116);
-    canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas.drawString("BNO085 9-DOF", 132 + offsetX, 130);
-
-    // Bottom Environment Status Strip
-    canvas.drawRoundRect(10 + offsetX, 156, 220, 52, 3, COLOR_ORANGE_DIM);
-    canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas.drawString("ENVIRONMENT // BME680", 18 + offsetX, 162);
-    canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-    char envBuf[32];
-    if (state.envDataReady && state.temp > -40.0f) {
-      snprintf(envBuf, sizeof(envBuf), "%.1f C  |  %.0f hPa", state.temp, state.press);
+    if (!qpInTileMode) {
+      canvas.drawCenterString("PUSH LEVER TO NAVIGATE", 120 + offsetX, 196);
     } else {
-      snprintf(envBuf, sizeof(envBuf), "--.- C  |  ---- hPa");
+      canvas.drawCenterString("LEVER: SELECT | BTN: BACK", 120 + offsetX, 196);
     }
-    canvas.drawString(envBuf, 18 + offsetX, 176);
-    canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    if (state.envDataReady && state.hum > 0.0f) {
-      snprintf(envBuf, sizeof(envBuf), "Humidity: %.0f%% RH", state.hum);
-    } else {
-      snprintf(envBuf, sizeof(envBuf), "Humidity: --%% RH");
-    }
-    canvas.drawString(envBuf, 18 + offsetX, 190);
   }
 
   void renderPageIndicator(float dotX) {

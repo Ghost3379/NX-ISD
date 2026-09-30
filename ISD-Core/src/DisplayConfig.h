@@ -17,7 +17,12 @@ public:
 
       cfg.spi_host   = SPI2_HOST;     // FSPI on ESP32-S3
       cfg.spi_mode   = 0;             // Mode 0
-      cfg.freq_write = 40000000;      // 40 MHz: Fast hardware SPI for smooth 40+ FPS animations
+      // 24 MHz: Maximum rated push-pull data rate for the TXB0106 level shifter (~24 Mbps).
+      // Delivers ~26 FPS (38.4ms per 240x240 16-bit frame). Prevents edge distortion,
+      // missed clock pulses, and periodic frame flickering during sensor power dips.
+      // NOTE for v1p4: Once U15 (TXB0106) is removed and the display runs directly on 3.3V,
+      // this clock can be boosted to 40 MHz (43.5 FPS) or 80 MHz (86.8 FPS).
+      cfg.freq_write = 24000000;
       cfg.freq_read  = 10000000;
       cfg.spi_3wire  = false;
       cfg.use_lock   = true;

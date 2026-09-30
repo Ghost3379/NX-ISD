@@ -30,6 +30,7 @@ Upcoming hardware revision tasks for the NX-ISD PCB.
 * [ ] Move FPC-connector for the display a bit to the left
 * [ ] Fix BQ25170 Overheating problem at 600mA charging
 * [ ] Change EP pad vias of MAX17048 & BQ25170 to 0.45mm drill to reduce pcb costs
+* [ ] Clear 2V8 path
 
 ## v1p5
 

@@ -50,23 +50,50 @@ void vSensorTask(void* pvParameters) {
 
     // 2. IMU polling (if BNO085 is present and ready)
     float curRoll = 0.0f, curPitch = 0.0f, curYaw = 0.0f;
+    uint8_t curCalib = 0;
     bool imuOk = false;
     if (HAL::imuReady) {
       sh2_SensorValue_t sensorValue;
-      if (HAL::imuSensor.getSensorEvent(&sensorValue)) {
-        if (sensorValue.sensorId == SH2_ARVR_STABILIZED_RV) {
-          float qr = sensorValue.un.arvrStabilizedRV.real;
-          float qi = sensorValue.un.arvrStabilizedRV.i;
-          float qj = sensorValue.un.arvrStabilizedRV.j;
-          float qk = sensorValue.un.arvrStabilizedRV.k;
+      while (HAL::imuSensor.getSensorEvent(&sensorValue)) {
+        float qr = 1.0f, qi = 0.0f, qj = 0.0f, qk = 0.0f;
+        bool validRv = false;
+
+        if (sensorValue.sensorId == SH2_ROTATION_VECTOR) {
+          qr = sensorValue.un.rotationVector.real;
+          qi = sensorValue.un.rotationVector.i;
+          qj = sensorValue.un.rotationVector.j;
+          qk = sensorValue.un.rotationVector.k;
+          curCalib = sensorValue.status & 0x03;
+          validRv = true;
+        } else if (sensorValue.sensorId == SH2_GEOMAGNETIC_ROTATION_VECTOR) {
+          qr = sensorValue.un.geoMagRotationVector.real;
+          qi = sensorValue.un.geoMagRotationVector.i;
+          qj = sensorValue.un.geoMagRotationVector.j;
+          qk = sensorValue.un.geoMagRotationVector.k;
+          curCalib = sensorValue.status & 0x03;
+          validRv = true;
+        } else if (sensorValue.sensorId == SH2_ARVR_STABILIZED_RV) {
+          qr = sensorValue.un.arvrStabilizedRV.real;
+          qi = sensorValue.un.arvrStabilizedRV.i;
+          qj = sensorValue.un.arvrStabilizedRV.j;
+          qk = sensorValue.un.arvrStabilizedRV.k;
+          curCalib = sensorValue.status & 0x03;
+          validRv = true;
+        }
+
+        if (validRv) {
           float sqr = qr * qr;
           float sqi = qi * qi;
           float sqj = qj * qj;
           float sqk = qk * qk;
-          curPitch = asin(-2.0f * (qi * qk - qj * qr) / (sqi + sqj + sqk + sqr)) * RAD_TO_DEG;
-          curRoll  = atan2(2.0f * (qj * qk + qi * qr), (-sqi - sqj + sqk + sqr)) * RAD_TO_DEG;
-          curYaw   = atan2(2.0f * (qi * qj + qk * qr), (sqi - sqj - sqk + sqr)) * RAD_TO_DEG;
-          imuOk = true;
+          float denom = sqi + sqj + sqk + sqr;
+          if (denom > 0.0001f) {
+            float sinP = constrain(-2.0f * (qi * qk - qj * qr) / denom, -1.0f, 1.0f);
+            curPitch = asin(sinP) * RAD_TO_DEG;
+            curRoll  = atan2(2.0f * (qj * qk + qi * qr), (-sqi - sqj + sqk + sqr)) * RAD_TO_DEG;
+            curYaw   = atan2(2.0f * (qi * qj + qk * qr), (sqi - sqj - sqk + sqr)) * RAD_TO_DEG;
+            imuOk = true;
+          }
         }
       }
     }
@@ -95,6 +122,7 @@ void vSensorTask(void* pvParameters) {
         sharedState.roll = curRoll;
         sharedState.pitch = curPitch;
         sharedState.yaw = curYaw;
+        sharedState.imuCalib = curCalib;
         sharedState.imuDataReady = true;
       }
 
@@ -113,6 +141,8 @@ void vSensorTask(void* pvParameters) {
           Serial.printf("[PWR] USB:%d CHG:%d | BAT: %.2fV (%.1f%%) | Rate: %.1f%%/h\n",
                         curUsb, curChg, sharedState.batVoltage, sharedState.batPercent,
                         sharedState.batChangeRate);
+          Serial.printf("[IMU] Yaw: %.1f deg | Roll: %.1f | Pitch: %.1f | Calib: %d/3\n",
+                        sharedState.yaw, sharedState.roll, sharedState.pitch, sharedState.imuCalib);
         }
 
         // RTC Real Time
@@ -132,13 +162,14 @@ void vSensorTask(void* pvParameters) {
         if (HAL::envSensorReady) {
           if (HAL::envSensor.fetchData()) {
             bme68xData data;
-            if (HAL::envSensor.getData(data)) {
-              sharedState.temp = data.temperature;
-              sharedState.hum = data.humidity;
-              sharedState.press = data.pressure / 100.0f; // Pa to hPa
-              sharedState.gas = data.gas_resistance;
-              sharedState.envDataReady = true;
-            }
+            HAL::envSensor.getData(data);
+            sharedState.temp = data.temperature;
+            sharedState.hum = data.humidity;
+            sharedState.press = data.pressure / 100.0f; // Pa to hPa
+            sharedState.gas = data.gas_resistance;
+            sharedState.envDataReady = true;
+            Serial.printf("[ENV] T: %.1f C | H: %.0f %% | P: %.0f hPa\n",
+                          sharedState.temp, sharedState.hum, sharedState.press);
           }
           HAL::envSensor.setOpMode(BME68X_FORCED_MODE);
         }
@@ -247,8 +278,11 @@ void loop() {
   if (navRight) {
     watchface.handleNavRight();
   }
-  if (navBtn || navPush) {
-    watchface.handleNavSelect();
+  if (navPush) {
+    watchface.handleNavPush();
+  }
+  if (navBtn) {
+    watchface.handleNavBack();
   }
 
   // Render active view to offscreen PSRAM sprite and push cleanly to ST7789

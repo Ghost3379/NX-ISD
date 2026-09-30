@@ -95,7 +95,7 @@ void HAL::begin() {
 
   imuReady = imuSensor.begin_I2C(0x4A, &Wire);
   if (imuReady) {
-    imuSensor.enableReport(SH2_ARVR_STABILIZED_RV, 50000);
+    imuSensor.enableReport(SH2_ROTATION_VECTOR, 40000); // 25 Hz 9-DOF fusion with magnetometer
   }
 }
 
