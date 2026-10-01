@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <esp_sleep.h>
+#include <driver/rtc_io.h>
 #include "DisplayConfig.h"
 #include "pins.h"
 #include "SensorState.h"
@@ -12,6 +14,7 @@ Watchface watchface(&tft);
 SensorState sharedState;
 SemaphoreHandle_t stateMutex = NULL;
 SemaphoreHandle_t i2cMutex = NULL;
+TaskHandle_t sensorTaskHandle = NULL;
 
 // Background Sensor & Input Task running on Core 0
 void vSensorTask(void* pvParameters) {
@@ -21,7 +24,14 @@ void vSensorTask(void* pvParameters) {
   bool lastPush  = false;
   bool lastRight = false;
 
+  uint32_t leftHoldStart = 0;
+  uint32_t lastLeftRepeat = 0;
+  uint32_t rightHoldStart = 0;
+  uint32_t lastRightRepeat = 0;
+
   for (;;) {
+    uint32_t now = millis();
+
     // 1. Fast polling of User Inputs (Active-LOW with INPUT_PULLUP)
     bool curBtn   = (digitalRead(BTN) == LOW);
     bool curLeft  = (digitalRead(LEVER_LEFT) == LOW);
@@ -29,15 +39,39 @@ void vSensorTask(void* pvParameters) {
     bool curRight = (digitalRead(LEVER_RIGHT) == LOW);
 
     // Detect single clicks on press transition (Active-LOW: HIGH -> LOW)
-    bool clickBtn   = (curBtn && !lastBtn);
-    bool clickLeft  = (curLeft && !lastLeft);
-    bool clickPush  = (curPush && !lastPush);
-    bool clickRight = (curRight && !lastRight);
+    bool clickBtn  = (curBtn && !lastBtn);
+    bool clickPush = (curPush && !lastPush);
 
-    if (clickBtn)   Serial.println("[NAV] BTN CLICK");
-    if (clickLeft)  Serial.println("[NAV] LEVER LEFT CLICK");
-    if (clickPush)  Serial.println("[NAV] LEVER PUSH CLICK");
-    if (clickRight) Serial.println("[NAV] LEVER RIGHT CLICK");
+    // Left lever hold-to-repeat: immediate initial click, 350ms hold delay, 80ms repeat
+    bool trigLeft = false;
+    if (curLeft) {
+      if (!lastLeft) {
+        trigLeft = true;
+        leftHoldStart = now;
+        lastLeftRepeat = now;
+        Serial.println("[NAV] LEVER LEFT CLICK");
+      } else if ((now - leftHoldStart >= 350) && (now - lastLeftRepeat >= 80)) {
+        trigLeft = true;
+        lastLeftRepeat = now;
+      }
+    }
+
+    // Right lever hold-to-repeat: immediate initial click, 350ms hold delay, 80ms repeat
+    bool trigRight = false;
+    if (curRight) {
+      if (!lastRight) {
+        trigRight = true;
+        rightHoldStart = now;
+        lastRightRepeat = now;
+        Serial.println("[NAV] LEVER RIGHT CLICK");
+      } else if ((now - rightHoldStart >= 350) && (now - lastRightRepeat >= 80)) {
+        trigRight = true;
+        lastRightRepeat = now;
+      }
+    }
+
+    if (clickBtn)  Serial.println("[NAV] BTN CLICK");
+    if (clickPush) Serial.println("[NAV] LEVER PUSH CLICK");
 
     lastBtn   = curBtn;
     lastLeft  = curLeft;
@@ -99,7 +133,6 @@ void vSensorTask(void* pvParameters) {
     }
 
     // 3. Slow Sensor polling (every 1000ms: Fuel Gauge, RTC, BME680, OPT3001)
-    uint32_t now = millis();
     bool doSlowPoll = (now - lastSlowPoll >= 1000);
     if (doSlowPoll) {
       lastSlowPoll = now;
@@ -111,10 +144,10 @@ void vSensorTask(void* pvParameters) {
       sharedState.inputLeverLeft = curLeft;
       sharedState.inputLeverPush = curPush;
       sharedState.inputLeverRight = curRight;
-      if (clickBtn)   sharedState.evtNavBtn = true;
-      if (clickLeft)  sharedState.evtNavLeft = true;
-      if (clickPush)  sharedState.evtNavPush = true;
-      if (clickRight) sharedState.evtNavRight = true;
+      if (clickBtn)  sharedState.evtNavBtn = true;
+      if (trigLeft)  sharedState.evtNavLeft = true;
+      if (clickPush) sharedState.evtNavPush = true;
+      if (trigRight) sharedState.evtNavRight = true;
       sharedState.usbConnected = curUsb;
       sharedState.isCharging = curChg;
 
@@ -193,7 +226,22 @@ void vSensorTask(void* pvParameters) {
 // ==================== INITIALIZATION & BOOT ====================
 
 void setup() {
+  // Release and deinit any pins held during deep sleep
+  rtc_gpio_hold_dis((gpio_num_t)BTN);
+  rtc_gpio_hold_dis((gpio_num_t)LEVER_PUSH);
+  rtc_gpio_deinit((gpio_num_t)BTN);
+  rtc_gpio_deinit((gpio_num_t)LEVER_PUSH);
+  gpio_deep_sleep_hold_dis();
+
   Serial.begin(115200);
+
+  // Check if waking up from Deep Sleep via BTN (GPIO 13) or other trigger
+  esp_sleep_wakeup_cause_t wakeup_cause = esp_sleep_get_wakeup_cause();
+  if (wakeup_cause == ESP_SLEEP_WAKEUP_EXT0 || 
+      wakeup_cause == ESP_SLEEP_WAKEUP_EXT1 || 
+      wakeup_cause == ESP_SLEEP_WAKEUP_GPIO) {
+    Serial.println("[PWR] Waking from Deep Sleep via User Input...");
+  }
 
   // 1. Initialize Hardware Pins & Buses (Completely Silent, Buzzer Muted)
   HAL::begin();
@@ -214,7 +262,7 @@ void setup() {
   stateMutex = xSemaphoreCreateMutex();
   i2cMutex = xSemaphoreCreateMutex();
 
-  // 5. Pre-seed initial state so watchface displays immediately without delay
+  // 6. Pre-seed initial state so watchface displays immediately without delay
   sharedState.usbConnected = (digitalRead(USB_DETECT) == LOW);
   sharedState.isCharging = (digitalRead(BAT_STAT) == LOW);
   float initV = 0.0f, initP = 0.0f, initR = 0.0f;
@@ -235,14 +283,14 @@ void setup() {
              HAL::rtcClock.getDate());
   }
 
-  // 6. Spawn Background Sensor Task pinned to Core 0 (PRO CPU)
+  // 7. Spawn Background Sensor Task pinned to Core 0 (PRO CPU)
   xTaskCreatePinnedToCore(
     vSensorTask,
     "SensorTask",
     4096,
     NULL,
     1,
-    NULL,
+    &sensorTaskHandle,
     0
   );
 
@@ -271,7 +319,28 @@ void loop() {
     xSemaphoreGive(stateMutex);
   }
 
-  // Handle panel navigation
+  // 1. Handle Standby (Display Off) State
+  static bool prevUsb = false;
+  if (watchface.isInStandby()) {
+    bool usbPlugged = (localState.usbConnected && !prevUsb);
+    prevUsb = localState.usbConnected;
+    if (navBtn || navLeft || navPush || navRight || usbPlugged) {
+      Serial.println("[PWR] Waking from Standby via User Input...");
+      watchface.wakeFromStandby();
+      // Swallow the wake input so it doesn't trigger unexpected screen actions
+      navBtn = false;
+      navLeft = false;
+      navPush = false;
+      navRight = false;
+    } else {
+      delay(50);
+      return; // Skip rendering frames to save CPU and power
+    }
+  } else {
+    prevUsb = localState.usbConnected;
+  }
+
+  // 2. Handle Panel Navigation
   if (navLeft) {
     watchface.handleNavLeft();
   }
@@ -285,7 +354,25 @@ void loop() {
     watchface.handleNavBack();
   }
 
-  // Render active view to offscreen PSRAM sprite and push cleanly to ST7789
+  // 3. Process Requested Power Actions from Quickpanel Power Menu
+  PowerAction pwrAct = watchface.getRequestedPowerAction();
+  if (pwrAct != PWR_ACT_NONE) {
+    if (pwrAct == PWR_ACT_STANDBY) {
+      Serial.println("[PWR] Entering Standby mode (Display off)...");
+      watchface.enterStandby();
+      return;
+    } else if (pwrAct == PWR_ACT_RESTART) {
+      Serial.println("[PWR] Restarting system...");
+      watchface.renderPowerMessage("RESTARTING", "SYSTEM REBOOT IN PROGRESS", 2);
+      delay(800);
+      ESP.restart();
+    } else if (pwrAct == PWR_ACT_SHUTDOWN) {
+      Serial.println("[PWR] Shutdown disabled (pending dedicated hardware pull-up resistor).");
+      // Intentionally does nothing per user request
+    }
+  }
+
+  // 4. Render active view to offscreen PSRAM sprite and push cleanly to ST7789
   watchface.render(localState);
 
   // Max hardware SPI throughput during transitions, ~33 FPS when resting to save battery

@@ -10,6 +10,13 @@ enum AppView {
   VIEW_QUICKPANEL    = 2
 };
 
+enum PowerAction {
+  PWR_ACT_NONE = 0,
+  PWR_ACT_STANDBY,
+  PWR_ACT_SHUTDOWN,
+  PWR_ACT_RESTART
+};
+
 class Watchface {
 private:
   LGFX_Sprite canvas;
@@ -35,12 +42,62 @@ private:
   bool qpInTileMode = false; // whether user is navigating inside the tiles
   bool qpEcoMode = false;
   bool qpSilentMode = true;
-  bool qpDisplayMax = false;
   bool qpHrmMeasuring = false;
   uint32_t qpHrmStartMs = 0;
 
+  // Interactive Brightness Menu & Hardware Backlight State
+  LGFX* display = nullptr;
+  int brightnessPercent = 85;       // 10% .. 100%
+  bool qpInBrightnessMenu = false;  // Active circular menu overlay
+
+  // Interactive Power / Shutdown Menu State
+  bool qpInShutdownMenu = false;    // Active power menu overlay
+  int shutdownMenuIndex = 0;        // 0: Standby, 1: Shutdown, 2: Restart
+  PowerAction requestedPowerAction = PWR_ACT_NONE;
+  bool isStandby = false;           // Display off standby state
+
 public:
-  Watchface(LGFX* tft) : canvas(tft) {}
+  Watchface(LGFX* tft) : canvas(tft), display(tft) {}
+
+  void applyBrightness() {
+    if (display) {
+      uint8_t pwm = (uint8_t)map(brightnessPercent, 0, 100, 15, 255);
+      display->setBrightness(pwm);
+    }
+  }
+
+  int getBrightness() const {
+    return brightnessPercent;
+  }
+
+  PowerAction getRequestedPowerAction() {
+    PowerAction act = requestedPowerAction;
+    requestedPowerAction = PWR_ACT_NONE;
+    return act;
+  }
+
+  bool isInStandby() const {
+    return isStandby;
+  }
+
+  void enterStandby() {
+    isStandby = true;
+    if (display) {
+      display->setBrightness(0);
+    }
+  }
+
+  void wakeFromStandby() {
+    if (!isStandby) return;
+    isStandby = false;
+    currentView = VIEW_HOME;
+    targetView = VIEW_HOME;
+    isTransitioning = false;
+    qpInTileMode = false;
+    qpInBrightnessMenu = false;
+    qpInShutdownMenu = false;
+    applyBrightness();
+  }
 
   void setView(AppView v) {
     currentView = v;
@@ -67,11 +124,18 @@ public:
     transitionStartTime = millis();
     isTransitioning = true;
     qpInTileMode = false;
+    qpInBrightnessMenu = false;
+    qpInShutdownMenu = false;
   }
 
   void handleNavLeft() {
     if (isTransitioning) return;
-    if (currentView == VIEW_QUICKPANEL && qpInTileMode) {
+    if (currentView == VIEW_QUICKPANEL && qpInBrightnessMenu) {
+      brightnessPercent = min(100, brightnessPercent + 5);
+      applyBrightness();
+    } else if (currentView == VIEW_QUICKPANEL && qpInShutdownMenu) {
+      shutdownMenuIndex = (shutdownMenuIndex + 2) % 3;
+    } else if (currentView == VIEW_QUICKPANEL && qpInTileMode) {
       qpFocusIndex = (qpFocusIndex + 5) % 6;
     } else if (currentView == VIEW_QUICKPANEL) {
       startTransition(VIEW_HOME, -1);
@@ -82,7 +146,12 @@ public:
 
   void handleNavRight() {
     if (isTransitioning) return;
-    if (currentView == VIEW_QUICKPANEL && qpInTileMode) {
+    if (currentView == VIEW_QUICKPANEL && qpInBrightnessMenu) {
+      brightnessPercent = max(10, brightnessPercent - 5);
+      applyBrightness();
+    } else if (currentView == VIEW_QUICKPANEL && qpInShutdownMenu) {
+      shutdownMenuIndex = (shutdownMenuIndex + 1) % 3;
+    } else if (currentView == VIEW_QUICKPANEL && qpInTileMode) {
       qpFocusIndex = (qpFocusIndex + 1) % 6;
     } else if (currentView == VIEW_NOTIFICATIONS) {
       startTransition(VIEW_HOME, 1);
@@ -99,7 +168,25 @@ public:
       qpInTileMode = true;
       qpFocusIndex = 0;
     } else if (currentView == VIEW_QUICKPANEL) {
-      if (!qpInTileMode) {
+      if (qpInShutdownMenu) {
+        // Confirm and trigger selected power action
+        switch (shutdownMenuIndex) {
+          case 0:
+            requestedPowerAction = PWR_ACT_STANDBY;
+            break;
+          case 1:
+            // Shutdown functionality removed/disabled for now per user request
+            requestedPowerAction = PWR_ACT_NONE;
+            break;
+          case 2:
+            requestedPowerAction = PWR_ACT_RESTART;
+            break;
+        }
+        qpInShutdownMenu = false;
+      } else if (qpInBrightnessMenu) {
+        // Exit circular brightness menu and confirm level
+        qpInBrightnessMenu = false;
+      } else if (!qpInTileMode) {
         // Enter tile navigation mode
         qpInTileMode = true;
         qpFocusIndex = 0;
@@ -115,13 +202,15 @@ public:
           case 2: // Eco Mode
             qpEcoMode = !qpEcoMode;
             break;
-          case 3: // Display
-            qpDisplayMax = !qpDisplayMax;
+          case 3: // Display / Brightness circular menu
+            qpInBrightnessMenu = true;
             break;
           case 4: // Silent
             qpSilentMode = !qpSilentMode;
             break;
-          case 5: // Shutdown
+          case 5: // Shutdown / Power Menu
+            qpInShutdownMenu = true;
+            shutdownMenuIndex = 0;
             break;
         }
       }
@@ -133,7 +222,11 @@ public:
   void handleNavBack() {
     if (isTransitioning) return;
     if (currentView == VIEW_QUICKPANEL) {
-      if (qpInTileMode) {
+      if (qpInShutdownMenu) {
+        qpInShutdownMenu = false;
+      } else if (qpInBrightnessMenu) {
+        qpInBrightnessMenu = false;
+      } else if (qpInTileMode) {
         qpInTileMode = false;
       } else {
         startTransition(VIEW_HOME, -1);
@@ -159,6 +252,7 @@ public:
     COLOR_ORANGE_DIM    = canvas.color565(75, 28, 0);        // Dim hairline borders
     COLOR_ORANGE_DARK   = canvas.color565(35, 12, 0);        // Dark grid background
 
+    applyBrightness();
     initialized = true;
   }
 
@@ -342,8 +436,49 @@ public:
     canvas.pushSprite(0, 0);
   }
 
+  void renderPowerMessage(const char* title, const char* subtitle, int iconType) {
+    canvas.fillScreen(COLOR_BG);
+
+    int cx = 120;
+    int cy = 95;
+
+    // Outer Avionic Frame
+    canvas.drawRoundRect(16, 24, 208, 172, 10, COLOR_ORANGE_BRIGHT);
+    canvas.drawRoundRect(18, 26, 204, 168, 8, COLOR_ORANGE_DARK);
+
+    // Icon
+    if (iconType == 1) { // Power off
+      canvas.drawCircle(cx, cy - 20, 20, COLOR_ORANGE_BRIGHT);
+      canvas.drawCircle(cx, cy - 20, 19, COLOR_ORANGE_BRIGHT);
+      canvas.fillRect(cx - 5, cy - 42, 10, 8, COLOR_BG);
+      canvas.fillRect(cx - 2, cy - 40, 4, 18, COLOR_ORANGE_BRIGHT);
+    } else if (iconType == 2) { // Restart
+      canvas.drawCircle(cx, cy - 20, 20, COLOR_ORANGE_BRIGHT);
+      canvas.drawCircle(cx, cy - 20, 19, COLOR_ORANGE_BRIGHT);
+      canvas.fillRect(cx, cy - 42, 18, 16, COLOR_BG);
+      canvas.fillTriangle(cx + 12, cy - 42, cx + 22, cy - 20, cx + 6, cy - 25, COLOR_ORANGE_BRIGHT);
+    }
+
+    canvas.setTextSize(2);
+    canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
+    canvas.drawCenterString(title, cx, cy + 20);
+
+    canvas.setTextSize(1);
+    canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
+    canvas.drawCenterString(subtitle, cx, cy + 50);
+
+    // Direct flush to screen
+    if (display) {
+      display->startWrite();
+      canvas.pushSprite(0, 0);
+      display->endWrite();
+    }
+  }
+
 private:
   const char* getViewTitle(AppView v) {
+    if (v == VIEW_QUICKPANEL && qpInShutdownMenu) return "Power Menu";
+    if (v == VIEW_QUICKPANEL && qpInBrightnessMenu) return "Brightness";
     switch (v) {
       case VIEW_NOTIFICATIONS: return "Notifications";
       case VIEW_QUICKPANEL:    return "Quickpanel";
@@ -530,6 +665,18 @@ private:
   void renderQuickpanel(const SensorState& state, int offsetX) {
     canvas.setTextSize(1);
 
+    // Dedicated Power / Shutdown Menu overlay
+    if (qpInShutdownMenu) {
+      renderShutdownMenu(offsetX);
+      return;
+    }
+
+    // Dedicated Circular Brightness Menu overlay
+    if (qpInBrightnessMenu) {
+      renderBrightnessMenu(offsetX);
+      return;
+    }
+
     // 6 Concept Quick Action Tiles (Android Wear / Squircle Style)
     // Layout: 2 rows x 3 columns
     // Tile size: 64 x 62 px, corner radius: 8 px
@@ -538,11 +685,14 @@ private:
     const int startX[3] = { 14, 88, 162 };
     const int startY[2] = { 46, 122 };
 
+    char dispLabel[12];
+    snprintf(dispLabel, sizeof(dispLabel), "%d%%", brightnessPercent);
+
     const char* tileLabels[6] = {
       "SETTINGS",
       qpHrmMeasuring ? "MEASURE" : "HRM",
       qpEcoMode ? "ECO: ON" : "ECO: OFF",
-      qpDisplayMax ? "100%" : "85%",
+      dispLabel,
       qpSilentMode ? "SILENT" : "SOUND",
       "SHUTDOWN"
     };
@@ -559,7 +709,7 @@ private:
       bool isToggledOn = false;
       if (i == 1 && qpHrmMeasuring) isToggledOn = true;
       if (i == 2 && qpEcoMode)      isToggledOn = true;
-      if (i == 3 && qpDisplayMax)   isToggledOn = true;
+      if (i == 3 && brightnessPercent >= 90) isToggledOn = true;
       if (i == 4 && qpSilentMode)   isToggledOn = true;
 
       uint16_t borderColor = isFocused ? COLOR_ORANGE_BRIGHT : (isToggledOn ? COLOR_ORANGE_MID : COLOR_ORANGE_DIM);
@@ -670,6 +820,142 @@ private:
     } else {
       canvas.drawCenterString("LEVER: SELECT | BTN: BACK", 120 + offsetX, 196);
     }
+  }
+
+  void renderBrightnessMenu(int offsetX) {
+    int cx = 120 + offsetX;
+    int cy = 118;
+    int radius = 62;
+
+    // 1. Subtle Outer Reference Track Ring
+    canvas.drawCircle(cx, cy, radius + 3, COLOR_ORANGE_DARK);
+    canvas.drawCircle(cx, cy, radius - 11, COLOR_ORANGE_DARK);
+
+    // 2. Technical Radial Ticks from 10% to 100% (19 ticks, spaced every 5%)
+    // Angular sweep: 270 deg total, from 135 deg (bottom-left) to 405 deg (bottom-right)
+    for (int p = 10; p <= 100; p += 5) {
+      float frac = (p - 10) / 90.0f;
+      float angleDeg = 135.0f + frac * 270.0f;
+      float rad = angleDeg * 0.0174532925f;
+
+      bool isMajor = (p % 10 == 0);
+      float rIn = isMajor ? (radius - 10) : (radius - 5);
+      float rOut = radius + 2;
+
+      int x1 = cx + (int)roundf(cosf(rad) * rIn);
+      int y1 = cy + (int)roundf(sinf(rad) * rIn);
+      int x2 = cx + (int)roundf(cosf(rad) * rOut);
+      int y2 = cy + (int)roundf(sinf(rad) * rOut);
+
+      uint16_t tickColor = (p <= brightnessPercent) ? (isMajor ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID) : COLOR_ORANGE_DARK;
+      canvas.drawLine(x1, y1, x2, y2, tickColor);
+    }
+
+    // 3. Active Orbital Satellite Pip (Glowing pointer pip outside the ring)
+    float curFrac = (brightnessPercent - 10) / 90.0f;
+    float curAngleDeg = 135.0f + curFrac * 270.0f;
+    float curRad = curAngleDeg * 0.0174532925f;
+    int pipX = cx + (int)roundf(cosf(curRad) * (radius + 9));
+    int pipY = cy + (int)roundf(sinf(curRad) * (radius + 9));
+    canvas.fillCircle(pipX, pipY, 3, COLOR_ORANGE_BRIGHT);
+    canvas.drawCircle(pipX, pipY, 4, COLOR_ORANGE_MID);
+
+    // 4. Central Sun Glyph
+    int sunY = cy - 20;
+    canvas.drawCircle(cx, sunY, 4, COLOR_ORANGE_BRIGHT);
+    canvas.fillCircle(cx, sunY, 2, COLOR_ORANGE_BRIGHT);
+    for (int r = 0; r < 8; r++) {
+      float sRad = r * 0.785398f;
+      int sx1 = cx + (int)roundf(cosf(sRad) * 6.0f);
+      int sy1 = sunY + (int)roundf(sinf(sRad) * 6.0f);
+      int sx2 = cx + (int)roundf(cosf(sRad) * 9.0f);
+      int sy2 = sunY + (int)roundf(sinf(sRad) * 9.0f);
+      canvas.drawLine(sx1, sy1, sx2, sy2, COLOR_ORANGE_MID);
+    }
+
+    // 5. Large Digital Readout
+    canvas.setTextSize(3);
+    canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
+    char pBuf[8];
+    snprintf(pBuf, sizeof(pBuf), "%d%%", brightnessPercent);
+    canvas.drawCenterString(pBuf, cx, cy + 2);
+
+    // 6. Context Bottom Bar
+    canvas.setTextSize(1);
+    canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
+    canvas.drawCenterString("< LEVER > ADJUST | PUSH: OK", cx, 196);
+  }
+
+  void renderShutdownMenu(int offsetX) {
+    const char* titles[3] = { "STANDBY", "SHUTDOWN", "RESTART" };
+    const char* descs[3]  = { "DISPLAY OFF (ANY KEY)", "DISABLED (PLANNED)", "REBOOT ISD-CORE" };
+
+    int cardW = 216;
+    int cardH = 46;
+    int startX = 12 + offsetX;
+    int startY[3] = { 44, 96, 148 };
+
+    for (int i = 0; i < 3; i++) {
+      bool isSelected = (i == shutdownMenuIndex);
+      int cx = startX;
+      int cy = startY[i];
+
+      uint16_t cardBg = isSelected ? COLOR_ORANGE_DARK : COLOR_BG;
+      uint16_t borderCol = isSelected ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_DIM;
+      uint16_t textCol = isSelected ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID;
+      uint16_t iconCol = isSelected ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_DIM;
+
+      // Card Background & Border
+      canvas.fillRoundRect(cx, cy, cardW, cardH, 8, cardBg);
+      canvas.drawRoundRect(cx, cy, cardW, cardH, 8, borderCol);
+      if (isSelected) {
+        canvas.drawRoundRect(cx + 1, cy + 1, cardW - 2, cardH - 2, 7, borderCol);
+        // Active indicator vertical bar on left edge
+        canvas.fillRoundRect(cx + 4, cy + 8, 3, cardH - 16, 2, COLOR_ORANGE_BRIGHT);
+      }
+
+      // Card Icon
+      int icx = cx + 24;
+      int icy = cy + (cardH / 2);
+
+      switch (i) {
+        case 0: { // STANDBY (Crescent Moon)
+          canvas.fillCircle(icx, icy, 8, iconCol);
+          canvas.fillCircle(icx + 4, icy - 2, 6, cardBg);
+          canvas.fillCircle(icx + 6, icy - 5, 1, iconCol);
+          canvas.fillCircle(icx + 8, icy + 2, 1, iconCol);
+          break;
+        }
+        case 1: { // SHUTDOWN (Power Symbol)
+          canvas.drawCircle(icx, icy + 1, 8, iconCol);
+          canvas.drawCircle(icx, icy + 1, 7, iconCol);
+          canvas.fillRect(icx - 3, icy - 8, 6, 6, cardBg);
+          canvas.fillRect(icx - 1, icy - 8, 3, 9, iconCol);
+          break;
+        }
+        case 2: { // RESTART (Reboot circular arrow)
+          canvas.drawCircle(icx, icy, 8, iconCol);
+          canvas.drawCircle(icx, icy, 7, iconCol);
+          canvas.fillRect(icx, icy - 10, 9, 8, cardBg);
+          canvas.fillTriangle(icx + 6, icy - 10, icx + 9, icy - 2, icx + 2, icy - 5, iconCol);
+          break;
+        }
+      }
+
+      // Title & Subtitle
+      canvas.setTextSize(2);
+      canvas.setTextColor(textCol, cardBg);
+      canvas.drawString(titles[i], cx + 46, cy + 7);
+
+      canvas.setTextSize(1);
+      canvas.setTextColor(isSelected ? COLOR_ORANGE_MID : COLOR_ORANGE_DIM, cardBg);
+      canvas.drawString(descs[i], cx + 46, cy + 27);
+    }
+
+    // Bottom Navigation Context Prompt
+    canvas.setTextSize(1);
+    canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
+    canvas.drawCenterString("< LEVER > SELECT | PUSH: OK", 120 + offsetX, 206);
   }
 
   void renderPageIndicator(float dotX) {
