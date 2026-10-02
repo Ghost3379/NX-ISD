@@ -25,11 +25,16 @@ SemaphoreHandle_t stateMutex = NULL;
 SemaphoreHandle_t i2cMutex = NULL;
 TaskHandle_t sensorTaskHandle = NULL;
 
-// Hardware Interrupt Event Flags for zero-latency, non-blocking user input
+// Hardware Interrupt Event Flags & Physical State Latching for zero-latency, bounce-free control
 volatile bool isrFlagBtn   = false;
 volatile bool isrFlagLeft  = false;
 volatile bool isrFlagPush  = false;
 volatile bool isrFlagRight = false;
+
+volatile bool activeBtn    = false;
+volatile bool activeLeft   = false;
+volatile bool activePush   = false;
+volatile bool activeRight  = false;
 
 volatile uint32_t isrTimeBtn   = 0;
 volatile uint32_t isrTimeLeft  = 0;
@@ -38,7 +43,8 @@ volatile uint32_t isrTimeRight = 0;
 
 void IRAM_ATTR isrBtn() {
   uint32_t now = (uint32_t)(esp_timer_get_time() / 1000ULL);
-  if (now - isrTimeBtn > 40) { // 40ms debounce
+  if (!activeBtn && (now - isrTimeBtn > 40)) {
+    activeBtn = true;
     isrFlagBtn = true;
     isrTimeBtn = now;
   }
@@ -46,7 +52,8 @@ void IRAM_ATTR isrBtn() {
 
 void IRAM_ATTR isrLeverLeft() {
   uint32_t now = (uint32_t)(esp_timer_get_time() / 1000ULL);
-  if (now - isrTimeLeft > 40) {
+  if (!activeLeft && (now - isrTimeLeft > 40)) {
+    activeLeft = true;
     isrFlagLeft = true;
     isrTimeLeft = now;
   }
@@ -54,7 +61,8 @@ void IRAM_ATTR isrLeverLeft() {
 
 void IRAM_ATTR isrLeverPush() {
   uint32_t now = (uint32_t)(esp_timer_get_time() / 1000ULL);
-  if (now - isrTimePush > 40) {
+  if (!activePush && (now - isrTimePush > 40)) {
+    activePush = true;
     isrFlagPush = true;
     isrTimePush = now;
   }
@@ -62,7 +70,8 @@ void IRAM_ATTR isrLeverPush() {
 
 void IRAM_ATTR isrLeverRight() {
   uint32_t now = (uint32_t)(esp_timer_get_time() / 1000ULL);
-  if (now - isrTimeRight > 40) {
+  if (!activeRight && (now - isrTimeRight > 40)) {
+    activeRight = true;
     isrFlagRight = true;
     isrTimeRight = now;
   }
@@ -371,6 +380,23 @@ void loop() {
   bool curPush  = (digitalRead(LEVER_PUSH) == LOW);
   bool curBtn   = (digitalRead(BTN) == LOW);
 
+  // Release state reset: unlatch ISR only when the pin is physically HIGH (released)
+  // and at least 50ms has elapsed since the press event (suppresses release bounce)
+  if (!curLeft && (now - isrTimeLeft >= 50)) {
+    activeLeft = false;
+    leftHoldStart = 0;
+  }
+  if (!curRight && (now - isrTimeRight >= 50)) {
+    activeRight = false;
+    rightHoldStart = 0;
+  }
+  if (!curPush && (now - isrTimePush >= 50)) {
+    activePush = false;
+  }
+  if (!curBtn && (now - isrTimeBtn >= 50)) {
+    activeBtn = false;
+  }
+
   bool navLeft  = false;
   bool navRight = false;
   bool navPush  = false;
@@ -383,7 +409,7 @@ void loop() {
     leftHoldStart = now;
     lastLeftRepeat = now;
     Serial.println("[NAV] LEVER LEFT CLICK (ISR)");
-  } else if (curLeft && (now - leftHoldStart >= 350) && (now - lastLeftRepeat >= 80)) {
+  } else if (curLeft && (leftHoldStart > 0) && (now - leftHoldStart >= 600) && (now - lastLeftRepeat >= 160)) {
     navLeft = true;
     lastLeftRepeat = now;
   }
@@ -394,7 +420,7 @@ void loop() {
     rightHoldStart = now;
     lastRightRepeat = now;
     Serial.println("[NAV] LEVER RIGHT CLICK (ISR)");
-  } else if (curRight && (now - rightHoldStart >= 350) && (now - lastRightRepeat >= 80)) {
+  } else if (curRight && (rightHoldStart > 0) && (now - rightHoldStart >= 600) && (now - lastRightRepeat >= 160)) {
     navRight = true;
     lastRightRepeat = now;
   }
