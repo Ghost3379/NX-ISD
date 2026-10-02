@@ -83,7 +83,7 @@ User controls utilize dedicated **hardware interrupts** (`attachInterrupt`) with
 
 - **Zero-Latency Latching & Bounce Immunity:** Momentary lever flicks (15-25 ms) are latched in hardware within $<1\mu\text{s}$. Physical active-state tracking rejects release chatter, ensuring exactly one transition per click.
 - **Hardware Timer Debounce:** ISRs enforce a 40 ms hardware debounce window using `esp_timer_get_time()`, unlatching only after stable physical release.
-- **Hold-to-Repeat:** Continuous holds trigger an immediate click, followed by a 600 ms hold delay, then repeat smoothly every 160 ms.
+- **Hold-to-Repeat:** Continuous holds trigger an immediate click, followed by a 475 ms hold delay, then repeat smoothly every 160 ms.
 
 ---
 

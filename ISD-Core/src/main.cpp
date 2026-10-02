@@ -409,7 +409,7 @@ void loop() {
     leftHoldStart = now;
     lastLeftRepeat = now;
     Serial.println("[NAV] LEVER LEFT CLICK (ISR)");
-  } else if (curLeft && (leftHoldStart > 0) && (now - leftHoldStart >= 600) && (now - lastLeftRepeat >= 160)) {
+  } else if (curLeft && (leftHoldStart > 0) && (now - leftHoldStart >= 475) && (now - lastLeftRepeat >= 160)) {
     navLeft = true;
     lastLeftRepeat = now;
   }
@@ -420,7 +420,7 @@ void loop() {
     rightHoldStart = now;
     lastRightRepeat = now;
     Serial.println("[NAV] LEVER RIGHT CLICK (ISR)");
-  } else if (curRight && (rightHoldStart > 0) && (now - rightHoldStart >= 600) && (now - lastRightRepeat >= 160)) {
+  } else if (curRight && (rightHoldStart > 0) && (now - rightHoldStart >= 475) && (now - lastRightRepeat >= 160)) {
     navRight = true;
     lastRightRepeat = now;
   }
