@@ -675,10 +675,13 @@ private:
     // 4. Center Reference Hub / Level Target
     canvas.drawCircle(centerX, centerY, 5, COLOR_ORANGE_DARK);
 
-    // 5. Active 2D Spirit Level Bubble (Tilts in 2D with IMU roll & pitch)
+    // 5. Active 2D Spirit Level Bubble (Aligned with 90° rotated display frame)
     if (state.imuDataReady) {
-      float bx = state.roll * 0.75f;
-      float by = state.pitch * 0.75f;
+      // BNO085 axes mapped to screen rotation (tft.setRotation(3)):
+      // Physical Left/Right tilt corresponds to pitch (inverted: -state.pitch -> Screen X)
+      // Physical Forth/Back tilt corresponds to roll (-state.roll -> Screen Y)
+      float bx = -state.pitch * 0.75f;
+      float by = -state.roll * 0.75f;
       float dist = sqrtf(bx * bx + by * by);
       if (dist > 22.0f) {
         bx = (bx / dist) * 22.0f;
