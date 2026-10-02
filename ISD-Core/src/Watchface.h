@@ -56,8 +56,69 @@ private:
   PowerAction requestedPowerAction = PWR_ACT_NONE;
   bool isStandby = false;           // Display off standby state
 
+  // Lever-Push Hold-to-Charge state for App Menu entrance
+  uint32_t leverPushStartMs = 0;
+  bool appMenuTriggered = false;
+  float chargeProgress = 0.0f;
+
 public:
   Watchface(LGFX* tft) : canvas(tft), display(tft) {}
+
+  LGFX_Sprite* getCanvas() { return &canvas; }
+  uint16_t getColorBg() const { return COLOR_BG; }
+  uint16_t getColorOrangeBright() const { return COLOR_ORANGE_BRIGHT; }
+  uint16_t getColorOrangeMid() const { return COLOR_ORANGE_MID; }
+  uint16_t getColorOrangeDim() const { return COLOR_ORANGE_DIM; }
+  uint16_t getColorOrangeDark() const { return COLOR_ORANGE_DARK; }
+
+  bool checkAndClearAppMenuTrigger() {
+    if (appMenuTriggered) {
+      appMenuTriggered = false;
+      return true;
+    }
+    return false;
+  }
+
+  void playCyberTransition(bool toAppMenu, const SensorState& state) {
+    if (!initialized || !display) return;
+
+    // Keep outer technical frame and top status bar perfectly intact
+    canvas.fillRect(4, 4, 232, 24, COLOR_BG);
+    canvas.drawRect(4, 4, 232, 232, COLOR_ORANGE_DIM);
+    canvas.drawFastHLine(4, 28, 232, COLOR_ORANGE_DIM);
+
+    canvas.setTextSize(1);
+    canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
+    canvas.drawString("ISD-Core // ", 10, 10);
+    canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
+    canvas.drawString(toAppMenu ? "APP MENU" : "HOME", 82, 10);
+
+    // Battery Readout
+    char batBuf[16];
+    if (state.batPercent > 0.0f) {
+      int displayPct = (int)constrain(roundf(state.batPercent), 0.0f, 100.0f);
+      if (state.usbConnected || state.isCharging) {
+        snprintf(batBuf, sizeof(batBuf), "%d%% [CHG]", displayPct);
+      } else {
+        snprintf(batBuf, sizeof(batBuf), "%d%%", displayPct);
+      }
+      canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
+    } else {
+      snprintf(batBuf, sizeof(batBuf), "--%%");
+      canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
+    }
+    canvas.drawRightString(batBuf, 230, 10);
+
+    // Clear viewport with a short subtle terminal lag
+    canvas.fillRect(6, 29, 228, 203, COLOR_BG);
+
+    display->startWrite();
+    canvas.pushSprite(0, 0);
+    display->endWrite();
+
+    // Momentary tactical processing pause before target screen appears
+    delay(75);
+  }
 
   void applyBrightness() {
     if (display) {
@@ -111,7 +172,7 @@ public:
   }
 
   bool isAnimating() const {
-    return isTransitioning;
+    return isTransitioning || (leverPushStartMs > 0);
   }
 
   void startTransition(AppView target, int direction) {
@@ -163,10 +224,9 @@ public:
   void handleNavPush() {
     if (isTransitioning) return;
     if (currentView == VIEW_HOME) {
-      // Pushing lever from Home slides to Quickpanel and enters it!
-      startTransition(VIEW_QUICKPANEL, 1);
-      qpInTileMode = true;
-      qpFocusIndex = 0;
+      // Lever push on Home is dedicated to the 2.0s hold charge gesture.
+      // Quickpanel is accessed via lever right.
+      return;
     } else if (currentView == VIEW_QUICKPANEL) {
       if (qpInShutdownMenu) {
         // Confirm and trigger selected power action
@@ -256,121 +316,120 @@ public:
     initialized = true;
   }
 
-  void playBootAnimation() {
+  void renderBootFrame(float progress) {
+    canvas.fillScreen(COLOR_BG);
+
+    // Big Bold NX-ISD Text (Size 4)
+    canvas.setTextSize(4);
+    canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
+    canvas.drawCenterString("NX-ISD", 120, 68);
+
+    // Thick Loading Bar
+    const int barW = 160;
+    const int barH = 10;
+    const int barX = (240 - barW) / 2;
+    const int barY = 120;
+
+    // Track border & dark background
+    canvas.drawRect(barX - 1, barY - 1, barW + 2, barH + 2, COLOR_ORANGE_DIM);
+    canvas.fillRect(barX, barY, barW, barH, COLOR_ORANGE_DARK);
+
+    // Progress Fill
+    int fillW = (int)roundf(constrain(progress, 0.0f, 1.0f) * (float)barW);
+    if (fillW > 0) {
+      canvas.fillRect(barX, barY, fillW, barH, COLOR_ORANGE_BRIGHT);
+    }
+
+    // Version Tag Directly Under Loading Bar
+    canvas.setTextSize(1);
+    canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
+    canvas.drawCenterString("v0p3", 120, 140);
+
+    // Bottom Footer in the middle of the screen
+    canvas.setTextSize(1);
+    canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
+    canvas.drawCenterString("powered by ISD-Core", 120, 215);
+
+    canvas.pushSprite(0, 0);
+  }
+
+  void playBootSequence(volatile float* hwProgress, volatile bool* hwDone, uint32_t minDurationMs = 1750) {
     if (!initialized) return;
-
-    struct LineEntry {
-      char text[56];
-      uint16_t color;
-    };
-
-    LineEntry history[16];
-    int historyCount = 0;
-
-    auto pushHistory = [&](const char* text, uint16_t color) {
-      if (historyCount < 16) {
-        strncpy(history[historyCount].text, text, sizeof(history[historyCount].text) - 1);
-        history[historyCount].text[sizeof(history[historyCount].text) - 1] = '\0';
-        history[historyCount].color = color;
-        historyCount++;
-      }
-    };
-
-    auto redrawTerminal = [&](const char* activePrefix = nullptr, char spinnerChar = '\0') {
-      canvas.fillScreen(COLOR_BG);
-      canvas.setTextSize(1);
-      int y = 20;
-
-      for (int i = 0; i < historyCount; i++) {
-        canvas.setTextColor(history[i].color, COLOR_BG);
-        canvas.drawString(history[i].text, 12, y);
-        y += 14;
-      }
-
-      if (activePrefix != nullptr) {
-        canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-        canvas.drawString(activePrefix, 12, y);
-        if (spinnerChar != '\0') {
-          char sBuf[3] = { ' ', spinnerChar, '\0' };
-          canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-          canvas.drawString(sBuf, 12 + (int)strlen(activePrefix) * 6, y);
-        }
-      }
-
-      canvas.pushSprite(0, 0);
-    };
 
     auto isInterrupted = [&]() -> bool {
       return (digitalRead(BTN) == LOW || digitalRead(LEVER_PUSH) == LOW ||
               digitalRead(LEVER_LEFT) == LOW || digitalRead(LEVER_RIGHT) == LOW);
     };
 
-    const char spinFrames[] = { '/', '|', '\\', '-' };
+    uint32_t startMs = millis();
+    float displayedProgress = 0.02f;
 
-    auto runSpinnerTask = [&](const char* label, const char* finalSuffix, int ticks = 6) -> bool {
-      for (int t = 0; t < ticks; t++) {
-        if (isInterrupted()) return false;
-        redrawTerminal(label, spinFrames[t % 4]);
-        delay(75);
+    while (true) {
+      uint32_t now = millis();
+      uint32_t elapsed = now - startMs;
+
+      float currentHw = (hwProgress != nullptr) ? *hwProgress : 1.0f;
+      bool done = (hwDone != nullptr) ? *hwDone : true;
+
+      // Smoothly advance displayedProgress toward currentHw
+      float diff = currentHw - displayedProgress;
+      if (diff > 0.0f) {
+        float step = diff * 0.08f;
+        if (step < 0.003f) step = 0.003f;
+        if (step > 0.015f) step = 0.015f; // Prevents abrupt jumps
+        displayedProgress += step;
+        if (displayedProgress > currentHw) displayedProgress = currentHw;
       }
-      char completedLine[56];
-      snprintf(completedLine, sizeof(completedLine), "%s%s", label, finalSuffix);
-      pushHistory(completedLine, COLOR_ORANGE_BRIGHT);
-      redrawTerminal();
-      delay(120);
-      return true;
-    };
 
-    // Step 1: Initial line
-    pushHistory("// Firmware start", COLOR_ORANGE_DIM);
-    redrawTerminal();
-    delay(200);
+      renderBootFrame(displayedProgress);
 
-    // Step 2: Fetching data from Internal flash
-    if (!runSpinnerTask("Fetching data from Flash...", " [OK]", 6)) return;
+      // User interrupt: allow immediate skip only if background hardware bringup is complete
+      if (isInterrupted() && done) {
+        break;
+      }
 
-    // Step 3: Validating Firmware
-    if (!runSpinnerTask("Validating Firmware...", " [OK]", 6)) return;
-    pushHistory("    Name: ISD-Core", COLOR_ORANGE_MID);
-    redrawTerminal();
-    delay(100);
-    pushHistory("    Version: v0p2", COLOR_ORANGE_MID);
-    redrawTerminal();
-    delay(140);
+      // Check completion: hardware must be fully done, bar at 100%, and minimum duration met
+      if (done && displayedProgress >= 0.995f && elapsed >= minDurationMs) {
+        renderBootFrame(1.0f);
+        delay(120); // Crisp final pause at 100%
+        break;
+      }
 
-    // Step 4: Checking peripherals
-    if (!runSpinnerTask("Checking peripherals...", " [OK]", 6)) return;
-    pushHistory("    Buses: SPI @ 24MHz | I2C0", COLOR_ORANGE_MID);
-    redrawTerminal();
-    delay(100);
-    char sensorStr[48];
-    snprintf(sensorStr, sizeof(sensorStr), "    Sensors: BME680%s IMU%s",
-             HAL::envSensorReady ? " [OK]" : " [--]",
-             HAL::imuReady ? " [OK]" : " [--]");
-    pushHistory(sensorStr, COLOR_ORANGE_MID);
-    redrawTerminal();
-    delay(140);
+      delay(16); // ~60 FPS update rate
+    }
+  }
 
-    // Step 5: Preparing UI elements
-    if (!runSpinnerTask("Preparing UI elements...", " [OK]", 6)) return;
-    pushHistory("    Buffer: 8MB OPI PSRAM", COLOR_ORANGE_MID);
-    redrawTerminal();
-    delay(100);
-
-    // Step 6: Starting ISD-Core OS
-    if (!runSpinnerTask("Starting ISD-Core OS...", " [OK]", 5)) return;
-    pushHistory(">> READY", COLOR_ORANGE_BRIGHT);
-    redrawTerminal();
-    delay(300);
-
-    // Brief blank screen before revealing Home
-    canvas.fillScreen(COLOR_BG);
-    canvas.pushSprite(0, 0);
-    delay(100);
+  void playBootAnimation() {
+    float dummyHw = 1.0f;
+    bool dummyDone = true;
+    playBootSequence(&dummyHw, &dummyDone, 1750);
   }
 
   void render(const SensorState& state) {
     if (!initialized) return;
+
+    // Check if lever push is held on Home watchface to charge into App Menu
+    if (currentView == VIEW_HOME && !isTransitioning) {
+      if (state.inputLeverPush) {
+        if (leverPushStartMs == 0) {
+          leverPushStartMs = millis();
+        }
+        uint32_t elapsed = millis() - leverPushStartMs;
+        const uint32_t CHARGE_HOLD_DURATION_MS = 1200; // Snappy 1.2s charge
+        chargeProgress = constrain((float)elapsed / (float)CHARGE_HOLD_DURATION_MS, 0.0f, 1.0f);
+        if (elapsed >= CHARGE_HOLD_DURATION_MS) {
+          appMenuTriggered = true;
+          leverPushStartMs = 0;
+          chargeProgress = 0.0f;
+        }
+      } else {
+        leverPushStartMs = 0;
+        chargeProgress = 0.0f;
+      }
+    } else {
+      leverPushStartMs = 0;
+      chargeProgress = 0.0f;
+    }
 
     // Calculate transition interpolation with easeOutCubic curve
     int outgoingOffsetX = 0;
@@ -652,6 +711,21 @@ private:
     canvas.drawString(tempBuf, startTx, textY);
     canvas.drawCircle(startTx + tWidth + 2, textY + 1, 1, COLOR_ORANGE_MID);
     canvas.drawString("C", startTx + tWidth + 5, textY);
+
+    // 7. Tactical Compass Charge-Up (Hold LEVER_PUSH for 1.2s to enter App Menu)
+    if (chargeProgress > 0.0f) {
+      float sweepDeg = chargeProgress * 360.0f;
+      // Denser and brighter outline right on the circle perimeter (radii 39, 40, 41)
+      canvas.drawArc(centerX, centerY, 39, 41, -90.0f, -90.0f + sweepDeg, COLOR_ORANGE_BRIGHT);
+      // Outer density glow at radius 42
+      canvas.drawArc(centerX, centerY, 42, 42, -90.0f, -90.0f + sweepDeg, COLOR_ORANGE_MID);
+
+      // Bright tracking charge node directly on the circle
+      float headRad = (-90.0f + sweepDeg) * 0.0174532925f;
+      int headX = centerX + (int)roundf(cosf(headRad) * 40.5f);
+      int headY = centerY + (int)roundf(sinf(headRad) * 40.5f);
+      canvas.fillCircle(headX, headY, 2, COLOR_ORANGE_BRIGHT);
+    }
   }
 
   void renderNotifications(const SensorState& state, int offsetX) {

@@ -30,7 +30,9 @@ public:
   static bool imuReady;
   static bool rtcReady;
 
-  static void begin();
+  static bool pinsInited;
+  static void initPins();
+  static void begin(void (*onProgress)(float progress) = nullptr);
   static void setMatrixPower(bool on);
   static bool readFuelGauge(float &outVolt, float &outPct, float &outRate);
 };

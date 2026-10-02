@@ -7,10 +7,19 @@
 #include "SensorState.h"
 #include "HAL.h"
 #include "Watchface.h"
+#include "AppMenu.h"
 
 // Hardware and UI instances
 LGFX tft;
 Watchface watchface(&tft);
+AppMenu appMenu(&tft);
+
+enum AppScreenMode {
+  SCREEN_WATCHFACE,
+  SCREEN_APPMENU
+};
+AppScreenMode currentScreen = SCREEN_WATCHFACE;
+
 SensorState sharedState;
 SemaphoreHandle_t stateMutex = NULL;
 SemaphoreHandle_t i2cMutex = NULL;
@@ -133,12 +142,71 @@ void vSensorTask(void* pvParameters) {
     }
 
     // 3. Slow Sensor polling (every 1000ms: Fuel Gauge, RTC, BME680, OPT3001)
+    // Executed OUTSIDE the mutex so stateMutex lock time is strictly < 1 microsecond!
     bool doSlowPoll = (now - lastSlowPoll >= 1000);
+    float slowVolt = 0.0f, slowPct = 0.0f, slowRate = 0.0f;
+    bool slowFuelOk = false;
+    char slowTime[16] = "";
+    char slowDate[16] = "";
+    bool slowRtcOk = false;
+    bme68xData slowEnvData;
+    bool slowEnvOk = false;
+    float slowLux = 0.0f;
+    bool slowLightOk = false;
+
     if (doSlowPoll) {
       lastSlowPoll = now;
+
+      // Battery Fuel Gauge (MAX17048 with hardware I2C fallback)
+      slowFuelOk = HAL::readFuelGauge(slowVolt, slowPct, slowRate);
+
+      // RTC Real Time (RV-3028)
+      if (HAL::rtcReady) {
+        HAL::rtcClock.updateTime();
+        snprintf(slowTime, sizeof(slowTime), "%02d:%02d:%02d",
+                 HAL::rtcClock.getHours(),
+                 HAL::rtcClock.getMinutes(),
+                 HAL::rtcClock.getSeconds());
+        snprintf(slowDate, sizeof(slowDate), "%04d-%02d-%02d",
+                 HAL::rtcClock.getYear(),
+                 HAL::rtcClock.getMonth(),
+                 HAL::rtcClock.getDate());
+        slowRtcOk = true;
+      }
+
+      // BME680 Environmental (Temp, Humidity, Pressure, Gas)
+      if (HAL::envSensorReady) {
+        if (HAL::envSensor.fetchData()) {
+          HAL::envSensor.getData(slowEnvData);
+          slowEnvOk = true;
+        }
+        HAL::envSensor.setOpMode(BME68X_FORCED_MODE);
+      }
+
+      // Ambient Light (OPT3001)
+      if (HAL::lightSensorReady) {
+        OPT3001 res = HAL::lightSensor.readResult();
+        if (res.error == NO_ERROR) {
+          slowLux = res.lux;
+          slowLightOk = true;
+        }
+      }
+
+      static uint8_t logCounter = 0;
+      if (++logCounter >= 2) {
+        logCounter = 0;
+        Serial.printf("[PWR] USB:%d CHG:%d | BAT: %.2fV (%.1f%%) | Rate: %.1f%%/h\n",
+                      curUsb, curChg, slowVolt, slowPct, slowRate);
+        Serial.printf("[IMU] Yaw: %.1f deg | Roll: %.1f | Pitch: %.1f | Calib: %d/3\n",
+                      curYaw, curRoll, curPitch, curCalib);
+        if (slowEnvOk) {
+          Serial.printf("[ENV] T: %.1f C | H: %.0f %% | P: %.0f hPa\n",
+                        slowEnvData.temperature, slowEnvData.humidity, slowEnvData.pressure / 100.0f);
+        }
+      }
     }
 
-    // 4. Thread-safe state update
+    // 4. Thread-safe state update (< 1 microsecond memory copy)
     if (xSemaphoreTake(stateMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
       sharedState.inputBtn = curBtn;
       sharedState.inputLeverLeft = curLeft;
@@ -160,59 +228,24 @@ void vSensorTask(void* pvParameters) {
       }
 
       if (doSlowPoll) {
-        // Battery Fuel Gauge (MAX17048 with hardware I2C fallback)
-        float v = 0.0f, p = 0.0f, r = 0.0f;
-        if (HAL::readFuelGauge(v, p, r)) {
-          sharedState.batVoltage = v;
-          sharedState.batPercent = p;
-          sharedState.batChangeRate = r;
+        if (slowFuelOk) {
+          sharedState.batVoltage = slowVolt;
+          sharedState.batPercent = slowPct;
+          sharedState.batChangeRate = slowRate;
         }
-
-        static uint8_t logCounter = 0;
-        if (++logCounter >= 2) {
-          logCounter = 0;
-          Serial.printf("[PWR] USB:%d CHG:%d | BAT: %.2fV (%.1f%%) | Rate: %.1f%%/h\n",
-                        curUsb, curChg, sharedState.batVoltage, sharedState.batPercent,
-                        sharedState.batChangeRate);
-          Serial.printf("[IMU] Yaw: %.1f deg | Roll: %.1f | Pitch: %.1f | Calib: %d/3\n",
-                        sharedState.yaw, sharedState.roll, sharedState.pitch, sharedState.imuCalib);
+        if (slowRtcOk) {
+          memcpy(sharedState.rtcTime, slowTime, sizeof(sharedState.rtcTime));
+          memcpy(sharedState.rtcDate, slowDate, sizeof(sharedState.rtcDate));
         }
-
-        // RTC Real Time
-        if (HAL::rtcReady) {
-          HAL::rtcClock.updateTime();
-          snprintf(sharedState.rtcTime, sizeof(sharedState.rtcTime), "%02d:%02d:%02d",
-                   HAL::rtcClock.getHours(),
-                   HAL::rtcClock.getMinutes(),
-                   HAL::rtcClock.getSeconds());
-          snprintf(sharedState.rtcDate, sizeof(sharedState.rtcDate), "%04d-%02d-%02d",
-                   HAL::rtcClock.getYear(),
-                   HAL::rtcClock.getMonth(),
-                   HAL::rtcClock.getDate());
+        if (slowEnvOk) {
+          sharedState.temp = slowEnvData.temperature;
+          sharedState.hum = slowEnvData.humidity;
+          sharedState.press = slowEnvData.pressure / 100.0f; // Pa to hPa
+          sharedState.gas = slowEnvData.gas_resistance;
+          sharedState.envDataReady = true;
         }
-
-        // BME680 Environmental (Temp, Humidity, Pressure, Gas)
-        if (HAL::envSensorReady) {
-          if (HAL::envSensor.fetchData()) {
-            bme68xData data;
-            HAL::envSensor.getData(data);
-            sharedState.temp = data.temperature;
-            sharedState.hum = data.humidity;
-            sharedState.press = data.pressure / 100.0f; // Pa to hPa
-            sharedState.gas = data.gas_resistance;
-            sharedState.envDataReady = true;
-            Serial.printf("[ENV] T: %.1f C | H: %.0f %% | P: %.0f hPa\n",
-                          sharedState.temp, sharedState.hum, sharedState.press);
-          }
-          HAL::envSensor.setOpMode(BME68X_FORCED_MODE);
-        }
-
-        // Ambient Light
-        if (HAL::lightSensorReady) {
-          OPT3001 res = HAL::lightSensor.readResult();
-          if (res.error == NO_ERROR) {
-            sharedState.lightLux = res.lux;
-          }
+        if (slowLightOk) {
+          sharedState.lightLux = slowLux;
         }
       }
 
@@ -224,6 +257,20 @@ void vSensorTask(void* pvParameters) {
 }
 
 // ==================== INITIALIZATION & BOOT ====================
+
+struct BootSync {
+  volatile float hwProgress;
+  volatile bool hwDone;
+};
+static BootSync bootSync = { 0.05f, false };
+
+void vHardwareInitTask(void* pvParameters) {
+  HAL::begin([](float progress) {
+    bootSync.hwProgress = progress;
+  });
+  bootSync.hwDone = true;
+  vTaskDelete(NULL);
+}
 
 void setup() {
   // Release and deinit any pins held during deep sleep
@@ -243,10 +290,10 @@ void setup() {
     Serial.println("[PWR] Waking from Deep Sleep via User Input...");
   }
 
-  // 1. Initialize Hardware Pins & Buses (Completely Silent, Buzzer Muted)
-  HAL::begin();
+  // 1. Initialize Hardware Pins & Safety Gating (Muted buzzer, CS lines high, user inputs configured)
+  HAL::initPins();
 
-  // 2. Initialize ST7789 IPS Display
+  // 2. Initialize ST7789 IPS Display immediately
   tft.init();
   tft.setRotation(3);
   tft.setBrightness(220);
@@ -255,8 +302,32 @@ void setup() {
   // 3. Initialize Double-Buffered Watchface Sprite in PSRAM
   watchface.begin();
 
-  // 4. Play Retro Cyberpunk / TVA Terminal Boot Animation
-  watchface.playBootAnimation();
+  // 3b. Initialize AppMenu sharing zero-copy PSRAM canvas and palette with Watchface
+  appMenu.init(
+    watchface.getCanvas(),
+    watchface.getColorBg(),
+    watchface.getColorOrangeBright(),
+    watchface.getColorOrangeMid(),
+    watchface.getColorOrangeDim(),
+    watchface.getColorOrangeDark()
+  );
+
+  // 4. Render initial boot frame instantly
+  watchface.renderBootFrame(0.02f);
+
+  // 5. Launch Hardware Bring-up in Real Background Task on Core 0
+  xTaskCreatePinnedToCore(
+    vHardwareInitTask,
+    "HwInitTask",
+    6144,
+    NULL,
+    1,
+    NULL,
+    0
+  );
+
+  // 6. Play Smooth Boot Animation on Core 1 tracking real background hardware progress (~1.8s)
+  watchface.playBootSequence(&bootSync.hwProgress, &bootSync.hwDone, 1750);
 
   // 5. Create FreeRTOS Mutexes
   stateMutex = xSemaphoreCreateMutex();
@@ -300,7 +371,7 @@ void setup() {
 // ==================== MAIN UI LOOP (Core 1) ====================
 
 void loop() {
-  SensorState localState;
+  static SensorState localState;
   bool navLeft  = false;
   bool navRight = false;
   bool navPush  = false;
@@ -340,41 +411,80 @@ void loop() {
     prevUsb = localState.usbConnected;
   }
 
-  // 2. Handle Panel Navigation
-  if (navLeft) {
-    watchface.handleNavLeft();
-  }
-  if (navRight) {
-    watchface.handleNavRight();
-  }
-  if (navPush) {
-    watchface.handleNavPush();
-  }
-  if (navBtn) {
-    watchface.handleNavBack();
-  }
-
-  // 3. Process Requested Power Actions from Quickpanel Power Menu
-  PowerAction pwrAct = watchface.getRequestedPowerAction();
-  if (pwrAct != PWR_ACT_NONE) {
-    if (pwrAct == PWR_ACT_STANDBY) {
-      Serial.println("[PWR] Entering Standby mode (Display off)...");
-      watchface.enterStandby();
-      return;
-    } else if (pwrAct == PWR_ACT_RESTART) {
-      Serial.println("[PWR] Restarting system...");
-      watchface.renderPowerMessage("RESTARTING", "SYSTEM REBOOT IN PROGRESS", 2);
-      delay(800);
-      ESP.restart();
-    } else if (pwrAct == PWR_ACT_SHUTDOWN) {
-      Serial.println("[PWR] Shutdown disabled (pending dedicated hardware pull-up resistor).");
-      // Intentionally does nothing per user request
+  // 2. Dispatch UI by Current Screen
+  if (currentScreen == SCREEN_WATCHFACE) {
+    // Process Watchface Navigation
+    if (navLeft) {
+      watchface.handleNavLeft();
     }
+    if (navRight) {
+      watchface.handleNavRight();
+    }
+    if (navPush) {
+      watchface.handleNavPush();
+    }
+    if (navBtn) {
+      watchface.handleNavBack();
+    }
+
+    // Process Requested Power Actions from Quickpanel Power Menu
+    PowerAction pwrAct = watchface.getRequestedPowerAction();
+    if (pwrAct != PWR_ACT_NONE) {
+      if (pwrAct == PWR_ACT_STANDBY) {
+        Serial.println("[PWR] Entering Standby mode (Display off)...");
+        watchface.enterStandby();
+        return;
+      } else if (pwrAct == PWR_ACT_RESTART) {
+        Serial.println("[PWR] Restarting system...");
+        watchface.renderPowerMessage("RESTARTING", "SYSTEM REBOOT IN PROGRESS", 2);
+        delay(800);
+        ESP.restart();
+      } else if (pwrAct == PWR_ACT_SHUTDOWN) {
+        Serial.println("[PWR] Shutdown disabled (pending dedicated hardware pull-up resistor).");
+      }
+    }
+
+    // Render active watchface view to offscreen PSRAM sprite and push cleanly to ST7789
+    watchface.render(localState);
+
+    // Check if lever hold triggered the App Menu entrance
+    if (watchface.checkAndClearAppMenuTrigger()) {
+      Serial.println("[NAV] 1.2s Lever Charge Complete -> Triggering Cyberpunk Transition into App Menu!");
+      watchface.playCyberTransition(true, localState);
+      appMenu.reset();
+      currentScreen = SCREEN_APPMENU;
+      return;
+    }
+
+    // Max hardware SPI throughput during transitions, ~33 FPS when resting to save battery
+    delay(watchface.isAnimating() ? 1 : 30);
+
+  } else if (currentScreen == SCREEN_APPMENU) {
+    // App Menu Navigation
+    if (navBtn) {
+      // Exit App Menu back to Watchface Home
+      Serial.println("[NAV] Exiting App Menu back to Home Watchface");
+      watchface.playCyberTransition(false, localState);
+      currentScreen = SCREEN_WATCHFACE;
+      return;
+    }
+    if (navLeft) {
+      appMenu.handleNavLeft();
+    }
+    if (navRight) {
+      appMenu.handleNavRight();
+    }
+    if (navPush) {
+      appMenu.handleNavPush();
+    }
+
+    // Update 3D carousel physics
+    appMenu.update();
+
+    // Render 3D app deck to offscreen PSRAM sprite and push cleanly to ST7789
+    appMenu.render(localState);
+
+    // Dynamic framerate: 50+ FPS during 3D carousel sliding, 33 FPS at rest
+    delay(appMenu.isAnimating() ? 1 : 30);
   }
-
-  // 4. Render active view to offscreen PSRAM sprite and push cleanly to ST7789
-  watchface.render(localState);
-
-  // Max hardware SPI throughput during transitions, ~33 FPS when resting to save battery
-  delay(watchface.isAnimating() ? 1 : 30);
 }

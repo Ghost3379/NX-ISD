@@ -21,7 +21,7 @@ public:
       // flickering during sensor power dips. NOTE for v1p4: Once U15 (TXB0106)
       // is removed and the display runs directly on 3.3V, this clock can be
       // boosted to 40 MHz (43.5 FPS) or 80 MHz (86.8 FPS).
-      cfg.freq_write = 16000000;
+      cfg.freq_write = 80000000; // 80 MHz high-speed SPI write clock
       cfg.freq_read = 10000000;
       cfg.spi_3wire = false;
       cfg.use_lock = true;
