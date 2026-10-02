@@ -25,69 +25,57 @@ SemaphoreHandle_t stateMutex = NULL;
 SemaphoreHandle_t i2cMutex = NULL;
 TaskHandle_t sensorTaskHandle = NULL;
 
-// Background Sensor & Input Task running on Core 0
+// Hardware Interrupt Event Flags for zero-latency, non-blocking user input
+volatile bool isrFlagBtn   = false;
+volatile bool isrFlagLeft  = false;
+volatile bool isrFlagPush  = false;
+volatile bool isrFlagRight = false;
+
+volatile uint32_t isrTimeBtn   = 0;
+volatile uint32_t isrTimeLeft  = 0;
+volatile uint32_t isrTimePush  = 0;
+volatile uint32_t isrTimeRight = 0;
+
+void IRAM_ATTR isrBtn() {
+  uint32_t now = (uint32_t)(esp_timer_get_time() / 1000ULL);
+  if (now - isrTimeBtn > 40) { // 40ms debounce
+    isrFlagBtn = true;
+    isrTimeBtn = now;
+  }
+}
+
+void IRAM_ATTR isrLeverLeft() {
+  uint32_t now = (uint32_t)(esp_timer_get_time() / 1000ULL);
+  if (now - isrTimeLeft > 40) {
+    isrFlagLeft = true;
+    isrTimeLeft = now;
+  }
+}
+
+void IRAM_ATTR isrLeverPush() {
+  uint32_t now = (uint32_t)(esp_timer_get_time() / 1000ULL);
+  if (now - isrTimePush > 40) {
+    isrFlagPush = true;
+    isrTimePush = now;
+  }
+}
+
+void IRAM_ATTR isrLeverRight() {
+  uint32_t now = (uint32_t)(esp_timer_get_time() / 1000ULL);
+  if (now - isrTimeRight > 40) {
+    isrFlagRight = true;
+    isrTimeRight = now;
+  }
+}
+
+// Background Sensor Acquisition Task running on Core 0 (PRO CPU)
 void vSensorTask(void* pvParameters) {
   uint32_t lastSlowPoll = 0;
-  bool lastBtn   = false;
-  bool lastLeft  = false;
-  bool lastPush  = false;
-  bool lastRight = false;
-
-  uint32_t leftHoldStart = 0;
-  uint32_t lastLeftRepeat = 0;
-  uint32_t rightHoldStart = 0;
-  uint32_t lastRightRepeat = 0;
 
   for (;;) {
     uint32_t now = millis();
 
-    // 1. Fast polling of User Inputs (Active-LOW with INPUT_PULLUP)
-    bool curBtn   = (digitalRead(BTN) == LOW);
-    bool curLeft  = (digitalRead(LEVER_LEFT) == LOW);
-    bool curPush  = (digitalRead(LEVER_PUSH) == LOW);
-    bool curRight = (digitalRead(LEVER_RIGHT) == LOW);
-
-    // Detect single clicks on press transition (Active-LOW: HIGH -> LOW)
-    bool clickBtn  = (curBtn && !lastBtn);
-    bool clickPush = (curPush && !lastPush);
-
-    // Left lever hold-to-repeat: immediate initial click, 350ms hold delay, 80ms repeat
-    bool trigLeft = false;
-    if (curLeft) {
-      if (!lastLeft) {
-        trigLeft = true;
-        leftHoldStart = now;
-        lastLeftRepeat = now;
-        Serial.println("[NAV] LEVER LEFT CLICK");
-      } else if ((now - leftHoldStart >= 350) && (now - lastLeftRepeat >= 80)) {
-        trigLeft = true;
-        lastLeftRepeat = now;
-      }
-    }
-
-    // Right lever hold-to-repeat: immediate initial click, 350ms hold delay, 80ms repeat
-    bool trigRight = false;
-    if (curRight) {
-      if (!lastRight) {
-        trigRight = true;
-        rightHoldStart = now;
-        lastRightRepeat = now;
-        Serial.println("[NAV] LEVER RIGHT CLICK");
-      } else if ((now - rightHoldStart >= 350) && (now - lastRightRepeat >= 80)) {
-        trigRight = true;
-        lastRightRepeat = now;
-      }
-    }
-
-    if (clickBtn)  Serial.println("[NAV] BTN CLICK");
-    if (clickPush) Serial.println("[NAV] LEVER PUSH CLICK");
-
-    lastBtn   = curBtn;
-    lastLeft  = curLeft;
-    lastPush  = curPush;
-    lastRight = curRight;
-
-    // Power & charging detection (BQ25170 /PG on USB_DETECT and /STAT on BAT_STAT are open-drain, active-LOW)
+    // 1. Power & charging detection (BQ25170 /PG on USB_DETECT and /STAT on BAT_STAT)
     bool curUsb = (digitalRead(USB_DETECT) == LOW);
     bool curChg = (digitalRead(BAT_STAT) == LOW);
 
@@ -208,14 +196,6 @@ void vSensorTask(void* pvParameters) {
 
     // 4. Thread-safe state update (< 1 microsecond memory copy)
     if (xSemaphoreTake(stateMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
-      sharedState.inputBtn = curBtn;
-      sharedState.inputLeverLeft = curLeft;
-      sharedState.inputLeverPush = curPush;
-      sharedState.inputLeverRight = curRight;
-      if (clickBtn)  sharedState.evtNavBtn = true;
-      if (trigLeft)  sharedState.evtNavLeft = true;
-      if (clickPush) sharedState.evtNavPush = true;
-      if (trigRight) sharedState.evtNavRight = true;
       sharedState.usbConnected = curUsb;
       sharedState.isCharging = curChg;
 
@@ -252,7 +232,7 @@ void vSensorTask(void* pvParameters) {
       xSemaphoreGive(stateMutex);
     }
 
-    vTaskDelay(pdMS_TO_TICKS(20)); // 50 Hz poll rate
+    vTaskDelay(pdMS_TO_TICKS(10)); // 100 Hz sampling for IMU
   }
 }
 
@@ -292,6 +272,12 @@ void setup() {
 
   // 1. Initialize Hardware Pins & Safety Gating (Muted buzzer, CS lines high, user inputs configured)
   HAL::initPins();
+
+  // Attach zero-latency hardware interrupts for controls
+  attachInterrupt(digitalPinToInterrupt(BTN), isrBtn, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LEVER_LEFT), isrLeverLeft, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LEVER_PUSH), isrLeverPush, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LEVER_RIGHT), isrLeverRight, FALLING);
 
   // 2. Initialize ST7789 IPS Display immediately
   tft.init();
@@ -372,23 +358,70 @@ void setup() {
 
 void loop() {
   static SensorState localState;
+  static uint32_t leftHoldStart = 0;
+  static uint32_t lastLeftRepeat = 0;
+  static uint32_t rightHoldStart = 0;
+  static uint32_t lastRightRepeat = 0;
+
+  uint32_t now = millis();
+
+  // Instant direct hardware pin reads
+  bool curLeft  = (digitalRead(LEVER_LEFT) == LOW);
+  bool curRight = (digitalRead(LEVER_RIGHT) == LOW);
+  bool curPush  = (digitalRead(LEVER_PUSH) == LOW);
+  bool curBtn   = (digitalRead(BTN) == LOW);
+
   bool navLeft  = false;
   bool navRight = false;
   bool navPush  = false;
   bool navBtn   = false;
 
-  if (xSemaphoreTake(stateMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+  // 1. Consume hardware-interrupt clicks with hold-to-repeat
+  if (isrFlagLeft) {
+    isrFlagLeft = false;
+    navLeft = true;
+    leftHoldStart = now;
+    lastLeftRepeat = now;
+    Serial.println("[NAV] LEVER LEFT CLICK (ISR)");
+  } else if (curLeft && (now - leftHoldStart >= 350) && (now - lastLeftRepeat >= 80)) {
+    navLeft = true;
+    lastLeftRepeat = now;
+  }
+
+  if (isrFlagRight) {
+    isrFlagRight = false;
+    navRight = true;
+    rightHoldStart = now;
+    lastRightRepeat = now;
+    Serial.println("[NAV] LEVER RIGHT CLICK (ISR)");
+  } else if (curRight && (now - rightHoldStart >= 350) && (now - lastRightRepeat >= 80)) {
+    navRight = true;
+    lastRightRepeat = now;
+  }
+
+  if (isrFlagPush) {
+    isrFlagPush = false;
+    navPush = true;
+    Serial.println("[NAV] LEVER PUSH CLICK (ISR)");
+  }
+
+  if (isrFlagBtn) {
+    isrFlagBtn = false;
+    navBtn = true;
+    Serial.println("[NAV] BTN CLICK (ISR)");
+  }
+
+  // 2. Fetch fresh sensor telemetry from thread-safe bridge (< 1 microsecond)
+  if (xSemaphoreTake(stateMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
     localState = sharedState;
-    navLeft  = sharedState.evtNavLeft;
-    navRight = sharedState.evtNavRight;
-    navPush  = sharedState.evtNavPush;
-    navBtn   = sharedState.evtNavBtn;
-    sharedState.evtNavLeft  = false;
-    sharedState.evtNavRight = false;
-    sharedState.evtNavPush  = false;
-    sharedState.evtNavBtn   = false;
     xSemaphoreGive(stateMutex);
   }
+
+  // Pass real-time hardware hold state for compass charge gesture and active UI
+  localState.inputLeverPush = curPush;
+  localState.inputBtn = curBtn;
+  localState.inputLeverLeft = curLeft;
+  localState.inputLeverRight = curRight;
 
   // 1. Handle Standby (Display Off) State
   static bool prevUsb = false;
@@ -456,8 +489,8 @@ void loop() {
       return;
     }
 
-    // Max hardware SPI throughput during transitions, ~33 FPS when resting to save battery
-    delay(watchface.isAnimating() ? 1 : 30);
+    // Non-blocking yield: prevents CPU starvation while maintaining maximum responsiveness
+    delay(1);
 
   } else if (currentScreen == SCREEN_APPMENU) {
     // App Menu Navigation
@@ -484,7 +517,7 @@ void loop() {
     // Render 3D app deck to offscreen PSRAM sprite and push cleanly to ST7789
     appMenu.render(localState);
 
-    // Dynamic framerate: 50+ FPS during 3D carousel sliding, 33 FPS at rest
-    delay(appMenu.isAnimating() ? 1 : 30);
+    // Non-blocking yield: prevents CPU starvation while maintaining maximum responsiveness
+    delay(1);
   }
 }

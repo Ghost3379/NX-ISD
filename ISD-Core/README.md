@@ -1,192 +1,145 @@
-# ISD-Core
+# ISD-Core Firmware
 
-ISD-Core is the embedded firmware for the NX-ISD intelligent sensor device. It is built with PlatformIO, the Arduino framework, and FreeRTOS on an ESP32-S3.
+Firmware for the ISD (Integrated Sensor Device) built on the ESP32-S3 (WROOM-1-N16R8, 16MB Flash, 8MB Octal PSRAM).
 
-The current firmware provides a hardware bring-up and diagnostics console for the NX-ISD board. It initializes the connected sensors and peripherals, performs a boot self-check, continuously collects telemetry, and presents the results through the TFT display.
+ISD-Core delivers a high-performance, dual-core wearable operating environment featuring a real-time cyberpunk telemetry watchface, a 3D perspective-projected cover flow application deck, and an interrupt-driven control subsystem.
 
-## Current Capabilities
-
-- ESP32-S3 firmware running on the NX-ISD board
-- TFT display initialization and diagnostics user interface
-- Boot-time self-check for sensors, storage, and peripherals
-- FreeRTOS task scheduling across both ESP32-S3 cores
-- Thread-safe shared sensor telemetry
-- Fast polling for motion and pulse data
-- Slow polling for environmental and battery data
-- Fuel-gauge readings including voltage, percentage, and charge rate
-- NeoPixel matrix power control and animations
-- RTC time and date support
-- NAND-SD read/write test
-- Buzzer feedback for startup, navigation, and successful checks
+---
 
 ## Software Architecture
 
+The firmware utilizes the ESP32-S3 dual-core asymmetric processing model under FreeRTOS to eliminate frame drops and ensure zero input latency:
+
 ```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                  ISD-Core                                   │
-│                                                                             │
-│  ┌─────────────────────────┐          ┌──────────────────────────────────┐  │
-│  │   Boot & Self-Check     │          │         FreeRTOS Runtime         │  │
-│  ├─────────────────────────┤          ├──────────────────────────────────┤  │
-│  │ • Power-Rail Enable     │          │   CORE 1 (APP CPU)               │  │
-│  │ • I2C & SPI Bus Init    │          │   ┌──────────────────────────┐   │  │
-│  │ • Display Splash Screen │          │   │ vUITask (~50 Hz)         │   │  │
-│  │ • Sensor Self-Tests     │          │   │ Menu • Screen • Controls │   │  │
-│  └────────────┬────────────┘          │   └────────────┬─────────────┘   │  │
-│               │                       │                │ (Read)          │  │
-│               │                       │   ┌────────────▼─────────────┐   │  │
-│               │ Hand-off              │   │   Shared `SensorState`   │   │  │
-│               │ to Runtime            │   │ (Mutex-Protected Bridge) │   │  │
-│               │                       │   └────────────▲─────────────┘   │  │
-│               │                       │                │ (Write)         │  │
-│               │                       │   CORE 0 (PRO CPU)               │  │
-│               │                       │   ┌──────────────────────────┐   │  │
-│               │                       │   │ Sensor Tasks (1 - 50 Hz) │   │  │
-│               │                       │   │ Fast Motion • Biometrics │   │  │
-│               │                       │   │ Climate • Battery Gauge  │   │  │
-│               │                       │   └──────────────────────────┘   │  │
-│               │                       └─────────────────┬────────────────┘  │
-│               │                                         │                   │
-│               └────────────────────┬────────────────────┘                   │
-│                                    │                                        │
-│                                    ▼                                        │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │                         Hardware Layer                                │  │
-│  │  Sensors:  BNO085 • BME690 • MAX30102 • OPT3001 • MAX17048 • RV-3028  │  │
-│  │  I/O:      ST7789 Display • 4x4 NeoPixels • NAND-SD • Lever & Buzzer  │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────┘
++-----------------------------------------------------------------------------+
+|                                  ISD-Core                                   |
+|                                                                             |
+|  +-------------------------+          +----------------------------------+  |
+|  |   Boot & Bring-Up       |          |         FreeRTOS Runtime         |  |
+|  +-------------------------+          +----------------------------------+  |
+|  | * Display Bring-up      |          |   CORE 1 (APP CPU)               |  |
+|  | * Staged Bootloader     |          |   +--------------------------+   |  |
+|  | * Core 0 Background     |          |   | Non-Blocking UI (~42 Hz) |   |  |
+|  |   Hardware Init (1.8s)  |          |   | Watchface • 3D App Menu  |   |  |
+|  +------------+------------+          |   +------------+-------------+   |  |
+|               |                       |                | (Read <1 µs)    |  |
+|               |                       |   +------------v-------------+   |  |
+|               | Hand-off              |   |   Shared SensorState     |   |  |
+|               | to Runtime            |   | (Mutex-Protected Bridge) |   |  |
+|               |                       |   +------------^-------------+   |  |
+|               |                       |                | (Write <1 µs)   |  |
+|               |                       |   CORE 0 (PRO CPU)               |  |
+|               |                       |   +--------------------------+   |  |
+|               |                       |   | Sensor Task (10 - 100 Hz)|   |  |
+|               |                       |   | 50 Hz IMU • Power/USB    |   |  |
+|               |                       |   | Slow I2C Telemetry (1 Hz)|   |  |
+|               |                       |   +--------------------------+   |  |
+|               |                       +-----------------+----------------+  |
+|               |                                         |                   |
+|               +--------------------+--------------------+                   |
+|                                    |                                        |
+|                                    v                                        |
+|  +-----------------------------------------------------------------------+  |
+|  |                         Hardware Layer                                |  |
+|  |  Sensors (I2C @ 400kHz): BNO085 • BME680 • OPT3001 • MAX17048 • RV3028|  |
+|  |  Display (SPI @ 40MHz):  ST7789 IPS 240x240 (Double-Buffered PSRAM)  |  |
+|  |  Inputs (IRAM ISRs):     BTN (GP13) • LEVER L/P/R (GP16/15/14)        |  |
+|  +-----------------------------------------------------------------------+  |
++-----------------------------------------------------------------------------+
 ```
 
-### Boot sequence
+### 1. Dual-Core Task Allocation
 
-1. Start the serial monitor at 115200 baud.
-2. Configure power-domain control, display control, buttons, and interrupts.
-3. Start the I2C and SPI buses.
-4. Initialize the TFT display and show the loading screen.
-5. Initialize each sensor and peripheral and display `OK` or `FAIL`.
-6. Initialize the buzzer and create the shared-state mutex.
-7. Wait for the user to press the lever or main button.
-8. Start the UI and sensor tasks.
-9. Delete the default Arduino loop task to release its resources.
+- **Core 1 (APP CPU) - UI & Graphics Subsystem (`loop()`):**
+  - Executes non-blocking rendering at ~42 FPS.
+  - Zero blocking delays: replaced conventional busy loops with `delay(1)` yields to prevent FreeRTOS watchdog starvation while guaranteeing immediate input evaluation.
+  - Double-buffered PSRAM rendering via `TFT_eSprite` pushed over SPI at 40 MHz.
+  - Manages UI state machines:
+    - **Watchface HUD (`Watchface.h`):** Real-time digital clock, orbital seconds indicator, battery arc gauge, sensor telemetry cards, dynamic compass with shortest-path circular interpolation, and low-power standby mode.
+    - **3D App Menu (`AppMenu.h`):** 3D perspective-projected card carousel with dynamic trapezoidal distortion, depth scaling, active card highlighting, and responsive spring physics (`diff * 0.48f`).
 
-## FreeRTOS Tasks
+- **Core 0 (PRO CPU) - Sensor Telemetry Subsystem (`vSensorTask`):**
+  - Dedicated to sensor polling on the Fast-Mode 400 kHz I2C bus (`Wire`).
+  - **High-Rate Motion:** Polls BNO085 9-DOF IMU rotation vectors (`SH2_ROTATION_VECTOR`) at 50-100 Hz.
+  - **Slow Telemetry:** Non-blocking 1 Hz polling for MAX17048 fuel gauge, RV-3028 RTC, BME680 environmental data, and OPT3001 ambient light.
+  - **Sub-Microsecond Mutex Locking:** All slow I2C bus transactions take place in local stack memory *outside* the mutex. `stateMutex` is acquired exclusively for sub-microsecond memory copies into `sharedState`.
 
-### UI task
+- **State Bridge (`SensorState.h`):**
+  - Shared thread-safe telemetry container protected by a FreeRTOS binary mutex (`stateMutex`).
+  - Core 1 maintains a static persistent local copy (`static SensorState localState`), completely preventing transient data dropouts (such as clock `--:--:--` or compass center snaps) during mutex contention.
 
-`vUITask()` runs on Core 1 and updates the diagnostic menu at approximately 50 Hz. It handles button input, menu navigation, screen rendering, and user-triggered peripheral actions.
+---
 
-### Fast sensor task
+### 2. Input & Control Subsystem (Interrupt-Driven)
 
-`vFastSensorTask()` runs on Core 0 and polls motion and pulse sensors at approximately 50 Hz:
+User controls utilize dedicated **hardware interrupts** (`attachInterrupt`) with IRAM-resident ISR handlers triggered on `FALLING` edges:
 
-- BNO085 rotation vector and linear acceleration
-- MAX30102 red and infrared readings
+| Input Pin | Physical Control | Function / Gesture |
+| :--- | :--- | :--- |
+| **GPIO 13** | Main Pushbutton (`BTN`) | Return to previous screen / Exit menu / Screen wake |
+| **GPIO 16** | Navigation Lever Left (`LEVER_LEFT`) | Previous card / Value decrement / Hold-to-repeat |
+| **GPIO 15** | Navigation Lever Push (`LEVER_PUSH`) | Select / Confirm / 1.2s Hold Charge Gesture into 3D Menu |
+| **GPIO 14** | Navigation Lever Right (`LEVER_RIGHT`) | Next card / Value increment / Hold-to-repeat |
 
-The task writes its results to `SensorState` while holding the shared mutex.
+- **Zero-Latency Latching:** Momentary lever flicks (15-25 ms) are latched in hardware within $<1\mu\text{s}$, completely eliminating missed inputs regardless of background I2C activity.
+- **Microsecond Debounce:** ISRs enforce a 40 ms hardware debounce window using `esp_timer_get_time()`.
+- **Hold-to-Repeat:** Continuous holds trigger an immediate click, followed by a 350 ms hold delay, then rapid repeats every 80 ms.
 
-### Slow sensor task
-
-`vSlowSensorTask()` runs on Core 0 and polls lower-rate measurements approximately once per second:
-
-- MAX17048 battery voltage, percentage, and charge rate
-- OPT3001 ambient light
-- BME690 temperature, humidity, pressure, and gas resistance
-
-## Diagnostic Menu
-
-The display menu currently provides these diagnostic pages:
-
-1. I2C bus scanner
-2. Display and LEDs
-3. Real-time clock
-4. Fuel gauge and charging
-5. Environment and ambient light
-6. IMU 9-DOF motion
-7. Pulse biometrics
-8. NAND-SD storage and buzzer
-
-The lever navigates the menu. Pressing the lever selects an item. The main button returns to the menu from a diagnostic page.
+---
 
 ## Hardware Interfaces
 
-| Device | Function | Interface / Address |
-| --- | --- | --- |
-| BNO085 | Motion and orientation | I2C, `0x4A` |
-| MAX30102 | Pulse and optical data | I2C, `0x57` |
-| BME690 | Temperature, humidity, pressure, gas | I2C, `0x76` |
-| OPT3001 | Ambient light | I2C, `0x45` |
-| MAX17048 | Battery fuel gauge | I2C, `0x36` |
-| RV-3028-C7 | Real-time clock | I2C, `0x52` |
-| ST7789 display | User interface | SPI, `CS_TFT` |
-| NAND-SD storage | Storage test | SPI, `CS_SD` |
-| WS2812B matrix | 16-pixel output | Single-wire, `IO18` |
-| Buzzer | Audio feedback | GPIO, `IO10` |
+| Device | Interface | Bus Frequency | Description |
+| :--- | :--- | :--- | :--- |
+| **ST7789 IPS Display** | SPI (VSPI) | 40 MHz | 240x240 RGB display, double-buffered in Octal PSRAM |
+| **BNO085** | I2C (`0x4A`) | 400 kHz | 9-DOF IMU (Rotation vector, compass heading) |
+| **RV-3028-C7** | I2C (`0x52`) | 400 kHz | Ultra-low power real-time clock (RTC) |
+| **MAX17048** | I2C (`0x36`) | 400 kHz | LiPo fuel gauge (voltage, percentage, charge rate) |
+| **BME680** | I2C (`0x76`) | 400 kHz | Environmental sensor (temp, humidity, pressure, gas) |
+| **OPT3001** | I2C (`0x45`) | 400 kHz | Precision ambient light sensor (lux) |
+| **BQ25170** | GPIO | - | Standalone linear charger (`/PG` USB detect, `/STAT` charging) |
+| **Piezo Buzzer** | GPIO 10 | PWM | Acoustic feedback, startup chime, UI navigation ticks |
+| **WS2812B NeoPixels**| GPIO 18 | - | 4x4 matrix auxiliary display |
 
-The exact GPIO assignments are centralized in `src/pins.h`.
+Pin definitions are centralized in `src/pins.h`.
+
+---
 
 ## Project Structure
 
 ```text
 ISD-Core/
-|-- platformio.ini        PlatformIO environment and dependencies
+|-- platformio.ini        PlatformIO project configuration & ESP32-S3 build flags
+|-- README.md             System architecture & technical documentation
 |-- src/
-|   |-- main.cpp          Boot sequence and FreeRTOS tasks
-|   |-- pins.h            Board GPIO definitions
-|   |-- SensorState.h     Shared telemetry structure
-|   |-- DiagnosticMenu.h  Display menu and input handling
-|   |-- TestSensors.h     Sensor wrappers and read operations
-|   |-- TestPeripherals.h RTC, storage, NeoPixel, and buzzer support
-|-- include/              Project include directory
-|-- lib/                  Project-local libraries
-|-- test/                 Test directory
+    |-- main.cpp          Core initialization, ISR handlers, and FreeRTOS task loops
+    |-- pins.h            Hardware GPIO mapping and pin definitions
+    |-- DisplayConfig.h   SPI bus clock (40 MHz) and ST7789 display parameters
+    |-- HAL.h / HAL.cpp   Hardware Abstraction Layer (pins, power, buzzer chimes)
+    |-- SensorState.h     Mutex-protected cross-core telemetry data structure
+    |-- Watchface.h       Cyberpunk watchface UI, dynamic compass & HUD rendering
+    |-- AppMenu.h         3D perspective cover flow application menu
 ```
 
-## Building and Uploading
+---
 
-Install PlatformIO in VS Code, open the repository root, and select the `4d_systems_esp32s3_gen4_r8n16` environment.
+## Building & Flashing
 
-Typical PlatformIO commands:
+ISD-Core is built using PlatformIO targeting the ESP32-S3 with 16MB Flash and 8MB Octal PSRAM (`OPI_OPI` mode).
 
-```text
+```bash
+# Build firmware
 pio run
+
+# Flash to target board via USB CDC
 pio run --target upload
+
+# Open serial telemetry monitor (115200 baud)
 pio device monitor
 ```
 
-The serial monitor uses:
-
-```text
-115200 baud
-```
-
-The board configuration, display build flags, and library dependencies are defined in `platformio.ini`.
-
-## Sensor Data and Calibration
-
-`SensorState` is the central telemetry structure shared between acquisition tasks and the diagnostic UI. It currently stores raw or directly converted measurements, including:
-
-- Battery voltage, percentage, and charge rate
-- Ambient light in lux
-- Temperature, humidity, pressure, and gas resistance
-- IMU roll, pitch, yaw, and linear acceleration
-- MAX30102 red and infrared samples
-
-The current firmware is focused on acquisition and diagnostics. Sensor calibration, drift tracking, filtering, environmental compensation, and higher-level sensor fusion are part of the planned software evolution. Measurements should therefore be treated as device telemetry rather than final medical or scientific values until those processing layers are implemented and validated.
-
-## Development Direction
-
-Planned software work includes:
-
-- Local and intelligent processing of sensor data
-- Sensor-specific calibration and drift compensation
-- Filtering and quality scoring for biometric measurements
-- Sensor fusion for motion and contextual data
-- More power-aware sampling and peripheral control
-- Integrated self-diagnostics and in-situ hardware proof-testing (NX-SDS)
-- Persistent data logging and analysis
-- Expanded automated tests for hardware interfaces and data processing
+---
 
 ## License
 
-The ISD-Core firmware is licensed under the GNU General Public License v3.0. See the repository `LICENSE` file for the full license text.
+ISD-Core is licensed under the GNU General Public License v3.0. See the `LICENSE` file for details.

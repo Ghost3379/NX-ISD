@@ -92,8 +92,8 @@ public:
 
   void update() {
     float diff = targetScrollPos - scrollPos;
-    if (fabsf(diff) > 0.005f) {
-      scrollPos += diff * 0.35f; // Fast, responsive spring lerp
+    if (fabsf(diff) > 0.003f) {
+      scrollPos += diff * 0.48f; // Crisp, instant spring response
     } else {
       scrollPos = targetScrollPos;
     }
