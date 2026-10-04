@@ -81,16 +81,25 @@ void HAL::begin(void (*onProgress)(float progress)) {
       rtcClock.setToCompilerTime();
     }
   }
-  delay(60);
-
-  lightSensor.begin(0x44);
-  OPT3001_Config optCfg;
-  optCfg.RangeNumber = 0b1100;
-  optCfg.ConvertionTime = 0b1;
-  optCfg.Latch = 0b1;
-  optCfg.ModeOfConversionOperation = 0b11;
-  lightSensorReady = (lightSensor.writeConfig(optCfg) == NO_ERROR);
-  delay(60);
+  // OPT3001 Ambient Light (Probe 0x45 first, fallback 0x44)
+  uint8_t optAddr = 0x45;
+  Wire.beginTransmission(0x45);
+  if (Wire.endTransmission() != 0) {
+    optAddr = 0x44;
+  }
+  Wire.beginTransmission(optAddr);
+  if (Wire.endTransmission() == 0) {
+    lightSensor.begin(optAddr);
+    OPT3001_Config optCfg;
+    optCfg.RangeNumber = 0b1100;
+    optCfg.ConvertionTime = 0b1;
+    optCfg.Latch = 0b1;
+    optCfg.ModeOfConversionOperation = 0b11;
+    lightSensorReady = (lightSensor.writeConfig(optCfg) == NO_ERROR);
+  } else {
+    lightSensorReady = false;
+  }
+  delay(40);
   if (onProgress) onProgress(0.55f);
 
   envSensor.begin(0x76, Wire);
@@ -100,13 +109,19 @@ void HAL::begin(void (*onProgress)(float progress)) {
     envSensor.setHeaterProf(300, 100);
     envSensor.setOpMode(BME68X_FORCED_MODE);
   }
-  delay(100);
+  delay(60);
 
-  heartRateReady = heartRateSensor.begin(Wire, I2C_SPEED_FAST);
-  if (heartRateReady) {
-    heartRateSensor.shutDown(); // Keep LEDs off
+  // MAX30105 Biometrics (Probe 0x57 before initializing to prevent bus hangs)
+  Wire.beginTransmission(0x57);
+  if (Wire.endTransmission() == 0) {
+    heartRateReady = heartRateSensor.begin(Wire, I2C_SPEED_FAST);
+    if (heartRateReady) {
+      heartRateSensor.shutDown(); // Keep LEDs off
+    }
+  } else {
+    heartRateReady = false;
   }
-  delay(80);
+  delay(40);
   if (onProgress) onProgress(0.75f);
 
   imuReady = imuSensor.begin_I2C(0x4A, &Wire);
@@ -122,6 +137,20 @@ void HAL::begin(void (*onProgress)(float progress)) {
 
 void HAL::setMatrixPower(bool on) {
   digitalWrite(PWR_NPM, on ? HIGH : LOW);
+}
+
+void HAL::buzzPip(uint16_t freqHz, uint16_t durationMs) {
+  if (freqHz == 0 || durationMs == 0) return;
+  // Subtle soft micro-click: brief 15us pulse every 280us (~3.5kHz)
+  uint32_t ms = (durationMs > 8) ? 8 : durationMs;
+  uint32_t cycles = (ms * 1000UL) / 300UL;
+  for (uint32_t i = 0; i < cycles; i++) {
+    digitalWrite(BUZZER, HIGH);
+    delayMicroseconds(15); // Low duty cycle produces a gentle soft tick instead of a loud screech
+    digitalWrite(BUZZER, LOW);
+    delayMicroseconds(285);
+  }
+  digitalWrite(BUZZER, LOW);
 }
 
 bool HAL::readFuelGauge(float &outVolt, float &outPct, float &outRate) {

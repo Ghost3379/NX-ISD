@@ -78,8 +78,22 @@ public:
     }
   }
 
+  bool requestedAppLaunch = false;
+  AppId requestedApp = APP_TOOLS;
+
   void handleNavPush() {
-    Serial.printf("[APPMENU] Selected App: %s (Index %d)\n", appNames[selectedIndex], selectedIndex);
+    requestedAppLaunch = true;
+    requestedApp = (AppId)selectedIndex;
+    Serial.printf("[APPMENU] Launching App: %s (Index %d)\n", appNames[selectedIndex], selectedIndex);
+  }
+
+  bool checkAndClearLaunch(AppId &outApp) {
+    if (requestedAppLaunch) {
+      requestedAppLaunch = false;
+      outApp = requestedApp;
+      return true;
+    }
+    return false;
   }
 
   int getSelectedIndex() const {

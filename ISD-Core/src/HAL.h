@@ -34,5 +34,6 @@ public:
   static void initPins();
   static void begin(void (*onProgress)(float progress) = nullptr);
   static void setMatrixPower(bool on);
+  static void buzzPip(uint16_t freqHz = 3500, uint16_t durationMs = 15);
   static bool readFuelGauge(float &outVolt, float &outPct, float &outRate);
 };

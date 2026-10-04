@@ -8,15 +8,19 @@
 #include "HAL.h"
 #include "Watchface.h"
 #include "AppMenu.h"
+#include "apps/tools/UplinkBridge.h"
+#include "apps/tools/AppTools.h"
 
 // Hardware and UI instances
 LGFX tft;
 Watchface watchface(&tft);
 AppMenu appMenu(&tft);
+AppTools appTools(&tft);
 
 enum AppScreenMode {
   SCREEN_WATCHFACE,
-  SCREEN_APPMENU
+  SCREEN_APPMENU,
+  SCREEN_APP_TOOLS
 };
 AppScreenMode currentScreen = SCREEN_WATCHFACE;
 
@@ -188,19 +192,6 @@ void vSensorTask(void* pvParameters) {
           slowLightOk = true;
         }
       }
-
-      static uint8_t logCounter = 0;
-      if (++logCounter >= 2) {
-        logCounter = 0;
-        Serial.printf("[PWR] USB:%d CHG:%d | BAT: %.2fV (%.1f%%) | Rate: %.1f%%/h\n",
-                      curUsb, curChg, slowVolt, slowPct, slowRate);
-        Serial.printf("[IMU] Yaw: %.1f deg | Roll: %.1f | Pitch: %.1f | Calib: %d/3\n",
-                      curYaw, curRoll, curPitch, curCalib);
-        if (slowEnvOk) {
-          Serial.printf("[ENV] T: %.1f C | H: %.0f %% | P: %.0f hPa\n",
-                        slowEnvData.temperature, slowEnvData.humidity, slowEnvData.pressure / 100.0f);
-        }
-      }
     }
 
     // 4. Thread-safe state update (< 1 microsecond memory copy)
@@ -307,6 +298,16 @@ void setup() {
     watchface.getColorOrangeDark()
   );
 
+  // 3c. Initialize AppTools sharing zero-copy PSRAM canvas and palette
+  appTools.init(
+    watchface.getCanvas(),
+    watchface.getColorBg(),
+    watchface.getColorOrangeBright(),
+    watchface.getColorOrangeMid(),
+    watchface.getColorOrangeDim(),
+    watchface.getColorOrangeDark()
+  );
+
   // 4. Render initial boot frame instantly
   watchface.renderBootFrame(0.02f);
 
@@ -359,6 +360,9 @@ void setup() {
     &sensorTaskHandle,
     0
   );
+
+  // 8. Initialize NX-Uplink Companion Bridge and NeoPixel Matrix
+  UplinkBridge::begin();
 
   Serial.println("\n[NX-ISD] Watchface active. Double-buffering enabled. Audio muted.");
 }
@@ -470,6 +474,9 @@ void loop() {
     prevUsb = localState.usbConnected;
   }
 
+  // 1b. Update NX-Uplink Companion Bridge (serial telemetry & commands & LED matrix)
+  UplinkBridge::update(localState);
+
   // 2. Dispatch UI by Current Screen
   if (currentScreen == SCREEN_WATCHFACE) {
     // Process Watchface Navigation
@@ -537,6 +544,17 @@ void loop() {
       appMenu.handleNavPush();
     }
 
+    // Check if an app was launched
+    AppId launchApp;
+    if (appMenu.checkAndClearLaunch(launchApp)) {
+      if (launchApp == APP_TOOLS) {
+        Serial.println("[NAV] Entering TOOLS App View!");
+        currentScreen = SCREEN_APP_TOOLS;
+        appTools.onEnter();
+        return;
+      }
+    }
+
     // Update 3D carousel physics
     appMenu.update();
 
@@ -544,6 +562,30 @@ void loop() {
     appMenu.render(localState);
 
     // Non-blocking yield: prevents CPU starvation while maintaining maximum responsiveness
+    delay(1);
+
+  } else if (currentScreen == SCREEN_APP_TOOLS) {
+    // Tools Navigation
+    if (navBtn) {
+      // Exit Tools back to App Menu
+      Serial.println("[NAV] Exiting TOOLS App back to App Menu");
+      currentScreen = SCREEN_APPMENU;
+      return;
+    }
+    if (navLeft) {
+      appTools.handleNavLeft();
+    }
+    if (navRight) {
+      appTools.handleNavRight();
+    }
+    if (navPush) {
+      appTools.handleNavPush();
+    }
+
+    // Render Tools screen to offscreen PSRAM sprite and push cleanly to ST7789
+    appTools.render(localState);
+
+    // Non-blocking yield
     delay(1);
   }
 }
