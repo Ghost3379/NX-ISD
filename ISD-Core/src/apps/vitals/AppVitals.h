@@ -42,22 +42,17 @@ private:
   uint32_t scanDurationMs = 15000; // 15-second calibrated session
   float scanProgress = 0.0f;       // 0.0f .. 1.0f
 
-  // Live Optical Sampling & Signal Processing
+  // Live Optical Sampling & Proven Diagnostic Pipeline
   static const int PPG_HISTORY_SIZE = 110;
-  int16_t ppgWave[PPG_HISTORY_SIZE];
+  uint32_t ppgWave[PPG_HISTORY_SIZE];
   int ppgHead = 0;
+  float smoothSpan = 150.0f;
 
-  // Real-time DC Baseline & AC Oscilloscope Filter
-  float dcFilter = 0.0f;
-  float acSignal = 0.0f;
-  float prevAcSignal = 0.0f;
-  float peakAc = 60.0f;
-
-  // Adaptive Systolic Peak & Refractory Beat Detector
-  bool isRising = false;
-  float localPeakVal = 0.0f;
+  // Proven SparkFun PBA Beat Detection & Rate Averaging (from Diagnostic firmware)
   uint32_t lastBeatTime = 0;
   float liveBpm = 0.0f;
+  float rates[4] = {0, 0, 0, 0};
+  uint8_t rateSpot = 0;
   int beatCount = 0;
   static const int MAX_BEAT_INTERVALS = 32;
   uint32_t beatIntervals[MAX_BEAT_INTERVALS];
@@ -169,15 +164,12 @@ public:
     scanProgress = 0.0f;
     beatCount = 0;
     beatIntervalIndex = 0;
+    rateSpot = 0;
+    memset(rates, 0, sizeof(rates));
     memset(beatIntervals, 0, sizeof(beatIntervals));
     memset(ppgWave, 0, sizeof(ppgWave));
     ppgHead = 0;
-    dcFilter = 0.0f;
-    acSignal = 0.0f;
-    prevAcSignal = 0.0f;
-    peakAc = 60.0f;
-    isRising = false;
-    localPeakVal = 0.0f;
+    smoothSpan = 150.0f;
     liveBpm = 0.0f;
     liveSpo2 = 98.0f;
     redSum = 0;
@@ -191,6 +183,8 @@ public:
 
   void stopSensor() {
     if (sensorAwake && HAL::heartRateReady) {
+      HAL::heartRateSensor.setPulseAmplitudeRed(0);
+      HAL::heartRateSensor.setPulseAmplitudeIR(0);
       HAL::heartRateSensor.shutDown();
       sensorAwake = false;
     }
@@ -199,11 +193,11 @@ public:
   void wakeSensor() {
     if (HAL::heartRateReady) {
       HAL::heartRateSensor.wakeUp();
-      // Setup MAX30105 for Red + IR optical sampling:
-      // powerLevel = 0x28 (~8.5mA, optimal tissue reflection without ADC saturation)
-      // sampleAverage = 4, ledMode = 2 (Red + IR), sampleRate = 200 (50Hz effective output), pulseWidth = 411 (18-bit), adcRange = 4096
-      HAL::heartRateSensor.setup(0x28, 4, 2, 200, 411, 4096);
-      HAL::heartRateSensor.clearFIFO();
+      // Setup MAX30105 using exact diagnostic firmware parameters:
+      // powerLevel = 0x24, sampleAverage = 4, ledMode = 2 (Red + IR), sampleRate = 400, pulseWidth = 411, adcRange = 4096
+      HAL::heartRateSensor.setup(0x24, 4, 2, 400, 411, 4096);
+      HAL::heartRateSensor.setPulseAmplitudeRed(0x24);
+      HAL::heartRateSensor.setPulseAmplitudeIR(0x24);
       sensorAwake = true;
     }
   }
@@ -211,180 +205,106 @@ public:
   void updateSampling(const SensorState& state) {
     if (currentView != VITALS_VIEW_SCAN || !sensorAwake || !HAL::heartRateReady) return;
 
-    // Check for fresh optical samples from MAX30105
-    HAL::heartRateSensor.check();
+    // Read direct Red and IR values via getRed() and getIR() (proven diagnostic method)
+    uint32_t ir = HAL::heartRateSensor.getIR();
+    uint32_t red = HAL::heartRateSensor.getRed();
 
-    // Drain all samples currently available in the hardware FIFO
-    while (HAL::heartRateSensor.available()) {
-      uint32_t ir = HAL::heartRateSensor.getFIFOIR();
-      uint32_t red = HAL::heartRateSensor.getFIFORed();
-      HAL::heartRateSensor.nextSample(); // Advance FIFO tail pointer!
+    // Finger detection threshold from diagnostic firmware
+    bool fingerPresent = (ir > 20000);
 
-      // Finger contact detection threshold (ambient < 15k; finger contact >= 35k)
-      bool fingerPresent = (ir > 35000);
+    if (scanState == SCAN_WAITING_FOR_FINGER) {
+      if (fingerPresent) {
+        scanState = SCAN_ACTIVE;
+        scanStartTime = millis();
+        memset(ppgWave, 0, sizeof(ppgWave));
+        ppgHead = 0;
+        rateSpot = 0;
+        memset(rates, 0, sizeof(rates));
+        HAL::buzzPip(4400, 20);
+      }
+    } else if (scanState == SCAN_ACTIVE) {
+      if (!fingerPresent) {
+        // Lost contact: reset back to waiting and show physical sensor locator
+        scanState = SCAN_WAITING_FOR_FINGER;
+        scanStartTime = 0;
+        scanProgress = 0.0f;
+        memset(ppgWave, 0, sizeof(ppgWave));
+        return;
+      }
 
-      if (scanState == SCAN_WAITING_FOR_FINGER) {
-        if (fingerPresent) {
-          scanState = SCAN_ACTIVE;
-          scanStartTime = millis();
-          dcFilter = (float)ir;
-          acSignal = 0.0f;
-          prevAcSignal = 0.0f;
-          peakAc = 60.0f;
-          isRising = false;
-          localPeakVal = 0.0f;
-          memset(ppgWave, 0, sizeof(ppgWave));
-          ppgHead = 0;
-          HAL::buzzPip(4400, 20);
-        }
-      } else if (scanState == SCAN_ACTIVE) {
-        if (!fingerPresent) {
-          // Lost contact: reset back to waiting and show physical sensor locator
-          scanState = SCAN_WAITING_FOR_FINGER;
-          scanStartTime = 0;
-          scanProgress = 0.0f;
-          dcFilter = 0.0f;
-          acSignal = 0.0f;
-          prevAcSignal = 0.0f;
-          memset(ppgWave, 0, sizeof(ppgWave));
-          return;
-        }
+      uint32_t now = millis();
+      uint32_t elapsed = now - scanStartTime;
+      scanProgress = constrain((float)elapsed / (float)scanDurationMs, 0.0f, 1.0f);
 
-        uint32_t now = millis();
-        uint32_t elapsed = now - scanStartTime;
-        scanProgress = constrain((float)elapsed / (float)scanDurationMs, 0.0f, 1.0f);
+      // Record PPG waveform sample
+      ppgWave[ppgHead] = ir;
+      ppgHead = (ppgHead + 1) % PPG_HISTORY_SIZE;
 
-        // 1. DC Baseline tracking (High-pass filter removing massive tissue DC offset)
-        if (dcFilter < 1000.0f) {
-          dcFilter = (float)ir;
-        } else {
-          // Alpha of 0.04 at 50Hz gives ~0.5s time constant (passes 0.5-4Hz cardiac pulses)
-          dcFilter = (dcFilter * 0.96f) + ((float)ir * 0.04f);
-        }
+      // Heartbeat detection using proven SparkFun PBA algorithm with 4-sample running average
+      if (checkForBeat((int32_t)ir)) {
+        isBeating = true;
+        beatAnimTimer = now;
+        uint32_t delta = (lastBeatTime > 0) ? (now - lastBeatTime) : 0;
+        lastBeatTime = now;
 
-        // 2. Invert so blood volume expansion during systole peaks UPWARDS
-        float rawAc = -((float)ir - dcFilter);
+        if (delta > 280 && delta < 1800) { // 33.3 .. 214 BPM bounds
+          float instantBpm = 60000.0f / (float)delta;
+          if (instantBpm >= 45.0f && instantBpm <= 185.0f) {
+            rates[rateSpot++] = instantBpm;
+            rateSpot %= 4;
 
-        // 3. Low-Pass Filter (smoothes out optical flicker and high-freq noise)
-        acSignal = (acSignal * 0.55f) + (rawAc * 0.45f);
-
-        // 4. Automatic Gain Control (tracks peak-to-peak amplitude)
-        float absAc = fabsf(acSignal);
-        if (absAc > peakAc) {
-          peakAc = (peakAc * 0.7f) + (absAc * 0.3f);
-        } else {
-          peakAc = max(30.0f, peakAc * 0.997f);
-        }
-
-        // 5. Push into live scrolling oscilloscope history
-        ppgWave[ppgHead] = (int16_t)roundf(acSignal);
-        ppgHead = (ppgHead + 1) % PPG_HISTORY_SIZE;
-
-        // 6. Accumulate Red & IR for SpO2 calibration
-        redSum += red;
-        irSum += ir;
-        sampleAccumCount++;
-
-        // 7. NX-ISD Adaptive Systolic Peak & Refractory Beat Detector
-        // Beat threshold dynamically pegged to 55% of the rolling systolic peak
-        float beatThreshold = peakAc * 0.55f;
-        float slope = acSignal - prevAcSignal;
-
-        if (acSignal > beatThreshold && slope > 0.0f) {
-          // Actively rising toward systolic crest
-          isRising = true;
-          if (acSignal > localPeakVal) {
-            localPeakVal = acSignal;
-          }
-        } else if (isRising && slope <= 0.0f) {
-          // Reached the peak crest!
-          isRising = false;
-
-          uint32_t delta = (lastBeatTime > 0) ? (now - lastBeatTime) : 0;
-
-          // Enforce 320ms Physiological Refractory Lockout (blocks dicrotic bounce & reflections)
-          if (lastBeatTime == 0 || (delta >= 320 && delta <= 1800)) {
-            if (delta >= 320 && delta <= 1800) {
-              // Valid physiological inter-beat interval (33.3 .. 187.5 BPM)
-              beatIntervals[beatIntervalIndex % MAX_BEAT_INTERVALS] = delta;
-              beatIntervalIndex++;
-              beatCount++;
-
-              // Calculate Trimmed Average Live BPM from the last up to 8 intervals
-              int validHistory = min(beatCount, 8);
-              if (validHistory >= 4) {
-                uint32_t sorted[8];
-                for (int k = 0; k < validHistory; k++) {
-                  int idx = (beatIntervalIndex - 1 - k + MAX_BEAT_INTERVALS) % MAX_BEAT_INTERVALS;
-                  sorted[k] = beatIntervals[idx];
-                }
-                for (int a = 0; a < validHistory - 1; a++) {
-                  for (int b = a + 1; b < validHistory; b++) {
-                    if (sorted[a] > sorted[b]) {
-                      uint32_t temp = sorted[a];
-                      sorted[a] = sorted[b];
-                      sorted[b] = temp;
-                    }
-                  }
-                }
-                // Discard lowest and highest outlier intervals
-                uint32_t trimmedSum = 0;
-                for (int k = 1; k < validHistory - 1; k++) {
-                  trimmedSum += sorted[k];
-                }
-                float avgIbi = (float)trimmedSum / (float)(validHistory - 2);
-                if (avgIbi > 0.0f) {
-                  liveBpm = 60000.0f / avgIbi;
-                }
-              } else {
-                float instantBpm = 60000.0f / (float)delta;
-                if (liveBpm <= 10.0f) liveBpm = instantBpm;
-                else liveBpm = (liveBpm * 0.6f) + (instantBpm * 0.4f);
+            float sum = 0;
+            int count = 0;
+            for (int i = 0; i < 4; i++) {
+              if (rates[i] > 0) {
+                sum += rates[i];
+                count++;
               }
             }
+            if (count > 0) {
+              liveBpm = sum / (float)count;
+            }
+            beatCount++;
+            beatIntervals[beatIntervalIndex % MAX_BEAT_INTERVALS] = delta;
+            beatIntervalIndex++;
 
-            lastBeatTime = now;
-            isBeating = true;
-            beatAnimTimer = now;
-
-            // Optional subtle audio pip if notification dispatch enables audio
+            // Subtle heartbeat tick if audio enabled
             if (alertModeIndex == 0 || alertModeIndex == 2) {
               HAL::buzzPip(3200, 6);
             }
           }
-          localPeakVal = 0.0f;
-        } else if (acSignal < 0.0f) {
-          isRising = false;
-          localPeakVal = 0.0f;
         }
+      }
 
-        prevAcSignal = acSignal;
+      // Accumulate Red & IR for SpO2 calibration
+      redSum += red;
+      irSum += ir;
+      sampleAccumCount++;
 
-        // 8. Live SpO2 estimation (every ~50 samples = ~1 sec at 50Hz)
-        if (sampleAccumCount >= 50 && irSum > 0) {
-          float r = ((float)redSum / (float)sampleAccumCount) / ((float)irSum / (float)sampleAccumCount);
-          float estSpo2 = 104.0f - 17.0f * r;
-          liveSpo2 = constrain(estSpo2, 92.0f, 100.0f);
-          redSum = 0;
-          irSum = 0;
-          sampleAccumCount = 0;
-        }
+      // Live SpO2 estimation (every ~50 samples = ~1 sec)
+      if (sampleAccumCount >= 50 && irSum > 0) {
+        float r = ((float)redSum / (float)sampleAccumCount) / ((float)irSum / (float)sampleAccumCount);
+        float estSpo2 = 108.5f - 18.0f * r;
+        liveSpo2 = constrain(estSpo2, 94.0f, 100.0f);
+        redSum = 0;
+        irSum = 0;
+        sampleAccumCount = 0;
+      }
 
-        // 9. Check for session completion
-        if (scanProgress >= 1.0f) {
-          scanState = SCAN_FINISHED;
-          finalizeScan(state);
-          return;
-        }
+      // Check for session completion
+      if (scanProgress >= 1.0f) {
+        scanState = SCAN_FINISHED;
+        finalizeScan(state);
+        return;
       }
     }
   }
 
   void finalizeScan(const SensorState& state) {
-    if (beatCount >= 5 && liveBpm >= 45.0f && liveBpm <= 195.0f) {
+    if (beatCount >= 4 && liveBpm >= 45.0f && liveBpm <= 195.0f) {
       hasValidData = true;
       lastBpm = liveBpm;
-      lastSpo2 = (liveSpo2 >= 92.0f && liveSpo2 <= 100.0f) ? liveSpo2 : 98.0f;
+      lastSpo2 = (liveSpo2 >= 94.0f && liveSpo2 <= 100.0f) ? liveSpo2 : 98.0f;
 
       // Multi-Sensor Fusion (MSF) Stress Calculation:
       // 1. True HRV RMSSD component calculated from successive IBI variances
@@ -481,76 +401,126 @@ private:
   }
 
   void renderDashboard(const SensorState& state) {
-    // 1. Hero Metric Cards
-    // Metric 1: Heart Rate (BPM)
-    canvas->drawRoundRect(10, 36, 106, 78, 4, COLOR_ORANGE_DIM);
-    canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas->drawString("HEART RATE", 18, 42);
+    // 1. Background ECG Wave (Oscilloscope Depth Layer)
+    drawBackgroundEcg(118, lastBpm, hasValidData);
 
-    // Mini heart vector glyph
-    drawHeartIcon(98, 46, 3, COLOR_ORANGE_BRIGHT);
+    // 2. Central Heart Geometry & Alternating Discrete Pulse
+    int cx = 120;
+    int cy = 104;
+    int heartR = 26; // normal resting size
 
-    if (hasValidData) {
-      char bpmBuf[16];
-      snprintf(bpmBuf, sizeof(bpmBuf), "%.0f", lastBpm);
-      canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-      canvas->drawString(bpmBuf, 18, 58, &fonts::Font4);
-      canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawString("BPM [STABLE]", 18, 96);
-    } else {
-      canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawString("--", 18, 58, &fonts::Font4);
-      canvas->drawString("NO DATA", 18, 96);
+    if (hasValidData && lastBpm >= 40.0f) {
+      uint32_t period = (uint32_t)(60000.0f / lastBpm);
+      if (period < 300) period = 300;
+      uint32_t t = millis() % period;
+      // Alternating discrete beat: first 170ms is Big size, rest is Normal size
+      if (t < 170) {
+        heartR = 32;
+      }
     }
 
-    // Metric 2: SpO2 Blood Oxygen
-    canvas->drawRoundRect(124, 36, 106, 78, 4, COLOR_ORANGE_DIM);
+    // 3. SpO2 Card (Top Left)
+    int c1x = 8, c1y = 34, c1w = 86, c1h = 44;
+    canvas->drawRoundRect(c1x, c1y, c1w, c1h, 3, COLOR_ORANGE_DIM);
     canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas->drawString("SpO2 OXYGEN", 132, 42);
+    canvas->drawString("SpO2", c1x + 6, c1y + 5);
 
     if (hasValidData) {
-      char spo2Buf[16];
-      snprintf(spo2Buf, sizeof(spo2Buf), "%.0f%%", lastSpo2);
+      char sBuf[16];
+      snprintf(sBuf, sizeof(sBuf), "%.0f%%", lastSpo2);
       canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-      canvas->drawString(spo2Buf, 132, 58, &fonts::Font4);
+      canvas->drawString(sBuf, c1x + 6, c1y + 17, &fonts::Font4);
       canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawString(lastSpo2 >= 95.0f ? "[OPTIMAL]" : "[EVALUATE]", 132, 96);
+      canvas->drawString(lastSpo2 >= 95.0f ? "[OPTIMAL]" : "[EVAL]", c1x + 6, c1y + 33);
     } else {
       canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawString("--%", 132, 58, &fonts::Font4);
-      canvas->drawString("NO DATA", 132, 96);
+      canvas->drawString("--%", c1x + 6, c1y + 17, &fonts::Font4);
+      canvas->drawString("[STANDBY]", c1x + 6, c1y + 33);
     }
 
-    // Metric 3: Multi-Sensor Fusion (MSF) Stress Index
-    canvas->drawRoundRect(10, 120, 220, 78, 4, COLOR_ORANGE_DIM);
+    // 4. Stress Card (Top Right)
+    int c2x = 146, c2y = 34, c2w = 86, c2h = 44;
+    canvas->drawRoundRect(c2x, c2y, c2w, c2h, 3, COLOR_ORANGE_DIM);
     canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas->drawString("STRESS LEVEL // MSF FUSION", 18, 126);
+    canvas->drawString("STRESS", c2x + 6, c2y + 5);
 
     if (hasValidData && lastStress >= 0) {
-      char stressBuf[32];
-      snprintf(stressBuf, sizeof(stressBuf), "%d / 100", lastStress);
+      char stBuf[16];
+      snprintf(stBuf, sizeof(stBuf), "%d%%", lastStress);
       canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-      canvas->drawString(stressBuf, 18, 142, &fonts::Font4);
+      canvas->drawString(stBuf, c2x + 6, c2y + 17, &fonts::Font4);
 
-      const char* tag = "LOW STRESS";
-      if (lastStress > 65) tag = "HIGH STRESS";
-      else if (lastStress > 40) tag = "MODERATE";
+      const char* tag = (lastStress > 65) ? "[HIGH]" : (lastStress > 40) ? "[MOD]" : "[LOW]";
       canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-      canvas->drawString(tag, 140, 148);
+      canvas->drawString(tag, c2x + 6, c2y + 33);
 
-      // Segmented Stress Bar
-      int barX = 18, barY = 178, barW = 204, barH = 8;
-      canvas->drawRect(barX, barY, barW, barH, COLOR_ORANGE_DARK);
-      int fillW = (barW - 4) * lastStress / 100;
-      canvas->fillRect(barX + 2, barY + 2, fillW, barH - 4, COLOR_ORANGE_BRIGHT);
+      // Mini 4-segment gauge
+      int segX = c2x + 48, segY = c2y + 33;
+      int activeSegs = (lastStress <= 25) ? 1 : (lastStress <= 50) ? 2 : (lastStress <= 75) ? 3 : 4;
+      for (int s = 0; s < 4; s++) {
+        if (s < activeSegs) {
+          canvas->fillRect(segX + s * 8, segY, 6, 6, COLOR_ORANGE_BRIGHT);
+        } else {
+          canvas->drawRect(segX + s * 8, segY, 6, 6, COLOR_ORANGE_DARK);
+        }
+      }
     } else {
       canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawString("-- / 100", 18, 142, &fonts::Font4);
-      canvas->drawString("NOT MEASURED", 140, 148);
-      canvas->drawRect(18, 178, 204, 8, COLOR_ORANGE_DARK);
+      canvas->drawString("--%", c2x + 6, c2y + 17, &fonts::Font4);
+      canvas->drawString("[STANDBY]", c2x + 6, c2y + 33);
     }
 
-    // Bottom Navigation Bar
+    // 5. Draw Central Beating Heart
+    drawBigHeart(cx, cy, heartR, hasValidData, COLOR_ORANGE_BRIGHT, hasValidData ? COLOR_ORANGE_MID : COLOR_ORANGE_DIM);
+
+    // 6. Tactical Leader Lines (HUD Blueprint Schematic)
+    int lobeR = heartR * 5 / 10;
+    int lobeY = cy - heartR * 3 / 10;
+    int anchorSpo2X = cx - lobeR;
+    int anchorSpo2Y = lobeY - lobeR; // Pinned directly to top-left wing crest
+
+    uint16_t traceColor = hasValidData ? COLOR_ORANGE_MID : COLOR_ORANGE_DARK;
+    uint16_t nodeColor  = hasValidData ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_DIM;
+
+    // SpO2 Trace: Card right edge (c1x + c1w, c1y + 22) -> (anchorSpo2X, c1y + 22) -> (anchorSpo2X, anchorSpo2Y)
+    int card1OutX = c1x + c1w;
+    int card1OutY = c1y + 22;
+    canvas->drawLine(card1OutX, card1OutY, anchorSpo2X, card1OutY, traceColor);
+    canvas->drawLine(anchorSpo2X, card1OutY, anchorSpo2X, anchorSpo2Y, traceColor);
+    // SpO2 Anchor Node (O) on top-left wing
+    canvas->fillCircle(anchorSpo2X, anchorSpo2Y, 3, COLOR_BG);
+    canvas->drawCircle(anchorSpo2X, anchorSpo2Y, 3, nodeColor);
+    canvas->fillCircle(anchorSpo2X, anchorSpo2Y, 1, nodeColor);
+
+    // Stress Trace: Anchor (O) in Mid-Low core -> (c2x + 12, anchorStressY) -> bottom of card (c2x + 12, c2y + c2h)
+    int anchorStressX = cx;
+    int anchorStressY = cy + (heartR * 3 / 10);
+    int card2InX = c2x + 12;
+    int card2InY = c2y + c2h;
+    canvas->drawLine(anchorStressX, anchorStressY, card2InX, anchorStressY, traceColor);
+    canvas->drawLine(card2InX, anchorStressY, card2InX, card2InY, traceColor);
+    // Stress Anchor Node (O) in Mid-Low core
+    canvas->fillCircle(anchorStressX, anchorStressY, 3, COLOR_BG);
+    canvas->drawCircle(anchorStressX, anchorStressY, 3, nodeColor);
+    canvas->fillCircle(anchorStressX, anchorStressY, 1, nodeColor);
+
+    // 7. Pulse BPM Readout (Beneath Apex)
+    canvas->setTextDatum(MC_DATUM);
+    if (hasValidData) {
+      char bpmBuf[16];
+      snprintf(bpmBuf, sizeof(bpmBuf), "%.0f BPM", lastBpm);
+      canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
+      canvas->drawString(bpmBuf, 120, 162, &fonts::Font4);
+      canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
+      canvas->drawString("· PULSE RATE ·", 120, 186);
+    } else {
+      canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
+      canvas->drawString("-- BPM", 120, 162, &fonts::Font4);
+      canvas->drawString("· STANDBY ·", 120, 186);
+    }
+    canvas->setTextDatum(TL_DATUM);
+
+    // 8. Bottom Navigation Bar
     canvas->drawFastHLine(4, 206, 232, COLOR_ORANGE_DARK);
     canvas->setTextDatum(MC_DATUM);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
@@ -631,7 +601,12 @@ private:
       // Live SpO2 estimation tag
       char spo2Buf[16];
       snprintf(spo2Buf, sizeof(spo2Buf), "SpO2: %.0f%%", liveSpo2);
-      canvas->drawString(spo2Buf, 150, 74);
+      canvas->drawString(spo2Buf, 150, 68);
+
+      char beatBuf[16];
+      snprintf(beatBuf, sizeof(beatBuf), "BEATS: %d", beatCount);
+      canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
+      canvas->drawString(beatBuf, 150, 84);
 
       // 3. Real-Time PPG Waveform Oscilloscope Strip
       int waveY = 100;
@@ -644,20 +619,37 @@ private:
       canvas->drawFastVLine(10 + 110, waveY + 1, waveH - 2, COLOR_ORANGE_DARK);
       canvas->drawFastVLine(10 + 165, waveY + 1, waveH - 2, COLOR_ORANGE_DARK);
 
-      // Render scrolling PPG wave with Automatic Gain Control
-      float gain = (peakAc > 15.0f) ? (32.0f / peakAc) : 1.0f;
-      if (gain > 1.2f) gain = 1.2f;
+      // Dynamic Window Min/Max Auto-Scaling with Low-Pass Smoothing
+      uint32_t minVal = 0xFFFFFFFF;
+      uint32_t maxVal = 0;
+      for (int i = 0; i < PPG_HISTORY_SIZE; i++) {
+        if (ppgWave[i] == 0) continue;
+        if (ppgWave[i] < minVal) minVal = ppgWave[i];
+        if (ppgWave[i] > maxVal) maxVal = ppgWave[i];
+      }
+
+      uint32_t rawSpan = (maxVal > minVal) ? (maxVal - minVal) : 100;
+      if (rawSpan < 100) rawSpan = 100;
+      smoothSpan = (smoothSpan * 0.88f) + ((float)rawSpan * 0.12f);
+      float span = max(100.0f, smoothSpan);
 
       int prevX = 11;
       int prevY = midY;
       for (int i = 0; i < PPG_HISTORY_SIZE; i++) {
         int idx = (ppgHead + i) % PPG_HISTORY_SIZE;
-        int val = ppgWave[idx];
-        int py = midY - (int)roundf((float)val * gain);
+        uint32_t val = ppgWave[idx];
+        if (val == 0) {
+          prevX = 11 + (i * 217 / (PPG_HISTORY_SIZE - 1));
+          prevY = midY;
+          continue;
+        }
+
+        // Invert so arterial pulse peak (lower IR count) draws UPWARDS!
+        int py = (waveY + 4) + (int)(((float)(val - minVal) * (float)(waveH - 8)) / span);
         py = constrain(py, waveY + 3, waveY + waveH - 3);
         int px = 11 + (i * 217 / (PPG_HISTORY_SIZE - 1));
 
-        if (i > 0) {
+        if (i > 0 && prevX != 11) {
           // Glow trace line for tactical cyber aesthetic
           canvas->drawLine(prevX, prevY + 1, px, py + 1, COLOR_ORANGE_MID);
           // Sharp primary pulse wave line
@@ -696,7 +688,7 @@ private:
         snprintf(buf, sizeof(buf), "OXYGEN: %.0f%% SpO2", lastSpo2);
         canvas->drawString(buf, 120, 126, &fonts::Font2);
 
-        snprintf(buf, sizeof(buf), "MSF STRESS: %d / 100", lastStress);
+        snprintf(buf, sizeof(buf), "MSF STRESS: %d%%", lastStress);
         canvas->drawString(buf, 120, 156, &fonts::Font2);
 
         canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
@@ -753,5 +745,87 @@ private:
     canvas->fillCircle(cx - r / 2, cy - r / 3, r / 2, color);
     canvas->fillCircle(cx + r / 2, cy - r / 3, r / 2, color);
     canvas->fillTriangle(cx - r, cy - r / 4, cx + r, cy - r / 4, cx, cy + r, color);
+  }
+
+  void drawBigHeart(int cx, int cy, int r, bool filled, uint16_t fillColor, uint16_t outlineColor) {
+    int lobeR = r * 5 / 10;
+    int lobeY = cy - r * 3 / 10;
+    int leftLobeX = cx - lobeR;
+    int rightLobeX = cx + lobeR;
+    int apexY = cy + r;
+
+    if (filled) {
+      canvas->fillCircle(leftLobeX, lobeY, lobeR, fillColor);
+      canvas->fillCircle(rightLobeX, lobeY, lobeR, fillColor);
+      canvas->fillTriangle(cx - r, lobeY, cx + r, lobeY, cx, apexY, fillColor);
+      canvas->fillRect(cx - lobeR, lobeY, lobeR * 2, r * 4 / 10, fillColor);
+      canvas->drawCircle(leftLobeX, lobeY, lobeR, outlineColor);
+      canvas->drawCircle(rightLobeX, lobeY, lobeR, outlineColor);
+      canvas->drawLine(cx - r, lobeY, cx, apexY, outlineColor);
+      canvas->drawLine(cx + r, lobeY, cx, apexY, outlineColor);
+    } else {
+      for (int a = 0; a < 180; a += 15) {
+        int nextA = min(180, a + 15);
+        float rad1 = (float)a * DEG_TO_RAD;
+        float rad2 = (float)nextA * DEG_TO_RAD;
+        int x1 = leftLobeX - (int)roundf(cosf(rad1) * lobeR);
+        int y1 = lobeY - (int)roundf(sinf(rad1) * lobeR);
+        int x2 = leftLobeX - (int)roundf(cosf(rad2) * lobeR);
+        int y2 = lobeY - (int)roundf(sinf(rad2) * lobeR);
+        canvas->drawLine(x1, y1, x2, y2, outlineColor);
+      }
+      for (int a = 0; a < 180; a += 15) {
+        int nextA = min(180, a + 15);
+        float rad1 = (float)a * DEG_TO_RAD;
+        float rad2 = (float)nextA * DEG_TO_RAD;
+        int x1 = rightLobeX + (int)roundf(cosf(rad1) * lobeR);
+        int y1 = lobeY - (int)roundf(sinf(rad1) * lobeR);
+        int x2 = rightLobeX + (int)roundf(cosf(rad2) * lobeR);
+        int y2 = lobeY - (int)roundf(sinf(rad2) * lobeR);
+        canvas->drawLine(x1, y1, x2, y2, outlineColor);
+      }
+      canvas->drawLine(cx - r, lobeY, cx, apexY, outlineColor);
+      canvas->drawLine(cx + r, lobeY, cx, apexY, outlineColor);
+    }
+  }
+
+  void drawBackgroundEcg(int yBaseline, float bpm, bool active) {
+    const int waveW = 120;
+    int shift = 0;
+    if (active && bpm >= 40.0f) {
+      shift = (int)(fmodf((float)millis() * (bpm * (float)waveW / 60000.0f), (float)waveW));
+    }
+
+    int prevX = 6;
+    int prevY = yBaseline;
+
+    for (int x = 6; x <= 234; x += 2) {
+      int phase = (x + waveW - shift) % waveW;
+      int yOffset = 0;
+
+      if (active && bpm >= 40.0f) {
+        if (phase >= 30 && phase < 42) {
+          float p = (float)(phase - 30) / 12.0f;
+          yOffset = -(int)(sinf(p * 3.14159f) * 4.0f);
+        } else if (phase >= 46 && phase < 50) {
+          yOffset = 3;
+        } else if (phase >= 50 && phase < 56) {
+          float p = (float)(phase - 50) / 6.0f;
+          yOffset = -(int)(sinf(p * 3.14159f) * 18.0f);
+        } else if (phase >= 56 && phase < 60) {
+          yOffset = 5;
+        } else if (phase >= 70 && phase < 84) {
+          float p = (float)(phase - 70) / 14.0f;
+          yOffset = -(int)(sinf(p * 3.14159f) * 6.0f);
+        }
+      }
+
+      int curY = yBaseline + yOffset;
+      if (x > 6) {
+        canvas->drawLine(prevX, prevY, x, curY, COLOR_ORANGE_DARK);
+      }
+      prevX = x;
+      prevY = curY;
+    }
   }
 };

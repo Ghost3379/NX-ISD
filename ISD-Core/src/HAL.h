@@ -30,6 +30,8 @@ public:
   static bool imuReady;
   static bool rtcReady;
 
+  static bool silentMode;
+
   static bool pinsInited;
   static void initPins();
   static void begin(void (*onProgress)(float progress) = nullptr);

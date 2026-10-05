@@ -14,6 +14,7 @@ bool HAL::envSensorReady = false;
 bool HAL::heartRateReady = false;
 bool HAL::imuReady = false;
 bool HAL::rtcReady = false;
+bool HAL::silentMode = true;
 bool HAL::pinsInited = false;
 
 void HAL::initPins() {
@@ -140,7 +141,7 @@ void HAL::setMatrixPower(bool on) {
 }
 
 void HAL::buzzPip(uint16_t freqHz, uint16_t durationMs) {
-  if (freqHz == 0 || durationMs == 0) return;
+  if (silentMode || freqHz == 0 || durationMs == 0) return;
   // Subtle soft micro-click: brief 15us pulse every 280us (~3.5kHz)
   uint32_t ms = (durationMs > 8) ? 8 : durationMs;
   uint32_t cycles = (ms * 1000UL) / 300UL;

@@ -267,6 +267,7 @@ public:
             break;
           case 4: // Silent
             qpSilentMode = !qpSilentMode;
+            HAL::silentMode = qpSilentMode;
             break;
           case 5: // Shutdown / Power Menu
             qpInShutdownMenu = true;
@@ -313,6 +314,7 @@ public:
     COLOR_ORANGE_DARK   = canvas.color565(35, 12, 0);        // Dark grid background
 
     applyBrightness();
+    HAL::silentMode = qpSilentMode;
     initialized = true;
   }
 
