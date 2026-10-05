@@ -42,12 +42,15 @@ private:
   uint32_t scanDurationMs = 15000; // 15-second calibrated session
   float scanProgress = 0.0f;       // 0.0f .. 1.0f
 
-  // Live Sampling & Algorithms
-  static const int PPG_HISTORY_SIZE = 120;
-  int ppgWave[PPG_HISTORY_SIZE];
+  // Live Optical Sampling & Signal Processing
+  static const int PPG_HISTORY_SIZE = 110;
+  int16_t ppgWave[PPG_HISTORY_SIZE];
   int ppgHead = 0;
-  int32_t minPpg = 50000;
-  int32_t maxPpg = 150000;
+
+  // Real-time DC Baseline & AC Oscilloscope Filter
+  float dcFilter = 0.0f;
+  float acSignal = 0.0f;
+  float peakAc = 80.0f;
 
   uint32_t lastBeatTime = 0;
   float liveBpm = 0.0f;
@@ -159,13 +162,15 @@ public:
     memset(beatIntervals, 0, sizeof(beatIntervals));
     memset(ppgWave, 0, sizeof(ppgWave));
     ppgHead = 0;
-    minPpg = 50000;
-    maxPpg = 150000;
+    dcFilter = 0.0f;
+    acSignal = 0.0f;
+    peakAc = 80.0f;
     liveBpm = 0.0f;
     liveSpo2 = 98.0f;
     redSum = 0;
     irSum = 0;
     sampleAccumCount = 0;
+    lastBeatTime = 0;
 
     wakeSensor();
     HAL::buzzPip(3800, 25);
@@ -181,9 +186,11 @@ public:
   void wakeSensor() {
     if (HAL::heartRateReady) {
       HAL::heartRateSensor.wakeUp();
-      // Setup MAX30105 for Red + IR optical sampling
-      // powerLevel = 0x3F (~12mA), sampleAverage = 4, ledMode = 2 (Red + IR), sampleRate = 100, pulseWidth = 411, adcRange = 4096
-      HAL::heartRateSensor.setup(0x3F, 4, 2, 100, 411, 4096);
+      // Setup MAX30105 for Red + IR optical sampling:
+      // powerLevel = 0x28 (~8.5mA, optimal tissue reflection without ADC saturation)
+      // sampleAverage = 4, ledMode = 2 (Red + IR), sampleRate = 200 (50Hz effective output), pulseWidth = 411 (18-bit), adcRange = 4096
+      HAL::heartRateSensor.setup(0x28, 4, 2, 200, 411, 4096);
+      HAL::heartRateSensor.clearFIFO();
       sensorAwake = true;
     }
   }
@@ -191,82 +198,113 @@ public:
   void updateSampling(const SensorState& state) {
     if (currentView != VITALS_VIEW_SCAN || !sensorAwake || !HAL::heartRateReady) return;
 
-    // Check for fresh optical samples
-    uint16_t sampleCount = HAL::heartRateSensor.check();
-    if (sampleCount == 0) return;
+    // Fetch fresh optical samples from MAX30105
+    HAL::heartRateSensor.check();
 
-    uint32_t ir = HAL::heartRateSensor.getFIFOIR();
-    uint32_t red = HAL::heartRateSensor.getFIFORed();
+    // Drain all samples currently available in the hardware FIFO
+    while (HAL::heartRateSensor.available()) {
+      uint32_t ir = HAL::heartRateSensor.getFIFOIR();
+      uint32_t red = HAL::heartRateSensor.getFIFORed();
+      HAL::heartRateSensor.nextSample(); // Advance FIFO tail pointer!
 
-    // Finger detection threshold
-    bool fingerPresent = (ir > 50000);
+      // Finger contact detection threshold (ambient < 15k; finger contact >= 35k)
+      bool fingerPresent = (ir > 35000);
 
-    if (scanState == SCAN_WAITING_FOR_FINGER) {
-      if (fingerPresent) {
-        scanState = SCAN_ACTIVE;
-        scanStartTime = millis();
-        HAL::buzzPip(4400, 20);
-      }
-    } else if (scanState == SCAN_ACTIVE) {
-      if (!fingerPresent) {
-        // Lost contact: reset back to waiting
-        scanState = SCAN_WAITING_FOR_FINGER;
-        scanStartTime = 0;
-        scanProgress = 0.0f;
-        return;
-      }
-
-      uint32_t now = millis();
-      uint32_t elapsed = now - scanStartTime;
-      scanProgress = constrain((float)elapsed / (float)scanDurationMs, 0.0f, 1.0f);
-
-      // Record PPG waveform sample
-      ppgWave[ppgHead] = (int)ir;
-      ppgHead = (ppgHead + 1) % PPG_HISTORY_SIZE;
-
-      if ((int32_t)ir < minPpg) minPpg = (int32_t)ir;
-      if ((int32_t)ir > maxPpg) maxPpg = (int32_t)ir;
-
-      // Accumulate for SpO2 ratio
-      redSum += red;
-      irSum += ir;
-      sampleAccumCount++;
-
-      // Heartbeat detection using PBA algorithm
-      if (checkForBeat(ir)) {
-        isBeating = true;
-        beatAnimTimer = now;
-        if (lastBeatTime > 0) {
-          uint32_t delta = now - lastBeatTime;
-          if (delta >= 300 && delta <= 1500) { // 40 .. 200 BPM bounds
-            float instantBpm = 60000.0f / (float)delta;
-            if (liveBpm == 0.0f) {
-              liveBpm = instantBpm;
-            } else {
-              liveBpm = (liveBpm * 0.7f) + (instantBpm * 0.3f);
-            }
-            beatIntervals[beatIntervalIndex % 16] = delta;
-            beatIntervalIndex++;
-            beatCount++;
-          }
+      if (scanState == SCAN_WAITING_FOR_FINGER) {
+        if (fingerPresent) {
+          scanState = SCAN_ACTIVE;
+          scanStartTime = millis();
+          dcFilter = (float)ir;
+          acSignal = 0.0f;
+          peakAc = 80.0f;
+          memset(ppgWave, 0, sizeof(ppgWave));
+          ppgHead = 0;
+          HAL::buzzPip(4400, 20);
         }
-        lastBeatTime = now;
-      }
+      } else if (scanState == SCAN_ACTIVE) {
+        if (!fingerPresent) {
+          // Lost contact: reset back to waiting and show physical sensor locator
+          scanState = SCAN_WAITING_FOR_FINGER;
+          scanStartTime = 0;
+          scanProgress = 0.0f;
+          dcFilter = 0.0f;
+          acSignal = 0.0f;
+          memset(ppgWave, 0, sizeof(ppgWave));
+          return;
+        }
 
-      // Live SpO2 estimation
-      if (sampleAccumCount >= 25 && irSum > 0) {
-        float r = ((float)redSum / (float)sampleAccumCount) / ((float)irSum / (float)sampleAccumCount);
-        float estSpo2 = 104.0f - 17.0f * r;
-        liveSpo2 = constrain(estSpo2, 92.0f, 100.0f);
-        redSum = 0;
-        irSum = 0;
-        sampleAccumCount = 0;
-      }
+        uint32_t now = millis();
+        uint32_t elapsed = now - scanStartTime;
+        scanProgress = constrain((float)elapsed / (float)scanDurationMs, 0.0f, 1.0f);
 
-      // Check for completion
-      if (scanProgress >= 1.0f) {
-        scanState = SCAN_FINISHED;
-        finalizeScan(state);
+        // 1. DC Baseline tracking (High-pass filter removing massive tissue DC offset)
+        if (dcFilter < 1000.0f) {
+          dcFilter = (float)ir;
+        } else {
+          // Alpha of 0.04 at 50Hz gives ~0.5s time constant (passes 0.5-4Hz cardiac pulses)
+          dcFilter = (dcFilter * 0.96f) + ((float)ir * 0.04f);
+        }
+
+        // 2. Invert so blood volume expansion during systole peaks UPWARDS
+        float rawAc = -((float)ir - dcFilter);
+
+        // 3. Low-Pass Filter (smoothes out optical flicker and high-freq noise)
+        acSignal = (acSignal * 0.55f) + (rawAc * 0.45f);
+
+        // 4. Automatic Gain Control (tracks peak-to-peak amplitude)
+        float absAc = fabsf(acSignal);
+        if (absAc > peakAc) {
+          peakAc = (peakAc * 0.7f) + (absAc * 0.3f);
+        } else {
+          peakAc = max(40.0f, peakAc * 0.996f);
+        }
+
+        // 5. Push into live scrolling oscilloscope history
+        ppgWave[ppgHead] = (int16_t)roundf(acSignal);
+        ppgHead = (ppgHead + 1) % PPG_HISTORY_SIZE;
+
+        // 6. Accumulate Red & IR for SpO2 calibration
+        redSum += red;
+        irSum += ir;
+        sampleAccumCount++;
+
+        // 7. Heartbeat detection using PBA algorithm
+        if (checkForBeat((int32_t)ir)) {
+          isBeating = true;
+          beatAnimTimer = now;
+          if (lastBeatTime > 0) {
+            uint32_t delta = now - lastBeatTime;
+            if (delta >= 300 && delta <= 1600) { // 37.5 .. 200 BPM bounds
+              float instantBpm = 60000.0f / (float)delta;
+              if (liveBpm <= 10.0f) {
+                liveBpm = instantBpm;
+              } else {
+                liveBpm = (liveBpm * 0.65f) + (instantBpm * 0.35f);
+              }
+              beatIntervals[beatIntervalIndex % 16] = delta;
+              beatIntervalIndex++;
+              beatCount++;
+            }
+          }
+          lastBeatTime = now;
+        }
+
+        // 8. Live SpO2 estimation (every ~50 samples = ~1 sec at 50Hz)
+        if (sampleAccumCount >= 50 && irSum > 0) {
+          float r = ((float)redSum / (float)sampleAccumCount) / ((float)irSum / (float)sampleAccumCount);
+          float estSpo2 = 104.0f - 17.0f * r;
+          liveSpo2 = constrain(estSpo2, 92.0f, 100.0f);
+          redSum = 0;
+          irSum = 0;
+          sampleAccumCount = 0;
+        }
+
+        // 9. Check for session completion
+        if (scanProgress >= 1.0f) {
+          scanState = SCAN_FINISHED;
+          finalizeScan(state);
+          return;
+        }
       }
     }
   }
@@ -520,28 +558,40 @@ private:
       int waveH = 88;
       canvas->drawRect(10, waveY, 220, waveH, COLOR_ORANGE_DIM);
       // Oscilloscope background grid
-      canvas->drawFastHLine(11, waveY + waveH / 2, 218, COLOR_ORANGE_DARK);
+      int midY = waveY + waveH / 2;
+      canvas->drawFastHLine(11, midY, 218, COLOR_ORANGE_DARK);
       canvas->drawFastVLine(10 + 55, waveY + 1, waveH - 2, COLOR_ORANGE_DARK);
       canvas->drawFastVLine(10 + 110, waveY + 1, waveH - 2, COLOR_ORANGE_DARK);
       canvas->drawFastVLine(10 + 165, waveY + 1, waveH - 2, COLOR_ORANGE_DARK);
 
-      // Render scrolling PPG wave
-      int range = max(1000, (int)(maxPpg - minPpg));
-      int prevX = 12, prevY = waveY + waveH / 2;
+      // Render scrolling PPG wave with Automatic Gain Control
+      float gain = (peakAc > 15.0f) ? (32.0f / peakAc) : 1.0f;
+      if (gain > 1.2f) gain = 1.2f;
+
+      int prevX = 11;
+      int prevY = midY;
       for (int i = 0; i < PPG_HISTORY_SIZE; i++) {
         int idx = (ppgHead + i) % PPG_HISTORY_SIZE;
         int val = ppgWave[idx];
-        if (val > 0) {
-          int py = waveY + waveH - 4 - ((val - minPpg) * (waveH - 8) / range);
-          py = constrain(py, waveY + 3, waveY + waveH - 3);
-          int px = 12 + (i * 216 / PPG_HISTORY_SIZE);
-          if (i > 0) {
-            canvas->drawLine(prevX, prevY, px, py, COLOR_ORANGE_BRIGHT);
-          }
-          prevX = px;
+        int py = midY - (int)roundf((float)val * gain);
+        py = constrain(py, waveY + 3, waveY + waveH - 3);
+        int px = 11 + (i * 217 / (PPG_HISTORY_SIZE - 1));
+
+        if (i > 0) {
+          // Glow trace line for tactical cyber aesthetic
+          canvas->drawLine(prevX, prevY + 1, px, py + 1, COLOR_ORANGE_MID);
+          // Sharp primary pulse wave line
+          canvas->drawLine(prevX, prevY, px, py, COLOR_ORANGE_BRIGHT);
+        } else {
           prevY = py;
         }
+        prevX = px;
+        prevY = py;
       }
+
+      // Live pulse sweep beacon point on leading edge
+      canvas->fillCircle(prevX, prevY, 2, COLOR_ORANGE_BRIGHT);
+      canvas->drawCircle(prevX, prevY, 4, COLOR_ORANGE_MID);
 
       // Bottom scan prompt
       canvas->setTextDatum(MC_DATUM);
