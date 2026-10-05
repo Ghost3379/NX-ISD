@@ -50,12 +50,17 @@ private:
   // Real-time DC Baseline & AC Oscilloscope Filter
   float dcFilter = 0.0f;
   float acSignal = 0.0f;
-  float peakAc = 80.0f;
+  float prevAcSignal = 0.0f;
+  float peakAc = 60.0f;
 
+  // Adaptive Systolic Peak & Refractory Beat Detector
+  bool isRising = false;
+  float localPeakVal = 0.0f;
   uint32_t lastBeatTime = 0;
   float liveBpm = 0.0f;
   int beatCount = 0;
-  uint32_t beatIntervals[16];
+  static const int MAX_BEAT_INTERVALS = 32;
+  uint32_t beatIntervals[MAX_BEAT_INTERVALS];
   int beatIntervalIndex = 0;
   bool isBeating = false;
   uint32_t beatAnimTimer = 0;
@@ -120,9 +125,14 @@ public:
       startScan();
     } else if (currentView == VITALS_VIEW_SCAN) {
       if (scanState == SCAN_FINISHED) {
-        // Acknowledge and return to dashboard
-        currentView = VITALS_VIEW_DASHBOARD;
-        stopSensor();
+        if (hasValidData) {
+          // Acknowledge and return to dashboard
+          currentView = VITALS_VIEW_DASHBOARD;
+          stopSensor();
+        } else {
+          // Retry calibration scan
+          startScan();
+        }
       }
     } else if (currentView == VITALS_VIEW_SETTINGS) {
       // Toggle selected setting
@@ -164,7 +174,10 @@ public:
     ppgHead = 0;
     dcFilter = 0.0f;
     acSignal = 0.0f;
-    peakAc = 80.0f;
+    prevAcSignal = 0.0f;
+    peakAc = 60.0f;
+    isRising = false;
+    localPeakVal = 0.0f;
     liveBpm = 0.0f;
     liveSpo2 = 98.0f;
     redSum = 0;
@@ -198,7 +211,7 @@ public:
   void updateSampling(const SensorState& state) {
     if (currentView != VITALS_VIEW_SCAN || !sensorAwake || !HAL::heartRateReady) return;
 
-    // Fetch fresh optical samples from MAX30105
+    // Check for fresh optical samples from MAX30105
     HAL::heartRateSensor.check();
 
     // Drain all samples currently available in the hardware FIFO
@@ -216,7 +229,10 @@ public:
           scanStartTime = millis();
           dcFilter = (float)ir;
           acSignal = 0.0f;
-          peakAc = 80.0f;
+          prevAcSignal = 0.0f;
+          peakAc = 60.0f;
+          isRising = false;
+          localPeakVal = 0.0f;
           memset(ppgWave, 0, sizeof(ppgWave));
           ppgHead = 0;
           HAL::buzzPip(4400, 20);
@@ -229,6 +245,7 @@ public:
           scanProgress = 0.0f;
           dcFilter = 0.0f;
           acSignal = 0.0f;
+          prevAcSignal = 0.0f;
           memset(ppgWave, 0, sizeof(ppgWave));
           return;
         }
@@ -256,7 +273,7 @@ public:
         if (absAc > peakAc) {
           peakAc = (peakAc * 0.7f) + (absAc * 0.3f);
         } else {
-          peakAc = max(40.0f, peakAc * 0.996f);
+          peakAc = max(30.0f, peakAc * 0.997f);
         }
 
         // 5. Push into live scrolling oscilloscope history
@@ -268,26 +285,80 @@ public:
         irSum += ir;
         sampleAccumCount++;
 
-        // 7. Heartbeat detection using PBA algorithm
-        if (checkForBeat((int32_t)ir)) {
-          isBeating = true;
-          beatAnimTimer = now;
-          if (lastBeatTime > 0) {
-            uint32_t delta = now - lastBeatTime;
-            if (delta >= 300 && delta <= 1600) { // 37.5 .. 200 BPM bounds
-              float instantBpm = 60000.0f / (float)delta;
-              if (liveBpm <= 10.0f) {
-                liveBpm = instantBpm;
-              } else {
-                liveBpm = (liveBpm * 0.65f) + (instantBpm * 0.35f);
-              }
-              beatIntervals[beatIntervalIndex % 16] = delta;
+        // 7. NX-ISD Adaptive Systolic Peak & Refractory Beat Detector
+        // Beat threshold dynamically pegged to 55% of the rolling systolic peak
+        float beatThreshold = peakAc * 0.55f;
+        float slope = acSignal - prevAcSignal;
+
+        if (acSignal > beatThreshold && slope > 0.0f) {
+          // Actively rising toward systolic crest
+          isRising = true;
+          if (acSignal > localPeakVal) {
+            localPeakVal = acSignal;
+          }
+        } else if (isRising && slope <= 0.0f) {
+          // Reached the peak crest!
+          isRising = false;
+
+          uint32_t delta = (lastBeatTime > 0) ? (now - lastBeatTime) : 0;
+
+          // Enforce 320ms Physiological Refractory Lockout (blocks dicrotic bounce & reflections)
+          if (lastBeatTime == 0 || (delta >= 320 && delta <= 1800)) {
+            if (delta >= 320 && delta <= 1800) {
+              // Valid physiological inter-beat interval (33.3 .. 187.5 BPM)
+              beatIntervals[beatIntervalIndex % MAX_BEAT_INTERVALS] = delta;
               beatIntervalIndex++;
               beatCount++;
+
+              // Calculate Trimmed Average Live BPM from the last up to 8 intervals
+              int validHistory = min(beatCount, 8);
+              if (validHistory >= 4) {
+                uint32_t sorted[8];
+                for (int k = 0; k < validHistory; k++) {
+                  int idx = (beatIntervalIndex - 1 - k + MAX_BEAT_INTERVALS) % MAX_BEAT_INTERVALS;
+                  sorted[k] = beatIntervals[idx];
+                }
+                for (int a = 0; a < validHistory - 1; a++) {
+                  for (int b = a + 1; b < validHistory; b++) {
+                    if (sorted[a] > sorted[b]) {
+                      uint32_t temp = sorted[a];
+                      sorted[a] = sorted[b];
+                      sorted[b] = temp;
+                    }
+                  }
+                }
+                // Discard lowest and highest outlier intervals
+                uint32_t trimmedSum = 0;
+                for (int k = 1; k < validHistory - 1; k++) {
+                  trimmedSum += sorted[k];
+                }
+                float avgIbi = (float)trimmedSum / (float)(validHistory - 2);
+                if (avgIbi > 0.0f) {
+                  liveBpm = 60000.0f / avgIbi;
+                }
+              } else {
+                float instantBpm = 60000.0f / (float)delta;
+                if (liveBpm <= 10.0f) liveBpm = instantBpm;
+                else liveBpm = (liveBpm * 0.6f) + (instantBpm * 0.4f);
+              }
+            }
+
+            lastBeatTime = now;
+            isBeating = true;
+            beatAnimTimer = now;
+
+            // Optional subtle audio pip if notification dispatch enables audio
+            if (alertModeIndex == 0 || alertModeIndex == 2) {
+              HAL::buzzPip(3200, 6);
             }
           }
-          lastBeatTime = now;
+          localPeakVal = 0.0f;
+        } else if (acSignal < 0.0f) {
+          isRising = false;
+          localPeakVal = 0.0f;
         }
+
+        prevAcSignal = acSignal;
 
         // 8. Live SpO2 estimation (every ~50 samples = ~1 sec at 50Hz)
         if (sampleAccumCount >= 50 && irSum > 0) {
@@ -310,41 +381,50 @@ public:
   }
 
   void finalizeScan(const SensorState& state) {
-    lastBpm = (liveBpm > 45.0f && liveBpm < 190.0f) ? liveBpm : (68.0f + (rand() % 12));
-    lastSpo2 = (liveSpo2 >= 93.0f && liveSpo2 <= 100.0f) ? liveSpo2 : 98.0f;
+    if (beatCount >= 5 && liveBpm >= 45.0f && liveBpm <= 195.0f) {
+      hasValidData = true;
+      lastBpm = liveBpm;
+      lastSpo2 = (liveSpo2 >= 92.0f && liveSpo2 <= 100.0f) ? liveSpo2 : 98.0f;
 
-    // Multi-Sensor Fusion (MSF) Stress Calculation:
-    // 1. HRV RMSSD component (from pulse interval variances)
-    float rmssd = 35.0f;
-    if (beatCount >= 4) {
+      // Multi-Sensor Fusion (MSF) Stress Calculation:
+      // 1. True HRV RMSSD component calculated from successive IBI variances
+      int availablePairs = min(beatCount - 1, MAX_BEAT_INTERVALS - 1);
       float sumSqDiff = 0.0f;
       int pairs = 0;
-      for (int i = 1; i < min(beatCount, 16); i++) {
-        int diff = (int)beatIntervals[i] - (int)beatIntervals[i - 1];
+      for (int i = 1; i <= availablePairs; i++) {
+        int idxCurr = (beatIntervalIndex - i + MAX_BEAT_INTERVALS) % MAX_BEAT_INTERVALS;
+        int idxPrev = (beatIntervalIndex - i - 1 + MAX_BEAT_INTERVALS) % MAX_BEAT_INTERVALS;
+        int diff = (int)beatIntervals[idxCurr] - (int)beatIntervals[idxPrev];
         sumSqDiff += (float)(diff * diff);
         pairs++;
       }
-      if (pairs > 0) {
-        rmssd = sqrtf(sumSqDiff / (float)pairs);
-      }
+
+      float rmssd = (pairs > 0) ? sqrtf(sumSqDiff / (float)pairs) : 35.0f;
+      // High RMSSD (e.g. 65ms) = relaxed / low stress; Low RMSSD (e.g. 18ms) = high stress
+      float hrvStress = map(constrain((long)roundf(rmssd), 15L, 75L), 15L, 75L, 85L, 15L);
+
+      // 2. Resting Heart Rate elevation component
+      float rhrStress = map(constrain((long)roundf(lastBpm), 55L, 110L), 55L, 110L, 10L, 90L);
+
+      // 3. Motion stability fusion (BNO085 IMU)
+      float motionFactor = 1.0f;
+
+      // Final Multi-Sensor Fusion formula:
+      float fusedStress = (hrvStress * 0.65f) + (rhrStress * 0.35f);
+      lastStress = (int)constrain(roundf(fusedStress * motionFactor), 5.0f, 95.0f);
+
+      // Success Chime
+      HAL::buzzPip(4800, 35);
+    } else {
+      // Insufficient clean beats captured during scan
+      hasValidData = false;
+      lastBpm = 0.0f;
+      lastStress = -1;
+
+      // Warning buzz
+      HAL::buzzPip(1800, 40);
     }
-    // High RMSSD (e.g. 60ms) = low stress; Low RMSSD (e.g. 20ms) = high stress
-    float hrvStress = map(constrain((long)roundf(rmssd), 15L, 75L), 15L, 75L, 85L, 15L);
 
-    // 2. Resting Heart Rate elevation component
-    float rhrStress = map(constrain((long)roundf(lastBpm), 55L, 110L), 55L, 110L, 10L, 90L);
-
-    // 3. Motion stability fusion (BNO085)
-    // If board is stationary on desk/wrist, confidence is high; if moving, clamp stress
-    float motionFactor = 1.0f;
-
-    // Final Multi-Sensor Fusion formula:
-    float fusedStress = (hrvStress * 0.65f) + (rhrStress * 0.35f);
-    lastStress = (int)constrain(roundf(fusedStress * motionFactor), 5.0f, 95.0f);
-    hasValidData = true;
-
-    // Chime & power down optical LEDs
-    HAL::buzzPip(4800, 30);
     stopSensor();
   }
 
@@ -602,24 +682,40 @@ private:
     } else if (scanState == SCAN_FINISHED) {
       // Scan Finalized Screen
       canvas->setTextDatum(MC_DATUM);
-      canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-      canvas->drawString("SCAN COMPLETE", 120, 52, &fonts::Font2);
+      if (hasValidData) {
+        canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
+        canvas->drawString("SCAN COMPLETE", 120, 52, &fonts::Font2);
 
-      // Results Summary Card
-      canvas->drawRoundRect(14, 72, 212, 114, 4, COLOR_ORANGE_MID);
+        // Results Summary Card
+        canvas->drawRoundRect(14, 72, 212, 114, 4, COLOR_ORANGE_MID);
 
-      char buf[32];
-      snprintf(buf, sizeof(buf), "PULSE: %.0f BPM", lastBpm);
-      canvas->drawString(buf, 120, 96, &fonts::Font2);
+        char buf[32];
+        snprintf(buf, sizeof(buf), "PULSE: %.0f BPM", lastBpm);
+        canvas->drawString(buf, 120, 96, &fonts::Font2);
 
-      snprintf(buf, sizeof(buf), "OXYGEN: %.0f%% SpO2", lastSpo2);
-      canvas->drawString(buf, 120, 126, &fonts::Font2);
+        snprintf(buf, sizeof(buf), "OXYGEN: %.0f%% SpO2", lastSpo2);
+        canvas->drawString(buf, 120, 126, &fonts::Font2);
 
-      snprintf(buf, sizeof(buf), "MSF STRESS: %d / 100", lastStress);
-      canvas->drawString(buf, 120, 156, &fonts::Font2);
+        snprintf(buf, sizeof(buf), "MSF STRESS: %d / 100", lastStress);
+        canvas->drawString(buf, 120, 156, &fonts::Font2);
 
-      canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawString("[PUSH] SAVE & RETURN TO VITALS", 120, 214);
+        canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
+        canvas->drawString("[PUSH] SAVE & RETURN TO VITALS", 120, 214);
+      } else {
+        canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
+        canvas->drawString("CALIBRATION INCOMPLETE", 120, 52, &fonts::Font2);
+
+        // Results Summary Card
+        canvas->drawRoundRect(14, 72, 212, 114, 4, COLOR_ORANGE_DIM);
+
+        canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
+        canvas->drawString("WEAK OPTICAL CONTACT", 120, 96, &fonts::Font2);
+        canvas->drawString("Fewer than 5 clear beats locked", 120, 124);
+        canvas->drawString("Rest finger gently without moving", 120, 144);
+
+        canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
+        canvas->drawString("[PUSH] RETRY SCAN", 120, 214);
+      }
       canvas->setTextDatum(TL_DATUM);
     }
   }
