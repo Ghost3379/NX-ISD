@@ -4,6 +4,7 @@
 #include "SensorState.h"
 #include "HAL.h"
 #include <heartRate.h>
+#include "../../nx-systems/NX-MSF.h"
 
 enum VitalsViewMode {
   VITALS_VIEW_DASHBOARD = 0,
@@ -281,11 +282,9 @@ public:
       irSum += ir;
       sampleAccumCount++;
 
-      // Live SpO2 estimation (every ~50 samples = ~1 sec)
+      // Live SpO2 estimation (every ~50 samples = ~1 sec) via NX-MSF
       if (sampleAccumCount >= 50 && irSum > 0) {
-        float r = ((float)redSum / (float)sampleAccumCount) / ((float)irSum / (float)sampleAccumCount);
-        float estSpo2 = 108.5f - 18.0f * r;
-        liveSpo2 = constrain(estSpo2, 94.0f, 100.0f);
+        liveSpo2 = NX_MSF::estimateSpO2(redSum, irSum, sampleAccumCount);
         redSum = 0;
         irSum = 0;
         sampleAccumCount = 0;
@@ -306,32 +305,8 @@ public:
       lastBpm = liveBpm;
       lastSpo2 = (liveSpo2 >= 94.0f && liveSpo2 <= 100.0f) ? liveSpo2 : 98.0f;
 
-      // Multi-Sensor Fusion (MSF) Stress Calculation:
-      // 1. True HRV RMSSD component calculated from successive IBI variances
-      int availablePairs = min(beatCount - 1, MAX_BEAT_INTERVALS - 1);
-      float sumSqDiff = 0.0f;
-      int pairs = 0;
-      for (int i = 1; i <= availablePairs; i++) {
-        int idxCurr = (beatIntervalIndex - i + MAX_BEAT_INTERVALS) % MAX_BEAT_INTERVALS;
-        int idxPrev = (beatIntervalIndex - i - 1 + MAX_BEAT_INTERVALS) % MAX_BEAT_INTERVALS;
-        int diff = (int)beatIntervals[idxCurr] - (int)beatIntervals[idxPrev];
-        sumSqDiff += (float)(diff * diff);
-        pairs++;
-      }
-
-      float rmssd = (pairs > 0) ? sqrtf(sumSqDiff / (float)pairs) : 35.0f;
-      // High RMSSD (e.g. 65ms) = relaxed / low stress; Low RMSSD (e.g. 18ms) = high stress
-      float hrvStress = map(constrain((long)roundf(rmssd), 15L, 75L), 15L, 75L, 85L, 15L);
-
-      // 2. Resting Heart Rate elevation component
-      float rhrStress = map(constrain((long)roundf(lastBpm), 55L, 110L), 55L, 110L, 10L, 90L);
-
-      // 3. Motion stability fusion (BNO085 IMU)
-      float motionFactor = 1.0f;
-
-      // Final Multi-Sensor Fusion formula:
-      float fusedStress = (hrvStress * 0.65f) + (rhrStress * 0.35f);
-      lastStress = (int)constrain(roundf(fusedStress * motionFactor), 5.0f, 95.0f);
+      // Multi-Sensor Fusion (MSF) Stress Calculation via NX-MSF
+      lastStress = NX_MSF::calculateStress(beatIntervals, MAX_BEAT_INTERVALS, beatCount, beatIntervalIndex, lastBpm, 1.0f);
 
       // Success Chime
       HAL::buzzPip(4800, 35);
@@ -420,54 +395,56 @@ private:
     }
 
     // 3. SpO2 Card (Top Left)
-    int c1x = 8, c1y = 34, c1w = 86, c1h = 44;
+    int c1x = 8, c1y = 34, c1w = 76, c1h = 44;
     canvas->drawRoundRect(c1x, c1y, c1w, c1h, 3, COLOR_ORANGE_DIM);
     canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas->drawString("SpO2", c1x + 6, c1y + 5);
+    canvas->drawString("SpO2", c1x + 8, c1y + 6);
 
     if (hasValidData) {
       char sBuf[16];
       snprintf(sBuf, sizeof(sBuf), "%.0f%%", lastSpo2);
       canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-      canvas->drawString(sBuf, c1x + 6, c1y + 17, &fonts::Font4);
-      canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawString(lastSpo2 >= 95.0f ? "[OPTIMAL]" : "[EVAL]", c1x + 6, c1y + 33);
+      canvas->drawString(sBuf, c1x + 8, c1y + 18, &fonts::Font4);
     } else {
       canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawString("--%", c1x + 6, c1y + 17, &fonts::Font4);
-      canvas->drawString("[STANDBY]", c1x + 6, c1y + 33);
+      canvas->drawString("--%", c1x + 8, c1y + 18, &fonts::Font4);
     }
 
-    // 4. Stress Card (Top Right)
-    int c2x = 146, c2y = 34, c2w = 86, c2h = 44;
+    // 4. Stress Card (Top Right - Enlarged with 8-Segment Tactical Meter)
+    int c2x = 132, c2y = 34, c2w = 100, c2h = 52;
     canvas->drawRoundRect(c2x, c2y, c2w, c2h, 3, COLOR_ORANGE_DIM);
     canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas->drawString("STRESS", c2x + 6, c2y + 5);
+    canvas->drawString("STRESS", c2x + 8, c2y + 5);
 
     if (hasValidData && lastStress >= 0) {
+      const char* tag = (lastStress > 65) ? "[HIGH]" : (lastStress > 40) ? "[MOD]" : "[LOW]";
+      canvas->drawRightString(tag, c2x + c2w - 8, c2y + 5);
+
       char stBuf[16];
       snprintf(stBuf, sizeof(stBuf), "%d%%", lastStress);
       canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-      canvas->drawString(stBuf, c2x + 6, c2y + 17, &fonts::Font4);
-
-      const char* tag = (lastStress > 65) ? "[HIGH]" : (lastStress > 40) ? "[MOD]" : "[LOW]";
-      canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-      canvas->drawString(tag, c2x + 6, c2y + 33);
-
-      // Mini 4-segment gauge
-      int segX = c2x + 48, segY = c2y + 33;
-      int activeSegs = (lastStress <= 25) ? 1 : (lastStress <= 50) ? 2 : (lastStress <= 75) ? 3 : 4;
-      for (int s = 0; s < 4; s++) {
-        if (s < activeSegs) {
-          canvas->fillRect(segX + s * 8, segY, 6, 6, COLOR_ORANGE_BRIGHT);
-        } else {
-          canvas->drawRect(segX + s * 8, segY, 6, 6, COLOR_ORANGE_DARK);
-        }
-      }
+      canvas->drawString(stBuf, c2x + 8, c2y + 17, &fonts::Font4);
     } else {
       canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawString("--%", c2x + 6, c2y + 17, &fonts::Font4);
-      canvas->drawString("[STANDBY]", c2x + 6, c2y + 33);
+      canvas->drawString("--%", c2x + 8, c2y + 17, &fonts::Font4);
+    }
+
+    // Wide 8-Segment Tactical Meter Bar
+    int segW = 9;
+    int segH = 7;
+    int segGap = 2;
+    int totalW = 8 * segW + 7 * segGap; // 86px
+    int segStartX = c2x + (c2w - totalW) / 2;
+    int segY = c2y + 40;
+    int activeSegs = (hasValidData && lastStress >= 0) ? ((lastStress * 8 + 50) / 100) : 0;
+    if (hasValidData && lastStress > 0 && activeSegs == 0) activeSegs = 1;
+
+    for (int s = 0; s < 8; s++) {
+      if (s < activeSegs) {
+        canvas->fillRect(segStartX + s * (segW + segGap), segY, segW, segH, COLOR_ORANGE_BRIGHT);
+      } else {
+        canvas->drawRect(segStartX + s * (segW + segGap), segY, segW, segH, COLOR_ORANGE_DARK);
+      }
     }
 
     // 5. Draw Central Beating Heart
@@ -492,10 +469,10 @@ private:
     canvas->drawCircle(anchorSpo2X, anchorSpo2Y, 3, nodeColor);
     canvas->fillCircle(anchorSpo2X, anchorSpo2Y, 1, nodeColor);
 
-    // Stress Trace: Anchor (O) in Mid-Low core -> (c2x + 12, anchorStressY) -> bottom of card (c2x + 12, c2y + c2h)
+    // Stress Trace: Anchor (O) in Mid-Low core -> (c2x + 14, anchorStressY) -> bottom of card (c2x + 14, c2y + c2h)
     int anchorStressX = cx;
     int anchorStressY = cy + (heartR * 3 / 10);
-    int card2InX = c2x + 12;
+    int card2InX = c2x + 14;
     int card2InY = c2y + c2h;
     canvas->drawLine(anchorStressX, anchorStressY, card2InX, anchorStressY, traceColor);
     canvas->drawLine(card2InX, anchorStressY, card2InX, card2InY, traceColor);
@@ -504,19 +481,16 @@ private:
     canvas->drawCircle(anchorStressX, anchorStressY, 3, nodeColor);
     canvas->fillCircle(anchorStressX, anchorStressY, 1, nodeColor);
 
-    // 7. Pulse BPM Readout (Beneath Apex)
+    // 7. Pulse BPM Readout (Beneath Apex - Cleaned)
     canvas->setTextDatum(MC_DATUM);
     if (hasValidData) {
       char bpmBuf[16];
       snprintf(bpmBuf, sizeof(bpmBuf), "%.0f BPM", lastBpm);
       canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-      canvas->drawString(bpmBuf, 120, 162, &fonts::Font4);
-      canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawString("· PULSE RATE ·", 120, 186);
+      canvas->drawString(bpmBuf, 120, 168, &fonts::Font4);
     } else {
       canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawString("-- BPM", 120, 162, &fonts::Font4);
-      canvas->drawString("· STANDBY ·", 120, 186);
+      canvas->drawString("-- BPM", 120, 168, &fonts::Font4);
     }
     canvas->setTextDatum(TL_DATUM);
 
@@ -524,7 +498,7 @@ private:
     canvas->drawFastHLine(4, 206, 232, COLOR_ORANGE_DARK);
     canvas->setTextDatum(MC_DATUM);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawString("[PUSH] NEW SCAN   [R] SETTINGS   [B] EXIT", 120, 220);
+    canvas->drawString("[PUSH] NEW SCAN   [R] SETTINGS", 120, 220);
     canvas->setTextDatum(TL_DATUM);
   }
 
@@ -737,7 +711,7 @@ private:
     canvas->drawFastHLine(4, 206, 232, COLOR_ORANGE_DARK);
     canvas->setTextDatum(MC_DATUM);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawString("[PUSH] TOGGLE   [L] BACK TO VITALS", 120, 220);
+    canvas->drawString("[PUSH] TOGGLE   [L] VITALS", 120, 220);
     canvas->setTextDatum(TL_DATUM);
   }
 

@@ -1,4 +1,5 @@
 #include "HAL.h"
+#include "DisplayConfig.h"
 
 Adafruit_NeoPixel* HAL::neoPixels = nullptr;
 Adafruit_MAX17048 HAL::fuelGauge;
@@ -14,8 +15,33 @@ bool HAL::envSensorReady = false;
 bool HAL::heartRateReady = false;
 bool HAL::imuReady = false;
 bool HAL::rtcReady = false;
+NotificationMode HAL::notifMode = NOTIF_SILENT;
 bool HAL::silentMode = true;
+bool HAL::lightsEnabled = false;
+int HAL::brightnessPercent = 85;
+bool HAL::autoDimEnabled = false;
+TiltMode HAL::tiltMode = TILT_BALANCED;
+int HAL::screenTimeoutSec = 30;
+bool HAL::wristCoverSleep = true;
 bool HAL::pinsInited = false;
+
+void HAL::setNotificationMode(NotificationMode mode) {
+  notifMode = mode;
+  silentMode = (mode == NOTIF_SILENT || mode == NOTIF_LIGHTS_ONLY);
+  lightsEnabled = (mode == NOTIF_ALL || mode == NOTIF_LIGHTS_ONLY);
+}
+
+void HAL::setBrightness(int pct, LGFX* display) {
+  brightnessPercent = constrain(pct, 10, 100);
+  applyBrightness(display);
+}
+
+void HAL::applyBrightness(LGFX* display) {
+  if (display) {
+    uint8_t pwm = (uint8_t)map(brightnessPercent, 0, 100, 15, 255);
+    display->setBrightness(pwm);
+  }
+}
 
 void HAL::initPins() {
   if (pinsInited) return;
@@ -52,8 +78,18 @@ void HAL::begin(void (*onProgress)(float progress)) {
 
   // 6. I2C Bus Bring-up
   Wire.begin(I2C_SDA, I2C_SCL);
-  Wire.setClock(400000); // 400 kHz Fast Mode for high-throughput sensor telemetry
+  Wire.setClock(100000); // 100 kHz Standard Mode during sensor bring-up for maximum noise margin
+  Wire.setTimeOut(100);
   delay(80); // Allow I2C bus lines and pullups to stabilize
+
+  // Diagnostic I2C bus scan
+  Serial.println("[HAL] Scanning I2C bus...");
+  for (uint8_t addr = 1; addr < 127; addr++) {
+    Wire.beginTransmission(addr);
+    if (Wire.endTransmission() == 0) {
+      Serial.printf("[HAL] I2C device detected at 0x%02X\n", addr);
+    }
+  }
 
   // 7. Probe sensors safely
   // Test if MAX17048 acknowledges at address 0x36
@@ -82,15 +118,12 @@ void HAL::begin(void (*onProgress)(float progress)) {
       rtcClock.setToCompilerTime();
     }
   }
-  // OPT3001 Ambient Light (Probe 0x45 first, fallback 0x44)
-  uint8_t optAddr = 0x45;
-  Wire.beginTransmission(0x45);
-  if (Wire.endTransmission() != 0) {
-    optAddr = 0x44;
-  }
-  Wire.beginTransmission(optAddr);
+  delay(40);
+
+  // OPT3001 Ambient Light (Address 0x44)
+  Wire.beginTransmission(0x44);
   if (Wire.endTransmission() == 0) {
-    lightSensor.begin(optAddr);
+    lightSensor.begin(0x44);
     OPT3001_Config optCfg;
     optCfg.RangeNumber = 0b1100;
     optCfg.ConvertionTime = 0b1;
@@ -122,17 +155,34 @@ void HAL::begin(void (*onProgress)(float progress)) {
   } else {
     heartRateReady = false;
   }
-  delay(40);
+  delay(60);
   if (onProgress) onProgress(0.75f);
 
-  imuReady = imuSensor.begin_I2C(0x4A, &Wire);
+  // BNO085 9-DOF IMU: retry loop across 0x4A and 0x4B with settling delays
+  delay(100);
+  for (int attempt = 0; attempt < 5 && !imuReady; attempt++) {
+    imuReady = imuSensor.begin_I2C(0x4A, &Wire);
+    if (!imuReady) {
+      delay(40);
+      imuReady = imuSensor.begin_I2C(0x4B, &Wire);
+    }
+    if (!imuReady) {
+      Serial.printf("[HAL] BNO085 init retry %d...\n", attempt + 1);
+      delay(80);
+    }
+  }
   if (imuReady) {
     imuSensor.enableReport(SH2_ROTATION_VECTOR, 20000); // 50 Hz 9-DOF fusion with magnetometer
+    Serial.println("[HAL] BNO085 IMU initialized successfully!");
+  } else {
+    Serial.println("[HAL] BNO085 IMU NOT FOUND");
   }
-  delay(150); // Allow SH2 dynamic calibration & sensor hub filter to stabilize
+  delay(120); // Allow SH2 dynamic calibration & sensor hub filter to stabilize
   if (onProgress) onProgress(0.95f);
 
-  delay(80);
+  // Switch to 400 kHz for high-throughput runtime telemetry
+  Wire.setClock(400000);
+  delay(40);
   if (onProgress) onProgress(1.0f);
 }
 

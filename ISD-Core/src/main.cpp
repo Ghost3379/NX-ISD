@@ -11,6 +11,8 @@
 #include "apps/tools/UplinkBridge.h"
 #include "apps/tools/AppTools.h"
 #include "apps/vitals/AppVitals.h"
+#include "apps/settings/AppSettings.h"
+#include "nx-systems/NX-MSF.h"
 
 // Hardware and UI instances
 LGFX tft;
@@ -18,14 +20,17 @@ Watchface watchface(&tft);
 AppMenu appMenu(&tft);
 AppTools appTools(&tft);
 AppVitals appVitals(&tft);
+AppSettings appSettings(&tft);
 
 enum AppScreenMode {
   SCREEN_WATCHFACE,
   SCREEN_APPMENU,
   SCREEN_APP_TOOLS,
-  SCREEN_APP_VITALS
+  SCREEN_APP_VITALS,
+  SCREEN_APP_SETTINGS
 };
 AppScreenMode currentScreen = SCREEN_WATCHFACE;
+static bool settingsFromQuickpanel = false;
 
 SensorState sharedState;
 SemaphoreHandle_t stateMutex = NULL;
@@ -145,7 +150,23 @@ void vSensorTask(void* pvParameters) {
       }
     }
 
-    // 3. Slow Sensor polling (every 1000ms: Fuel Gauge, RTC, BME680, OPT3001)
+    // 2b. Fast Ambient Light Polling (every 100ms for real-time palm cover & auto-dim)
+    static uint32_t lastLightPoll = 0;
+    bool doLightPoll = (now - lastLightPoll >= 100);
+    float fastLux = 0.0f;
+    bool fastLightOk = false;
+    if (doLightPoll) {
+      lastLightPoll = now;
+      if (HAL::lightSensorReady) {
+        OPT3001 res = HAL::lightSensor.readResult();
+        if (res.error == NO_ERROR) {
+          fastLux = res.lux;
+          fastLightOk = true;
+        }
+      }
+    }
+
+    // 3. Slow Sensor polling (every 1000ms: Fuel Gauge, RTC, BME680)
     // Executed OUTSIDE the mutex so stateMutex lock time is strictly < 1 microsecond!
     bool doSlowPoll = (now - lastSlowPoll >= 1000);
     float slowVolt = 0.0f, slowPct = 0.0f, slowRate = 0.0f;
@@ -155,8 +176,6 @@ void vSensorTask(void* pvParameters) {
     bool slowRtcOk = false;
     bme68xData slowEnvData;
     bool slowEnvOk = false;
-    float slowLux = 0.0f;
-    bool slowLightOk = false;
 
     if (doSlowPoll) {
       lastSlowPoll = now;
@@ -186,15 +205,6 @@ void vSensorTask(void* pvParameters) {
         }
         HAL::envSensor.setOpMode(BME68X_FORCED_MODE);
       }
-
-      // Ambient Light (OPT3001)
-      if (HAL::lightSensorReady) {
-        OPT3001 res = HAL::lightSensor.readResult();
-        if (res.error == NO_ERROR) {
-          slowLux = res.lux;
-          slowLightOk = true;
-        }
-      }
     }
 
     // 4. Thread-safe state update (< 1 microsecond memory copy)
@@ -208,6 +218,10 @@ void vSensorTask(void* pvParameters) {
         sharedState.yaw = curYaw;
         sharedState.imuCalib = curCalib;
         sharedState.imuDataReady = true;
+      }
+
+      if (fastLightOk) {
+        sharedState.lightLux = fastLux;
       }
 
       if (doSlowPoll) {
@@ -226,9 +240,6 @@ void vSensorTask(void* pvParameters) {
           sharedState.press = slowEnvData.pressure / 100.0f; // Pa to hPa
           sharedState.gas = slowEnvData.gas_resistance;
           sharedState.envDataReady = true;
-        }
-        if (slowLightOk) {
-          sharedState.lightLux = slowLux;
         }
       }
 
@@ -321,6 +332,16 @@ void setup() {
     watchface.getColorOrangeDark()
   );
 
+  // 3e. Initialize AppSettings sharing zero-copy PSRAM canvas and palette
+  appSettings.init(
+    watchface.getCanvas(),
+    watchface.getColorBg(),
+    watchface.getColorOrangeBright(),
+    watchface.getColorOrangeMid(),
+    watchface.getColorOrangeDim(),
+    watchface.getColorOrangeDark()
+  );
+
   // 4. Render initial boot frame instantly
   watchface.renderBootFrame(0.02f);
 
@@ -378,6 +399,42 @@ void setup() {
   UplinkBridge::begin();
 
   Serial.println("\n[NX-ISD] Watchface active. Double-buffering enabled. Audio muted.");
+}
+
+// Helper: Checks if the watch is held/tilted in an active viewing orientation
+static inline bool isViewingAngle(float roll, float pitch, TiltMode mode) {
+  float absR = fabsf(roll);
+  float absP = fabsf(pitch);
+
+  switch (mode) {
+    case TILT_SENSITIVE:
+      // Broad viewing window: 12° to 80° on either axis with orthogonal kept under 60°
+      return ((absR >= 12.0f && absR <= 80.0f && absP <= 60.0f) ||
+              (absP >= 12.0f && absP <= 80.0f && absR <= 60.0f));
+
+    case TILT_BALANCED:
+      // Natural wrist glance: 22° to 72° on either axis with orthogonal kept under 48°
+      return ((absR >= 22.0f && absR <= 72.0f && absP <= 48.0f) ||
+              (absP >= 22.0f && absP <= 72.0f && absR <= 48.0f));
+
+    case TILT_SLUGGISH:
+      // Steep deliberate glance: 35° to 65° with orthogonal strictly level (< 35°)
+      return ((absR >= 35.0f && absR <= 65.0f && absP <= 35.0f) ||
+              (absP >= 35.0f && absP <= 65.0f && absR <= 35.0f));
+
+    case TILT_OFF:
+    default:
+      return false;
+  }
+}
+
+// Helper: Checks if the watch is resting (arm hanging vertically down at the side)
+static inline bool isRestingAngle(float roll, float pitch) {
+  float absR = fabsf(roll);
+  float absP = fabsf(pitch);
+  // Arm hanging straight down (> 75° on primary axis)
+  // Flat on desk (facing upwards) is active viewing, NEVER sleep!
+  return (absR >= 75.0f) || (absP >= 75.0f);
 }
 
 // ==================== MAIN UI LOOP (Core 1) ====================
@@ -468,27 +525,127 @@ void loop() {
 
   // 1. Handle Standby (Display Off) State
   static bool prevUsb = false;
+  static bool wasViewing = false;
+  static uint32_t lastActivityMs = millis();
+  static uint32_t wakeTimeMs = millis();
+  static uint32_t tiltSleepStartMs = 0;
+  static uint32_t palmCoverStartMs = 0;
+  static float ambientLuxBaseline = 30.0f;
+
   if (watchface.isInStandby()) {
     bool usbPlugged = (localState.usbConnected && !prevUsb);
     prevUsb = localState.usbConnected;
-    if (navBtn || navLeft || navPush || navRight || usbPlugged) {
-      Serial.println("[PWR] Waking from Standby via User Input...");
+
+    // Check Tilt to Wake gesture based on active profile
+    bool tiltWake = false;
+    if (HAL::tiltMode != TILT_OFF && localState.imuDataReady) {
+      bool currentlyViewing = isViewingAngle(localState.roll, localState.pitch, HAL::tiltMode);
+      bool currentlyResting = isRestingAngle(localState.roll, localState.pitch);
+      if (currentlyResting) {
+        wasViewing = false;
+      }
+      if (!wasViewing && currentlyViewing) {
+        tiltWake = true;
+        wasViewing = true;
+      }
+    }
+
+    if (navBtn || navLeft || navPush || navRight || usbPlugged || tiltWake) {
+      if (tiltWake) {
+        Serial.println("[PWR] Waking from Standby via Tilt-to-Wake Gesture!");
+      } else {
+        Serial.println("[PWR] Waking from Standby via User Input...");
+      }
       watchface.wakeFromStandby();
+      currentScreen = SCREEN_WATCHFACE;
+      lastActivityMs = millis();
+      wakeTimeMs = millis();
+      tiltSleepStartMs = 0;
+      palmCoverStartMs = 0;
       // Swallow the wake input so it doesn't trigger unexpected screen actions
       navBtn = false;
       navLeft = false;
       navPush = false;
       navRight = false;
     } else {
-      delay(50);
+      delay(40);
       return; // Skip rendering frames to save CPU and power
     }
   } else {
     prevUsb = localState.usbConnected;
+
+    // A. Tilt Back to Sleep Check (when arm returns to resting or hanging down)
+    if (HAL::tiltMode != TILT_OFF && localState.imuDataReady) {
+      bool currentlyViewing = isViewingAngle(localState.roll, localState.pitch, HAL::tiltMode);
+      bool currentlyResting = isRestingAngle(localState.roll, localState.pitch);
+
+      if (currentlyViewing) {
+        wasViewing = true;
+        tiltSleepStartMs = 0;
+      } else if (wasViewing && currentlyResting && (millis() - wakeTimeMs >= 1500)) {
+        if (tiltSleepStartMs == 0) {
+          tiltSleepStartMs = millis();
+        } else if (millis() - tiltSleepStartMs >= 400) {
+          Serial.println("[PWR] Tilt Back to Sleep -> Entering Standby");
+          watchface.enterStandby();
+          wasViewing = false;
+          tiltSleepStartMs = 0;
+          return;
+        }
+      } else {
+        tiltSleepStartMs = 0;
+      }
+    }
+
+    // B. Wrist Cover to Sleep Check (covering OPT3001 and screen with palm/wrist)
+    if (HAL::wristCoverSleep) {
+      if (localState.lightLux > 4.0f) {
+        ambientLuxBaseline = (ambientLuxBaseline * 0.90f) + (localState.lightLux * 0.10f);
+      }
+      if (HAL::lightSensorReady && localState.lightLux <= 1.5f && ambientLuxBaseline >= 4.0f && (millis() - wakeTimeMs >= 700)) {
+        if (palmCoverStartMs == 0) {
+          palmCoverStartMs = millis();
+        } else if (millis() - palmCoverStartMs >= 250) {
+          Serial.println("[PWR] Wrist Cover to Sleep detected -> Entering Standby");
+          HAL::buzzPip(2400, 12);
+          watchface.enterStandby();
+          palmCoverStartMs = 0;
+          return;
+        }
+      } else {
+        palmCoverStartMs = 0;
+      }
+    } else {
+      palmCoverStartMs = 0;
+    }
+
+    // C. Inactivity Standby Timeout Check (0 = NEVER)
+    if (navBtn || navLeft || navPush || navRight || curPush || curBtn || curLeft || curRight || localState.fingerDetected) {
+      lastActivityMs = millis();
+    } else if (HAL::screenTimeoutSec > 0) {
+      if (millis() - lastActivityMs >= (uint32_t)HAL::screenTimeoutSec * 1000UL) {
+        Serial.println("[PWR] Inactivity timeout reached -> Entering Standby");
+        watchface.enterStandby();
+        return;
+      }
+    }
   }
 
   // 1b. Update NX-Uplink Companion Bridge (serial telemetry & commands & LED matrix)
   UplinkBridge::update(localState);
+
+  // 1c. Automatic Ambient Light Dimming (NX-MSF Logarithmic Weber-Fechner Curve)
+  if (HAL::autoDimEnabled && localState.lightLux >= 0.0f) {
+    static uint32_t lastAutoDimMs = 0;
+    static float smoothedLux = 50.0f;
+    if (millis() - lastAutoDimMs >= 150) {
+      lastAutoDimMs = millis();
+      int autoPct = NX_MSF::calculateAutoDim(localState.lightLux, smoothedLux);
+      if (abs(autoPct - HAL::brightnessPercent) >= 2) {
+        HAL::setBrightness(autoPct, &tft);
+      }
+    }
+  }
 
   // 2. Dispatch UI by Current Screen
   if (currentScreen == SCREEN_WATCHFACE) {
@@ -525,6 +682,15 @@ void loop() {
 
     // Render active watchface view to offscreen PSRAM sprite and push cleanly to ST7789
     watchface.render(localState);
+
+    // Check if Quick Panel Settings tile was triggered
+    if (watchface.checkAndClearSettingsTrigger()) {
+      Serial.println("[NAV] Quick Panel Settings Triggered -> Launching Settings!");
+      settingsFromQuickpanel = true;
+      currentScreen = SCREEN_APP_SETTINGS;
+      appSettings.onEnter();
+      return;
+    }
 
     // Check if lever hold triggered the App Menu entrance
     if (watchface.checkAndClearAppMenuTrigger()) {
@@ -569,6 +735,12 @@ void loop() {
         Serial.println("[NAV] Entering VITALS App View!");
         currentScreen = SCREEN_APP_VITALS;
         appVitals.onEnter();
+        return;
+      } else if (launchApp == APP_SETTINGS) {
+        Serial.println("[NAV] Entering SETTINGS App View!");
+        settingsFromQuickpanel = false;
+        currentScreen = SCREEN_APP_SETTINGS;
+        appSettings.onEnter();
         return;
       }
     }
@@ -629,6 +801,38 @@ void loop() {
 
     // Render Vitals screen to offscreen PSRAM sprite and push cleanly to ST7789
     appVitals.render(localState);
+
+    // Non-blocking yield
+    delay(1);
+
+  } else if (currentScreen == SCREEN_APP_SETTINGS) {
+    // Settings Navigation
+    if (navBtn) {
+      if (!appSettings.handleNavBtn()) {
+        if (settingsFromQuickpanel) {
+          Serial.println("[NAV] Exiting SETTINGS App back to Home Watchface");
+          settingsFromQuickpanel = false;
+          watchface.setView(VIEW_HOME);
+          currentScreen = SCREEN_WATCHFACE;
+        } else {
+          Serial.println("[NAV] Exiting SETTINGS App back to App Menu");
+          currentScreen = SCREEN_APPMENU;
+        }
+        return;
+      }
+    }
+    if (navLeft) {
+      appSettings.handleNavLeft();
+    }
+    if (navRight) {
+      appSettings.handleNavRight();
+    }
+    if (navPush) {
+      appSettings.handleNavPush();
+    }
+
+    // Render Settings screen to offscreen PSRAM sprite and push cleanly to ST7789
+    appSettings.render(localState);
 
     // Non-blocking yield
     delay(1);

@@ -13,6 +13,22 @@
 #include "pins.h"
 #include "SensorState.h"
 
+class LGFX;
+
+enum NotificationMode {
+  NOTIF_SILENT      = 0,
+  NOTIF_ALL         = 1,
+  NOTIF_SOUND_ONLY  = 2,
+  NOTIF_LIGHTS_ONLY = 3
+};
+
+enum TiltMode {
+  TILT_OFF       = 0,
+  TILT_SENSITIVE = 1,
+  TILT_BALANCED  = 2,
+  TILT_SLUGGISH  = 3
+};
+
 class HAL {
 public:
   static Adafruit_NeoPixel* neoPixels;
@@ -30,7 +46,18 @@ public:
   static bool imuReady;
   static bool rtcReady;
 
+  static NotificationMode notifMode;
   static bool silentMode;
+  static bool lightsEnabled;
+  static void setNotificationMode(NotificationMode mode);
+
+  static int brightnessPercent;
+  static bool autoDimEnabled;
+  static TiltMode tiltMode;
+  static int screenTimeoutSec;
+  static bool wristCoverSleep;
+  static void setBrightness(int pct, LGFX* display = nullptr);
+  static void applyBrightness(LGFX* display);
 
   static bool pinsInited;
   static void initPins();

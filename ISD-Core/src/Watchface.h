@@ -41,7 +41,9 @@ private:
   int qpFocusIndex = 0;      // 0..5 focused tile
   bool qpInTileMode = false; // whether user is navigating inside the tiles
   bool qpEcoMode = false;
-  bool qpSilentMode = true;
+  NotificationMode qpNotifMode = NOTIF_SILENT;
+  bool qpInNotifMenu = false;
+  int notifMenuIndex = 0;
   bool qpHrmMeasuring = false;
   uint32_t qpHrmStartMs = 0;
 
@@ -59,6 +61,7 @@ private:
   // Lever-Push Hold-to-Charge state for App Menu entrance
   uint32_t leverPushStartMs = 0;
   bool appMenuTriggered = false;
+  bool settingsTriggered = false;
   float chargeProgress = 0.0f;
 
 public:
@@ -74,6 +77,14 @@ public:
   bool checkAndClearAppMenuTrigger() {
     if (appMenuTriggered) {
       appMenuTriggered = false;
+      return true;
+    }
+    return false;
+  }
+
+  bool checkAndClearSettingsTrigger() {
+    if (settingsTriggered) {
+      settingsTriggered = false;
       return true;
     }
     return false;
@@ -121,14 +132,11 @@ public:
   }
 
   void applyBrightness() {
-    if (display) {
-      uint8_t pwm = (uint8_t)map(brightnessPercent, 0, 100, 15, 255);
-      display->setBrightness(pwm);
-    }
+    HAL::applyBrightness(display);
   }
 
   int getBrightness() const {
-    return brightnessPercent;
+    return HAL::brightnessPercent;
   }
 
   PowerAction getRequestedPowerAction() {
@@ -157,6 +165,7 @@ public:
     qpInTileMode = false;
     qpInBrightnessMenu = false;
     qpInShutdownMenu = false;
+    qpInNotifMenu = false;
     applyBrightness();
   }
 
@@ -185,19 +194,26 @@ public:
     transitionStartTime = millis();
     isTransitioning = true;
     qpInTileMode = false;
+    qpFocusIndex = 0;
     qpInBrightnessMenu = false;
     qpInShutdownMenu = false;
+    qpInNotifMenu = false;
   }
 
   void handleNavLeft() {
-    if (isTransitioning) return;
+    if (isTransitioning) {
+      isTransitioning = false;
+      currentView = targetView;
+    }
     if (currentView == VIEW_QUICKPANEL && qpInBrightnessMenu) {
-      brightnessPercent = min(100, brightnessPercent + 5);
-      applyBrightness();
+      HAL::setBrightness(HAL::brightnessPercent + 5, display);
     } else if (currentView == VIEW_QUICKPANEL && qpInShutdownMenu) {
       shutdownMenuIndex = (shutdownMenuIndex + 2) % 3;
+    } else if (currentView == VIEW_QUICKPANEL && qpInNotifMenu) {
+      notifMenuIndex = (notifMenuIndex + 3) % 4;
     } else if (currentView == VIEW_QUICKPANEL && qpInTileMode) {
       qpFocusIndex = (qpFocusIndex + 5) % 6;
+      HAL::buzzPip(3000, 10);
     } else if (currentView == VIEW_QUICKPANEL) {
       startTransition(VIEW_HOME, -1);
     } else if (currentView == VIEW_HOME) {
@@ -206,14 +222,19 @@ public:
   }
 
   void handleNavRight() {
-    if (isTransitioning) return;
+    if (isTransitioning) {
+      isTransitioning = false;
+      currentView = targetView;
+    }
     if (currentView == VIEW_QUICKPANEL && qpInBrightnessMenu) {
-      brightnessPercent = max(10, brightnessPercent - 5);
-      applyBrightness();
+      HAL::setBrightness(HAL::brightnessPercent - 5, display);
     } else if (currentView == VIEW_QUICKPANEL && qpInShutdownMenu) {
       shutdownMenuIndex = (shutdownMenuIndex + 1) % 3;
+    } else if (currentView == VIEW_QUICKPANEL && qpInNotifMenu) {
+      notifMenuIndex = (notifMenuIndex + 1) % 4;
     } else if (currentView == VIEW_QUICKPANEL && qpInTileMode) {
       qpFocusIndex = (qpFocusIndex + 1) % 6;
+      HAL::buzzPip(3000, 10);
     } else if (currentView == VIEW_NOTIFICATIONS) {
       startTransition(VIEW_HOME, 1);
     } else if (currentView == VIEW_HOME) {
@@ -222,7 +243,10 @@ public:
   }
 
   void handleNavPush() {
-    if (isTransitioning) return;
+    if (isTransitioning) {
+      isTransitioning = false;
+      currentView = targetView;
+    }
     if (currentView == VIEW_HOME) {
       // Lever push on Home is dedicated to the 2.0s hold charge gesture.
       // Quickpanel is accessed via lever right.
@@ -246,14 +270,24 @@ public:
       } else if (qpInBrightnessMenu) {
         // Exit circular brightness menu and confirm level
         qpInBrightnessMenu = false;
+      } else if (qpInNotifMenu) {
+        qpNotifMode = (NotificationMode)notifMenuIndex;
+        HAL::setNotificationMode(qpNotifMode);
+        qpInNotifMenu = false;
+        if (!HAL::silentMode) {
+          HAL::buzzPip(3500, 15);
+        }
       } else if (!qpInTileMode) {
         // Enter tile navigation mode
         qpInTileMode = true;
         qpFocusIndex = 0;
+        HAL::buzzPip(3500, 15);
       } else {
         // Toggle or activate the selected tile
         switch (qpFocusIndex) {
           case 0: // Settings
+            settingsTriggered = true;
+            HAL::buzzPip(3800, 15);
             break;
           case 1: // HRM
             qpHrmMeasuring = !qpHrmMeasuring;
@@ -265,9 +299,9 @@ public:
           case 3: // Display / Brightness circular menu
             qpInBrightnessMenu = true;
             break;
-          case 4: // Silent
-            qpSilentMode = !qpSilentMode;
-            HAL::silentMode = qpSilentMode;
+          case 4: // Notification Methods Menu
+            qpInNotifMenu = true;
+            notifMenuIndex = (int)qpNotifMode;
             break;
           case 5: // Shutdown / Power Menu
             qpInShutdownMenu = true;
@@ -281,14 +315,20 @@ public:
   }
 
   void handleNavBack() {
-    if (isTransitioning) return;
+    if (isTransitioning) {
+      isTransitioning = false;
+      currentView = targetView;
+    }
     if (currentView == VIEW_QUICKPANEL) {
       if (qpInShutdownMenu) {
         qpInShutdownMenu = false;
       } else if (qpInBrightnessMenu) {
         qpInBrightnessMenu = false;
+      } else if (qpInNotifMenu) {
+        qpInNotifMenu = false;
       } else if (qpInTileMode) {
         qpInTileMode = false;
+        HAL::buzzPip(2800, 10);
       } else {
         startTransition(VIEW_HOME, -1);
       }
@@ -314,7 +354,7 @@ public:
     COLOR_ORANGE_DARK   = canvas.color565(35, 12, 0);        // Dark grid background
 
     applyBrightness();
-    HAL::silentMode = qpSilentMode;
+    HAL::setNotificationMode(qpNotifMode);
     initialized = true;
   }
 
@@ -345,7 +385,7 @@ public:
     // Version Tag Directly Under Loading Bar
     canvas.setTextSize(1);
     canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas.drawCenterString("v0p3", 120, 140);
+    canvas.drawCenterString("v0p37", 120, 140);
 
     // Bottom Footer in the middle of the screen
     canvas.setTextSize(1);
@@ -756,6 +796,12 @@ private:
       return;
     }
 
+    // Dedicated Notification Methods Menu overlay
+    if (qpInNotifMenu) {
+      renderNotifMenu(offsetX);
+      return;
+    }
+
     // 6 Concept Quick Action Tiles (Android Wear / Squircle Style)
     // Layout: 2 rows x 3 columns
     // Tile size: 64 x 62 px, corner radius: 8 px
@@ -765,14 +811,15 @@ private:
     const int startY[2] = { 46, 122 };
 
     char dispLabel[12];
-    snprintf(dispLabel, sizeof(dispLabel), "%d%%", brightnessPercent);
+    snprintf(dispLabel, sizeof(dispLabel), "%d%%", HAL::brightnessPercent);
 
+    const char* notifTileLabels[4] = { "SILENT", "ALL", "SOUND", "LIGHTS" };
     const char* tileLabels[6] = {
       "SETTINGS",
       qpHrmMeasuring ? "MEASURE" : "HRM",
       qpEcoMode ? "ECO: ON" : "ECO: OFF",
       dispLabel,
-      qpSilentMode ? "SILENT" : "SOUND",
+      notifTileLabels[(int)qpNotifMode],
       "SHUTDOWN"
     };
 
@@ -789,7 +836,7 @@ private:
       if (i == 1 && qpHrmMeasuring) isToggledOn = true;
       if (i == 2 && qpEcoMode)      isToggledOn = true;
       if (i == 3 && brightnessPercent >= 90) isToggledOn = true;
-      if (i == 4 && qpSilentMode)   isToggledOn = true;
+      if (i == 4 && qpNotifMode != NOTIF_SILENT) isToggledOn = true;
 
       uint16_t borderColor = isFocused ? COLOR_ORANGE_BRIGHT : (isToggledOn ? COLOR_ORANGE_MID : COLOR_ORANGE_DIM);
       uint16_t iconColor   = isFocused ? COLOR_ORANGE_BRIGHT : (isToggledOn ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID);
@@ -866,14 +913,21 @@ private:
           break;
         }
 
-        case 4: { // AUDIO / SILENT (Bell with Mute Slash)
+        case 4: { // NOTIFICATION METHOD (Bell with status accents)
           canvas.drawCircle(icx, icy - 2, 4, iconColor);
           canvas.drawLine(icx - 6, icy + 4, icx - 4, icy - 2, iconColor);
           canvas.drawLine(icx + 6, icy + 4, icx + 4, icy - 2, iconColor);
           canvas.drawFastHLine(icx - 7, icy + 4, 15, iconColor);
           canvas.fillCircle(icx, icy + 6, 1, iconColor);
-          if (qpSilentMode) {
+          if (qpNotifMode == NOTIF_SILENT) {
             canvas.drawLine(icx - 8, icy - 8, icx + 8, icy + 8, COLOR_ORANGE_BRIGHT);
+          } else if (qpNotifMode == NOTIF_ALL) {
+            canvas.drawFastHLine(icx + 6, icy - 5, 3, COLOR_ORANGE_BRIGHT);
+            canvas.drawFastVLine(icx + 7, icy - 6, 3, COLOR_ORANGE_BRIGHT);
+          } else if (qpNotifMode == NOTIF_LIGHTS_ONLY) {
+            canvas.drawFastVLine(icx, icy - 8, 3, COLOR_ORANGE_BRIGHT);
+            canvas.drawFastHLine(icx - 9, icy, 3, COLOR_ORANGE_BRIGHT);
+            canvas.drawFastHLine(icx + 7, icy, 3, COLOR_ORANGE_BRIGHT);
           }
           break;
         }
@@ -926,12 +980,12 @@ private:
       int x2 = cx + (int)roundf(cosf(rad) * rOut);
       int y2 = cy + (int)roundf(sinf(rad) * rOut);
 
-      uint16_t tickColor = (p <= brightnessPercent) ? (isMajor ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID) : COLOR_ORANGE_DARK;
+      uint16_t tickColor = (p <= HAL::brightnessPercent) ? (isMajor ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID) : COLOR_ORANGE_DARK;
       canvas.drawLine(x1, y1, x2, y2, tickColor);
     }
 
     // 3. Active Orbital Satellite Pip (Glowing pointer pip outside the ring)
-    float curFrac = (brightnessPercent - 10) / 90.0f;
+    float curFrac = (HAL::brightnessPercent - 10) / 90.0f;
     float curAngleDeg = 135.0f + curFrac * 270.0f;
     float curRad = curAngleDeg * 0.0174532925f;
     int pipX = cx + (int)roundf(cosf(curRad) * (radius + 9));
@@ -956,7 +1010,7 @@ private:
     canvas.setTextSize(3);
     canvas.setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
     char pBuf[8];
-    snprintf(pBuf, sizeof(pBuf), "%d%%", brightnessPercent);
+    snprintf(pBuf, sizeof(pBuf), "%d%%", HAL::brightnessPercent);
     canvas.drawCenterString(pBuf, cx, cy + 2);
 
     // 6. Context Bottom Bar
@@ -1035,6 +1089,107 @@ private:
     canvas.setTextSize(1);
     canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
     canvas.drawCenterString("< LEVER > SELECT | PUSH: OK", 120 + offsetX, 206);
+  }
+
+  void renderNotifMenu(int offsetX) {
+    const char* titles[4] = { "SILENT", "ALL", "SOUND ONLY", "LIGHTS ONLY" };
+    const char* descs[4]  = { "MUTED BUZZER & LEDS", "BUZZER PIPS & MATRIX LED", "BUZZER PIPS ONLY", "SILENT MATRIX LED ONLY" };
+
+    int cardW = 216;
+    int cardH = 36;
+    int startX = 12 + offsetX;
+    int startY[4] = { 34, 74, 114, 154 };
+
+    for (int i = 0; i < 4; i++) {
+      bool isSelected = (i == notifMenuIndex);
+      bool isCurrentActive = (i == (int)qpNotifMode);
+      int cx = startX;
+      int cy = startY[i];
+
+      uint16_t cardBg = isSelected ? COLOR_ORANGE_DARK : COLOR_BG;
+      uint16_t borderCol = isSelected ? COLOR_ORANGE_BRIGHT : (isCurrentActive ? COLOR_ORANGE_MID : COLOR_ORANGE_DIM);
+      uint16_t textCol = isSelected ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID;
+      uint16_t iconCol = isSelected ? COLOR_ORANGE_BRIGHT : (isCurrentActive ? COLOR_ORANGE_MID : COLOR_ORANGE_DIM);
+
+      // Card Background & Border
+      canvas.fillRoundRect(cx, cy, cardW, cardH, 6, cardBg);
+      canvas.drawRoundRect(cx, cy, cardW, cardH, 6, borderCol);
+      if (isSelected) {
+        canvas.drawRoundRect(cx + 1, cy + 1, cardW - 2, cardH - 2, 5, borderCol);
+        canvas.fillRoundRect(cx + 4, cy + 6, 3, cardH - 12, 2, COLOR_ORANGE_BRIGHT);
+      }
+
+      // Radio dot if currently active mode
+      if (isCurrentActive) {
+        int dotX = cx + cardW - 14;
+        int dotY = cy + (cardH / 2);
+        canvas.fillCircle(dotX, dotY, 3, COLOR_ORANGE_BRIGHT);
+        canvas.drawCircle(dotX, dotY, 5, isSelected ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID);
+      }
+
+      // Card Icon
+      int icx = cx + 22;
+      int icy = cy + (cardH / 2);
+
+      switch (i) {
+        case 0: { // SILENT (Bell with Mute Slash)
+          canvas.drawCircle(icx, icy - 2, 4, iconCol);
+          canvas.drawLine(icx - 6, icy + 4, icx - 4, icy - 2, iconCol);
+          canvas.drawLine(icx + 6, icy + 4, icx + 4, icy - 2, iconCol);
+          canvas.drawFastHLine(icx - 7, icy + 4, 15, iconCol);
+          canvas.fillCircle(icx, icy + 6, 1, iconCol);
+          canvas.drawLine(icx - 7, icy - 7, icx + 7, icy + 7, COLOR_ORANGE_BRIGHT);
+          break;
+        }
+        case 1: { // ALL (Bell with Sound & Light accents)
+          canvas.drawCircle(icx - 2, icy - 2, 4, iconCol);
+          canvas.drawLine(icx - 8, icy + 4, icx - 6, icy - 2, iconCol);
+          canvas.drawLine(icx + 4, icy + 4, icx + 2, icy - 2, iconCol);
+          canvas.drawFastHLine(icx - 9, icy + 4, 15, iconCol);
+          canvas.fillCircle(icx - 2, icy + 6, 1, iconCol);
+          canvas.drawFastHLine(icx + 6, icy - 3, 3, COLOR_ORANGE_BRIGHT);
+          canvas.drawFastVLine(icx + 7, icy - 4, 3, COLOR_ORANGE_BRIGHT);
+          canvas.drawFastHLine(icx + 6, icy + 3, 3, COLOR_ORANGE_MID);
+          break;
+        }
+        case 2: { // SOUND ONLY (Bell with Sound Waves)
+          canvas.drawCircle(icx - 2, icy - 2, 4, iconCol);
+          canvas.drawLine(icx - 8, icy + 4, icx - 6, icy - 2, iconCol);
+          canvas.drawLine(icx + 4, icy + 4, icx + 2, icy - 2, iconCol);
+          canvas.drawFastHLine(icx - 9, icy + 4, 15, iconCol);
+          canvas.fillCircle(icx - 2, icy + 6, 1, iconCol);
+          canvas.drawCircle(icx + 2, icy - 2, 6, iconCol);
+          canvas.fillRect(icx - 4, icy - 9, 6, 14, cardBg);
+          break;
+        }
+        case 3: { // LIGHTS ONLY (Illuminated Rays)
+          canvas.drawCircle(icx, icy, 5, iconCol);
+          canvas.fillCircle(icx, icy, 2, iconCol);
+          for (int r = 0; r < 6; r++) {
+            float rad = r * 1.047197f;
+            int x1 = icx + (int)roundf(cosf(rad) * 6.0f);
+            int y1 = icy + (int)roundf(sinf(rad) * 6.0f);
+            int x2 = icx + (int)roundf(cosf(rad) * 8.5f);
+            int y2 = icy + (int)roundf(sinf(rad) * 8.5f);
+            canvas.drawLine(x1, y1, x2, y2, iconCol);
+          }
+          break;
+        }
+      }
+
+      // Title & Subtitle
+      canvas.setTextSize(1);
+      canvas.setTextColor(textCol, cardBg);
+      canvas.drawString(titles[i], cx + 42, cy + 6, &fonts::Font2);
+
+      canvas.setTextColor(isSelected ? COLOR_ORANGE_MID : COLOR_ORANGE_DIM, cardBg);
+      canvas.drawString(descs[i], cx + 42, cy + 22);
+    }
+
+    // Context Prompt at bottom
+    canvas.setTextSize(1);
+    canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
+    canvas.drawCenterString("< LEVER > SELECT | PUSH: SET", 120 + offsetX, 198);
   }
 
   void renderPageIndicator(float dotX) {
