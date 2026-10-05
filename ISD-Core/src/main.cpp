@@ -10,17 +10,20 @@
 #include "AppMenu.h"
 #include "apps/tools/UplinkBridge.h"
 #include "apps/tools/AppTools.h"
+#include "apps/vitals/AppVitals.h"
 
 // Hardware and UI instances
 LGFX tft;
 Watchface watchface(&tft);
 AppMenu appMenu(&tft);
 AppTools appTools(&tft);
+AppVitals appVitals(&tft);
 
 enum AppScreenMode {
   SCREEN_WATCHFACE,
   SCREEN_APPMENU,
-  SCREEN_APP_TOOLS
+  SCREEN_APP_TOOLS,
+  SCREEN_APP_VITALS
 };
 AppScreenMode currentScreen = SCREEN_WATCHFACE;
 
@@ -308,6 +311,16 @@ void setup() {
     watchface.getColorOrangeDark()
   );
 
+  // 3d. Initialize AppVitals sharing zero-copy PSRAM canvas and palette
+  appVitals.init(
+    watchface.getCanvas(),
+    watchface.getColorBg(),
+    watchface.getColorOrangeBright(),
+    watchface.getColorOrangeMid(),
+    watchface.getColorOrangeDim(),
+    watchface.getColorOrangeDark()
+  );
+
   // 4. Render initial boot frame instantly
   watchface.renderBootFrame(0.02f);
 
@@ -552,6 +565,11 @@ void loop() {
         currentScreen = SCREEN_APP_TOOLS;
         appTools.onEnter();
         return;
+      } else if (launchApp == APP_VITALS) {
+        Serial.println("[NAV] Entering VITALS App View!");
+        currentScreen = SCREEN_APP_VITALS;
+        appVitals.onEnter();
+        return;
       }
     }
 
@@ -584,6 +602,33 @@ void loop() {
 
     // Render Tools screen to offscreen PSRAM sprite and push cleanly to ST7789
     appTools.render(localState);
+
+    // Non-blocking yield
+    delay(1);
+
+  } else if (currentScreen == SCREEN_APP_VITALS) {
+    // Vitals Navigation
+    if (navBtn) {
+      if (!appVitals.handleNavBtn()) {
+        // Exit Vitals back to App Menu
+        Serial.println("[NAV] Exiting VITALS App back to App Menu");
+        appVitals.onExit();
+        currentScreen = SCREEN_APPMENU;
+        return;
+      }
+    }
+    if (navLeft) {
+      appVitals.handleNavLeft();
+    }
+    if (navRight) {
+      appVitals.handleNavRight();
+    }
+    if (navPush) {
+      appVitals.handleNavPush();
+    }
+
+    // Render Vitals screen to offscreen PSRAM sprite and push cleanly to ST7789
+    appVitals.render(localState);
 
     // Non-blocking yield
     delay(1);
