@@ -261,28 +261,56 @@ ISD-Core groups all functionality into **6 dedicated, human-centered decks**:
 ---
 
 ### App 2: ENVIRONMENT (External Ambience)
-*Focus: Ambient comfort, meteorological forecasting, and alpine trail safety.*
+*Focus: Ambient reconnaissance, real-time 3D planetary rendering, meteorological forecasting, and alpine trail safety.*
 
 ```text
 +-----------------------------------+
-| ENVIRONMENT // BME680      [LOG]  |
+| ISD-Core // ENVIRONMENT     98%   |
 | --------------------------------- |
-|  TEMP: 24.3 C       HUMID: 48 %RH |  Temperature and Relative Humidity
-|  LUX:  850 lx       GAS:  185 kOhm|  OPT3001 Photopic Lux & MOX Gas
-|  BARO: 1013.2 hPa   TREND: -0.4hPa|  Barometric pressure & 3h tendency
+| [BARO: 1014hPa ▲] [CLIM: 22C 48%] |  Top Telemetry Pods: Pressure & Climate
+| [STABLE / FAIR  ] [DEW: 11C COMF] |
+|        \                 /        |  Tactile Blueprint Leader Lines
+|         (O)─ . - . ─(O)           |  with (O) Atmospheric Anchor Nodes
+|             :  3D :               |  Real-Time 3D Rotating Vector Earth
+|         (O)─ ' - ' ─(O)           |  tilted at 23.4° with live continents
+|        /                 \        |
+| [AIR: 142kΩ GOOD] [LUX: 480 INDO] |  Bottom Telemetry Pods: VOC & Photometrics
+| [■■■■■□□□] IAQ    [☼☼☼░░░░] ROOM  |
 | --------------------------------- |
-|  STORM PREDICTOR (NX-MSF):        |
-|  [ STABLE / NO RAPID DROP ]       |  Barometric storm warning
-|  DEW POINT: 12.8 C (MARGIN: 11.5C)|  Magnus-Tetens condensation fog risk
-|  AIR QUALITY: GOOD (VOC LOW)      |  Gas resistance baseline comparison
+| [▼] SCROLL FOR SCHEMATICS   [0/4] |  Vertical Card Position Strip & Back Prompt
 +-----------------------------------+
 ```
 
-* **Consolidated Atmospheric Dashboard:** Simultaneous real-time monitoring of Temperature (°C/°F), Relative Humidity (%), Barometric Pressure (hPa), and photopic ambient light level (Lux via OPT3001).
-* **Air Quality & Gas Resistance:** Tracks BME680 metal-oxide sensor resistance ($R_{\text{gas}}$) against baseline to monitor volatile organic compounds (VOCs) and room ventilation.
-* **Storm Predictor (NX-MSF):** Evaluates rolling 3-hour pressure differentials ($\Delta P / \Delta t$). Triggers high-priority storm alerts if pressure drops $> 2.5\,\text{hPa}/3\text{h}$.
-* **Dew Point & Mountain Fog Intel:** Computes dew point ($T_{\text{dew}}$) using the Magnus-Tetens equation. Warns when $(T - T_{\text{dew}}) \le 1.0^\circ\text{C}$ to alert hikers of incoming trail fog or condensation.
-* **Thermal Strain & Perceived Comfort:** Merges temperature and humidity into Humidex ratings to assess heat exhaustion risk.
+The Environment deck uses a **5-card vertical hierarchical card architecture**:
+1. **Card 0: Master Environmental HUD (The Overview):**
+   * **Real-Time 3D Rotating Vector Earth:** Rendered live at 60 FPS on the ESP32-S3's hardware FPU with Earth's real $23.4^\circ$ axial tilt, rotating longitude meridians, projected latitude parallels (Equator and Tropics), 3D projected vector continents, and an outer exosphere halo.
+   * **Tactical Blueprint Leader Lines:** Circuit traces with `(O)` anchor nodes pin Earth's atmosphere directly to 4 corner telemetry pods (`BARO`, `CLIM`, `AIR QUALITY`, `PHOTOMETRICS`).
+2. **Card 1: ATMOSPHERE & ALTITUDE (Barometer Deep-Dive):**
+   * **Mountain Elevation Profile:** Vector mountain silhouette with a dynamic altitude target line calculating real-time elevation ($m$ & $ft$) from the BME680 barometric formula.
+   * **16-Bar Historical Isobaric Sparkline:** Oscilloscope-style pressure trend graph showing pressure changes over time.
+   * **`[PUSH]`:** Zero relative elevation ($QNH$ calibration).
+3. **Card 2: CLIMATE & THERMAL (Psychrometrics Deep-Dive):**
+   * **Vector Thermometer Capillary Tube:** Mercury fluid column dynamically rising and falling with temperature, with session min/max memory ticks.
+   * **Vector Moisture Droplet Hygrometer:** Relative humidity percentage readout.
+   * **2D Psychrometric Comfort Matrix:** Maps temperature versus dew point with an active cursor dot showing whether you are in the human comfort envelope.
+   * **`[PUSH]`:** Toggles between $^\circ\text{C} \longleftrightarrow ^\circ\text{F}$.
+4. **Card 3: AIR QUALITY & VOC (BME680 Sensor Deep-Dive):**
+   * **MEMS Gas Chamber Cutaway:** Blueprint cutaway showing the diffusion mesh, metal oxide substrate, and $300^\circ\text{C}$ heating coil.
+   * **8-Segment Tactical IAQ Meter:** Real-time air purity rating (`CLEAN` $\to$ `MODERATE` $\to$ `HAZARDOUS`) and MOX gas resistance in $\text{k}\Omega$.
+   * **`[PUSH]`:** Triggers a forced-mode heater burn pulse for fresh air sampling.
+5. **Card 4: PHOTOMETRICS & SOLAR (OPT3001 Light Deep-Dive):**
+   * **Dynamic Optical Aperture:** A 6-blade camera iris that physically dilates based on ambient Lux.
+   * **180° Celestial Daylight Horizon Arc:** Sweeping horizon arc marking lighting zones (`NIGHT` $\to$ `ROOM LIGHT` $\to$ `DIRECT SUN`) with an illuminated sun satellite pip.
+
+#### Navigation & Control Bindings
+* **`LEVER RIGHT` (or Down):** Smoothly scrolls down to the next sensor card ($0 \to 1 \to 2 \to 3 \to 4$).
+* **`LEVER LEFT` (or Up):** Smoothly scrolls up to the previous sensor card ($4 \to 3 \to 2 \to 1 \to 0$).
+* **`LEVER PUSH`:** 
+  * On Master HUD (Card 0): Jumps directly to Card 1.
+  * On Deep-Dive Cards: Triggers contextual action (Zero Altitude, Toggle $^\circ\text{C}/^\circ\text{F}$, Pulse Gas Sensor).
+* **`BTN` (Back):**
+  * On Deep-Dive Cards ($1 \dots 4$): Snaps straight back up to Master HUD (Card 0).
+  * On Master HUD (Card 0): Exits back to 3D App Menu.
 
 ---
 

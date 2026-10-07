@@ -15,6 +15,9 @@
 #include "nx-systems/NX-MSF.h"
 #include "storage/StorageManager.h"
 
+#include "apps/settings/AppSettings.h"
+#include "apps/enviroment/AppEnvironment.h"
+
 // Hardware and UI instances
 LGFX tft;
 Watchface watchface(&tft);
@@ -22,13 +25,15 @@ AppMenu appMenu(&tft);
 AppTools appTools(&tft);
 AppVitals appVitals(&tft);
 AppSettings appSettings(&tft);
+AppEnvironment appEnvironment(&tft);
 
 enum AppScreenMode {
   SCREEN_WATCHFACE,
   SCREEN_APPMENU,
   SCREEN_APP_TOOLS,
   SCREEN_APP_VITALS,
-  SCREEN_APP_SETTINGS
+  SCREEN_APP_SETTINGS,
+  SCREEN_APP_ENVIRONMENT
 };
 AppScreenMode currentScreen = SCREEN_WATCHFACE;
 static bool settingsFromQuickpanel = false;
@@ -335,6 +340,16 @@ void setup() {
 
   // 3e. Initialize AppSettings sharing zero-copy PSRAM canvas and palette
   appSettings.init(
+    watchface.getCanvas(),
+    watchface.getColorBg(),
+    watchface.getColorOrangeBright(),
+    watchface.getColorOrangeMid(),
+    watchface.getColorOrangeDim(),
+    watchface.getColorOrangeDark()
+  );
+
+  // 3f. Initialize AppEnvironment sharing zero-copy PSRAM canvas and palette
+  appEnvironment.init(
     watchface.getCanvas(),
     watchface.getColorBg(),
     watchface.getColorOrangeBright(),
@@ -740,6 +755,11 @@ void loop() {
         currentScreen = SCREEN_APP_VITALS;
         appVitals.onEnter();
         return;
+      } else if (launchApp == APP_ENVIRONMENT) {
+        Serial.println("[NAV] Entering ENVIRONMENT App View!");
+        currentScreen = SCREEN_APP_ENVIRONMENT;
+        appEnvironment.onEnter();
+        return;
       } else if (launchApp == APP_SETTINGS) {
         Serial.println("[NAV] Entering SETTINGS App View!");
         settingsFromQuickpanel = false;
@@ -837,6 +857,32 @@ void loop() {
 
     // Render Settings screen to offscreen PSRAM sprite and push cleanly to ST7789
     appSettings.render(localState);
+
+    // Non-blocking yield
+    delay(1);
+
+  } else if (currentScreen == SCREEN_APP_ENVIRONMENT) {
+    // Environment Navigation
+    if (navBtn) {
+      if (!appEnvironment.handleNavBtn()) {
+        Serial.println("[NAV] Exiting ENVIRONMENT App back to App Menu");
+        appEnvironment.onExit();
+        currentScreen = SCREEN_APPMENU;
+        return;
+      }
+    }
+    if (navLeft) {
+      appEnvironment.handleNavLeft();
+    }
+    if (navRight) {
+      appEnvironment.handleNavRight();
+    }
+    if (navPush) {
+      appEnvironment.handleNavPush();
+    }
+
+    // Render Environment screen to offscreen PSRAM sprite and push cleanly to ST7789
+    appEnvironment.render(localState);
 
     // Non-blocking yield
     delay(1);

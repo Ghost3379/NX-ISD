@@ -13,12 +13,14 @@ This document tracks implementation status across the 6 core application decks, 
 * [x] **HRM Measuring Reminders:** Scheduled cyclic measurement prompts (`OFF`, `30m`, `1h`, `2h`) configured in Settings
 
 ### 2. Environment (External Ambience)
-* [ ] **Pressure:** Live barometric readout (`BME680` via I2C `0x76`)
-* [ ] **Temperature:** Ambient temperature sensing
-* [ ] **Humidity:** Relative humidity sensing
-* [ ] **Compass:** 360° rotating azimuth reticle with shortest-path interpolation on Watchface HUD
-* [ ] **Light Intensity:** Photopic ambient illuminance (`OPT3001` via I2C `0x45`)
-* [ ] **MSF Calculated Weather Info:** 3-hour $\Delta P/\Delta t$ barometric storm prediction & Magnus-Tetens dew point calculation
+* [x] **Pressure:** Live barometric readout (`BME690` via I2C `0x76`) & 16-bar isobar history
+* [x] **Temperature:** Ambient temperature sensing with capillary mercury tube & min/max bounds
+* [x] **Humidity:** Relative humidity sensing with teardrop hygrometer
+* [x] **Light Intensity:** Photopic ambient illuminance (`OPT3001` via I2C `0x44`/`0x45`) with 6-blade optical aperture
+* [x] **MSF Calculated Weather Info:** 3-hour $\Delta P/\Delta t$ barometric storm prediction & Magnus-Tetens dew point calculation
+* [x] **3D Vector Earth Engine:** 60 FPS real-time rotating planetary wireframe with 23.4° tilt and continents
+* [x] **5-Card Vertical Hierarchy:** Master HUD + 4 dedicated deep-dive sensor analysis cards
+* [x] **Altimeter:** Barometric elevation calculation with relative zero and QNH calibration
 
 ### 3. Clock (Temporal Operations)
 * [ ] **Timer:** Countdown timer with progress bar and acoustic/NPM alert

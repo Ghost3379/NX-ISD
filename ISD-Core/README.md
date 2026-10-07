@@ -298,6 +298,14 @@ $$\text{pos}_{k+1} = \text{pos}_k + (\text{target} - \text{pos}_k) \times 0.48$$
 
 This provides a fluid, mechanical feel that snaps securely into slot on lever release.
 
+### 4. Real-Time 3D Vector Earth Engine
+The Environment deck renders a live 3D rotating planetary sphere directly on Core 1 at 60 FPS without bitmap textures:
+* **Planetary Projection:** Spherical latitude/longitude coordinates $(lat, lon)$ are rotated around Earth's $23.4^\circ$ tilted polar axis using Euler coordinate transformations:
+  $$x_0 = \cos(lat) \sin(lon + \theta), \quad y_0 = \sin(lat), \quad z_0 = \cos(lat) \cos(lon + \theta)$$
+  $$x = x_0 \cos(\alpha) - y_0 \sin(\alpha), \quad y = x_0 \sin(\alpha) + y_0 \cos(\alpha), \quad z = z_0$$
+* **Hemispherical Depth Culling:** Only vertices and coastline edges with $z > 0$ are projected onto the ST7789 display, while backside polygons are culled.
+* **Compact Footprint:** Continental coastlines are defined using compact `GeoNode` integer pairs ($< 1\,\text{kB}$ flash), executing in $< 30\,\mu\text{s}$ per frame on the ESP32-S3 hardware FPU.
+
 ---
 
 ## 8. Building, Flashing & Development Workflow
