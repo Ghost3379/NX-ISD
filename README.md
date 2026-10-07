@@ -60,15 +60,21 @@ N X - I S D
 * **Input:** Multi-Directional Lever-Switch and Push-Button
 
 ## Software & Core Systems
-The board is programmed via **PlatformIO** (Arduino Framework) and is optimized to run the custom **ISD-Core** operating system. The software stack is composed of three core modular systems:
+The board is programmed via **PlatformIO** (Arduino Framework) and is optimized to run the custom **ISD-Core** operating system. The software stack is composed of core modular subsystems:
 
-* **[ISD-Core](ISD-Core/):** The core dual-core FreeRTOS firmware layer handling task scheduling (Core 1 UI @ 50Hz, Core 0 Sensors @ 50Hz/1Hz), thread-safe `SensorState` telemetry, and peripheral drivers. See [`ISD-Core/README.md`](ISD-Core/README.md) for the software architecture diagram and build guide.
+* **[ISD-Core](ISD-Core/):** The dual-core FreeRTOS operating system handling task scheduling (Core 1 UI @ ~42Hz, Core 0 Sensors @ 50Hz/1Hz), thread-safe `SensorState` telemetry, 3D Cover Flow launcher, 360° radial dials, and smoothstep backlight transitions. See [`ISD-Core/README.md`](ISD-Core/README.md) for the software architecture and [`ISD-Core/MANUAL.md`](ISD-Core/MANUAL.md) for the complete user manual.
+* **Persistent Storage Subsystem (`StorageManager`):** Manages non-volatile configuration storage on the onboard 2 Gbit ZDSD NAND Flash (`CS_SD = GPIO 47`). Stores a 64-byte packed binary struct (`/sys/config.bin`) with CRC-16 validation and a zero-wear save policy (writes occur only on user confirmation/exit, never while dialing).
+* **Configuration Tooling (`tools/nx_config_tool.py`):** Standalone Python CLI utility to inspect, validate, dump to JSON, and compile binary config files offline for testing and flashing.
 * **NX-MSF (Mathematical Sensor Fusion):** The analytical physics and math engine executing 1D Kalman filter variometer tracking, Magnus-Tetens dew point calculation, barometric storm gradients, RMSSD heart rate variability, and software energy accounting.
 * **NX-AIS (Advanced Information System):** The autonomous on-device contextual advisor translating raw multi-sensor telemetry into proactive health, environmental, and tactical notifications.
 * **NX-SDS (Self-Diagnostic System):** The internal hardware integrity and health assurance engine providing continuous I2C bus recovery, on-demand in-situ proof-testing, and predictive battery/sensor aging analytics.
 
-## Features & Mathematical Modeling Roadmap
-See [FEATURE_LIST.md](FEATURE_LIST.md) for the comprehensive technical specifications, mathematical formulas, and implementation roadmap for **NX-MSF**, **NX-AIS**, and **NX-SDS**.
+## Documentation & Manuals
+* **User & Navigation Manual:** [`ISD-Core/MANUAL.md`](ISD-Core/MANUAL.md) — Comprehensive guide covering physical controls, screen layouts, the 6 core application decks, 360° radial dials, and storage persistence.
+* **Architecture & Hardware Guide:** [`ISD-Core/README.md`](ISD-Core/README.md) — Technical operating system internals, pin maps, and PlatformIO build instructions.
+* **Hardware & PCB Specifications:** [`ISD-PCB/README.md`](ISD-PCB/README.md) — Revision v1p3 schematics, power budgets, layer stackup, and BOM.
+* **Features & Math Modeling Roadmap:** [`FEATURE_LIST.md`](FEATURE_LIST.md) — Technical specifications, mathematical formulas, and implementation roadmap.
+* **Software Roadmap & TODOs:** [`ISD-Core/SW-TODO.md`](ISD-Core/SW-TODO.md) — Core application deck progress and feature checklist.
 
 ## License
 The software/firmware in the [ISD-Core] directory is licensed under the GNU General Public License v3.0 (GPLv3).

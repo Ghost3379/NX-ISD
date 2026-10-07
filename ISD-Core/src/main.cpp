@@ -13,6 +13,7 @@
 #include "apps/vitals/AppVitals.h"
 #include "apps/settings/AppSettings.h"
 #include "nx-systems/NX-MSF.h"
+#include "storage/StorageManager.h"
 
 // Hardware and UI instances
 LGFX tft;
@@ -397,6 +398,9 @@ void setup() {
 
   // 8. Initialize NX-Uplink Companion Bridge and NeoPixel Matrix
   UplinkBridge::begin();
+
+  // 9. Initialize Storage Manager & load persistent configuration from ZDSD NAND
+  StorageManager::begin(&tft);
 
   Serial.println("\n[NX-ISD] Watchface active. Double-buffering enabled. Audio muted.");
 }

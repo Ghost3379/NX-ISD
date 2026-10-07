@@ -55,6 +55,11 @@ public:
   static uint32_t getStreamRateHz() { return (streamIntervalMs > 0) ? (1000 / streamIntervalMs) : 0; }
   static void setStreamRateHz(uint8_t hz);
 
+  static bool getMatrixPower() { return matrixPower; }
+  static void setMatrixPower(bool on);
+  static uint8_t getMatrixBrightness() { return matrixBrightness; }
+  static void setMatrixBrightness(uint8_t b);
+
   static MatrixPattern getMatrixPattern() { return currentPattern; }
   static void setMatrixPattern(MatrixPattern pat);
 };

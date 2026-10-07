@@ -18,11 +18,24 @@ bool HAL::rtcReady = false;
 NotificationMode HAL::notifMode = NOTIF_SILENT;
 bool HAL::silentMode = true;
 bool HAL::lightsEnabled = false;
+uint8_t HAL::buzzerVolumePercent = 70;
+uint8_t HAL::buzzerTickDurationMs = 8;
+uint16_t HAL::buzzerBaseFreqHz = 3000;
 int HAL::brightnessPercent = 85;
 bool HAL::autoDimEnabled = false;
 TiltMode HAL::tiltMode = TILT_BALANCED;
 int HAL::screenTimeoutSec = 30;
 bool HAL::wristCoverSleep = true;
+uint16_t HAL::backlightFadeMs = 300;
+bool HAL::matrixLedAlerts = true;
+uint8_t HAL::hrmReminderIdx = 0;
+bool HAL::ecoMode = false;
+bool HAL::autoStandby = true;
+bool HAL::sensorSleep = false;
+bool HAL::nxAisCoProc = false;
+bool HAL::adaptiveSensing = true;
+uint8_t HAL::npmBrightnessPercent = 50;
+uint8_t HAL::npmPatternIdx = 0;
 bool HAL::pinsInited = false;
 
 void HAL::setNotificationMode(NotificationMode mode) {
@@ -41,6 +54,46 @@ void HAL::applyBrightness(LGFX* display) {
     uint8_t pwm = (uint8_t)map(brightnessPercent, 0, 100, 15, 255);
     display->setBrightness(pwm);
   }
+}
+
+void HAL::fadeOutBacklight(LGFX* display) {
+  if (!display) return;
+  uint8_t startPwm = (uint8_t)map(brightnessPercent, 0, 100, 15, 255);
+  if (backlightFadeMs == 0) {
+    display->setBrightness(0);
+    return;
+  }
+  const int steps = 20;
+  int delayPerStep = backlightFadeMs / steps;
+  if (delayPerStep < 4) delayPerStep = 4;
+  for (int i = steps - 1; i >= 0; i--) {
+    float t = (float)i / (float)steps;
+    float eased = t * t * (3.0f - 2.0f * t); // smoothstep
+    uint8_t pwm = (uint8_t)(startPwm * eased);
+    display->setBrightness(pwm);
+    delay(delayPerStep);
+  }
+  display->setBrightness(0);
+}
+
+void HAL::fadeInBacklight(LGFX* display) {
+  if (!display) return;
+  uint8_t targetPwm = (uint8_t)map(brightnessPercent, 0, 100, 15, 255);
+  if (backlightFadeMs == 0) {
+    display->setBrightness(targetPwm);
+    return;
+  }
+  const int steps = 20;
+  int delayPerStep = backlightFadeMs / steps;
+  if (delayPerStep < 4) delayPerStep = 4;
+  for (int i = 1; i <= steps; i++) {
+    float t = (float)i / (float)steps;
+    float eased = t * t * (3.0f - 2.0f * t); // smoothstep
+    uint8_t pwm = (uint8_t)(targetPwm * eased);
+    display->setBrightness(pwm);
+    delay(delayPerStep);
+  }
+  display->setBrightness(targetPwm);
 }
 
 void HAL::initPins() {
@@ -192,14 +245,34 @@ void HAL::setMatrixPower(bool on) {
 
 void HAL::buzzPip(uint16_t freqHz, uint16_t durationMs) {
   if (silentMode || freqHz == 0 || durationMs == 0) return;
-  // Subtle soft micro-click: brief 15us pulse every 280us (~3.5kHz)
-  uint32_t ms = (durationMs > 8) ? 8 : durationMs;
-  uint32_t cycles = (ms * 1000UL) / 300UL;
+  // Use user-configured tick duration for standard UI clicks (<= 15ms), or caller's durationMs for alerts
+  uint32_t ms = (durationMs <= 15) ? buzzerTickDurationMs : durationMs;
+  if (ms > 40) ms = 40; // clamp safety against blocking
+
+  // Shift nominal frequency (3000Hz baseline) by user's buzzerBaseFreqHz setting
+  int32_t delta = (int32_t)freqHz - 3000;
+  int32_t tunedFreq = (int32_t)buzzerBaseFreqHz + delta;
+  uint16_t actualFreq = (uint16_t)constrain(tunedFreq, 1200, 5500);
+
+  // Volume duty-cycle modulation:
+  // At 10%: ~3us pulse (whisper soft micro-tick)
+  // At 50%: ~40us pulse (crisp tactile click)
+  // At 100%: ~120us pulse (audible full-bodied tone)
+  uint32_t highUs = map(buzzerVolumePercent, 10, 100, 3, 120);
+
+  uint32_t periodUs = 1000000UL / actualFreq;
+  if (periodUs < 150) periodUs = 150;
+  if (highUs >= periodUs) highUs = periodUs / 2;
+  uint32_t lowUs = periodUs - highUs;
+
+  uint32_t cycles = (ms * 1000UL) / periodUs;
+  if (cycles == 0) cycles = 1;
+
   for (uint32_t i = 0; i < cycles; i++) {
     digitalWrite(BUZZER, HIGH);
-    delayMicroseconds(15); // Low duty cycle produces a gentle soft tick instead of a loud screech
+    delayMicroseconds(highUs);
     digitalWrite(BUZZER, LOW);
-    delayMicroseconds(285);
+    delayMicroseconds(lowUs);
   }
   digitalWrite(BUZZER, LOW);
 }

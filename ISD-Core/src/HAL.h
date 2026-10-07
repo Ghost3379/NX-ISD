@@ -49,6 +49,9 @@ public:
   static NotificationMode notifMode;
   static bool silentMode;
   static bool lightsEnabled;
+  static uint8_t buzzerVolumePercent;
+  static uint8_t buzzerTickDurationMs;
+  static uint16_t buzzerBaseFreqHz;
   static void setNotificationMode(NotificationMode mode);
 
   static int brightnessPercent;
@@ -58,11 +61,24 @@ public:
   static bool wristCoverSleep;
   static void setBrightness(int pct, LGFX* display = nullptr);
   static void applyBrightness(LGFX* display);
+  static uint16_t backlightFadeMs;
+  static void fadeOutBacklight(LGFX* display);
+  static void fadeInBacklight(LGFX* display);
+
+  static bool matrixLedAlerts;
+  static uint8_t hrmReminderIdx;
+  static bool ecoMode;
+  static bool autoStandby;
+  static bool sensorSleep;
+  static bool nxAisCoProc;
+  static bool adaptiveSensing;
+  static uint8_t npmBrightnessPercent;
+  static uint8_t npmPatternIdx;
 
   static bool pinsInited;
   static void initPins();
   static void begin(void (*onProgress)(float progress) = nullptr);
   static void setMatrixPower(bool on);
-  static void buzzPip(uint16_t freqHz = 3500, uint16_t durationMs = 15);
+  static void buzzPip(uint16_t freqHz = 3000, uint16_t durationMs = 15);
   static bool readFuelGauge(float &outVolt, float &outPct, float &outRate);
 };

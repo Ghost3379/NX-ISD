@@ -51,6 +51,37 @@ void UplinkBridge::setStreamRateHz(uint8_t hz) {
   }
 }
 
+void UplinkBridge::setMatrixPower(bool on) {
+  matrixPower = on;
+  if (matrixPower) {
+    HAL::setMatrixPower(true);
+    delay(10);
+    if (!HAL::neoPixels) {
+      HAL::neoPixels = new Adafruit_NeoPixel(16, NPM, NEO_GRB + NEO_KHZ800);
+      HAL::neoPixels->begin();
+    }
+    HAL::neoPixels->setBrightness(matrixBrightness);
+    HAL::neoPixels->clear();
+    HAL::neoPixels->show();
+    if (currentPattern == PATTERN_OFF) {
+      currentPattern = PATTERN_CYBER_RADAR;
+    }
+  } else {
+    if (HAL::neoPixels) {
+      HAL::neoPixels->clear();
+      HAL::neoPixels->show();
+    }
+    HAL::setMatrixPower(false);
+  }
+}
+
+void UplinkBridge::setMatrixBrightness(uint8_t b) {
+  matrixBrightness = constrain(b, 0, 80);
+  if (HAL::neoPixels && matrixPower) {
+    HAL::neoPixels->setBrightness(matrixBrightness);
+  }
+}
+
 void UplinkBridge::setMatrixPattern(MatrixPattern pat) {
   currentPattern = pat;
   matrixStep = 0;

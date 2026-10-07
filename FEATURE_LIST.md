@@ -232,7 +232,18 @@ While **NX-AIS** observes external environmental and physiological context, **NX
 * [x] 4×4 Serpentine Matrix Coordinate Engine (`NeoPixelTest::xy(x, y)`).
 * [x] 6 Interactive Matrix Animations (`CYBER RADAR`, `GLYPH BREATH`, `QUANTUM RIPPLE`, `NEON TRACER`, `MATRIX RAIN`, `SPECTRUM PLASMA`).
 * [x] Live 104×104 pixel TFT visualizer for NeoPixel matrix with Lever Left/Right cycling.
-* [ ] Implement `NX-AIS` rule evaluation engine and settings toggle (`ENABLED / SUBTLE / OFF`).
+* [x] Level 1A Watchface HUD with dynamic 360° compass reticle, 2D spirit bubble level, and 1.2s tactical charge launcher.
+* [x] Level 1B Quickpanel 2×3 action grid with interactive brightness dial, eco mode, silent, and shutdown/standby.
+* [x] Level 2 3D Cover Flow App Launcher with trapezoidal depth projection and spring-damper physics.
+* [x] Level 3 App 6 (SETTINGS) with 6 categories, strict 4-box viewport, and active scrollbar.
+* [x] 360° Circular Radial Dials (Brightness, Timeout, Fade Anim, Volume, Duration, Pitch, NPM Brightness).
+* [x] 4-Card Tactical Overview Menus (Tilt to Wake, Notifications, Shutdown).
+* [x] Backlight on/off fade transitions with mathematical smoothstep curve ($t^2 \times (3 - 2t)$).
+* [x] Persistent Storage Subsystem (`StorageManager`, onboard 2 Gbit ZDSD NAND Flash via SPI CS 47).
+* [x] 64-byte packed binary struct (`/sys/config.bin`) with Magic signature `0x584E`, Schema `v1`, and CRC-16 CCITT.
+* [x] Zero-wear save policy (dial in RAM, atomic commit only on `[PUSH]` or Settings exit).
+* [x] Standalone configuration CLI inspection and JSON conversion tool (`tools/nx_config_tool.py`).
+* [ ] Implement `NX-AIS` rule evaluation engine and background supervisor.
 * [ ] Implement `NX-SDS` core engine (I2C 9-clock recovery, silicon audit, and battery internal resistance probe).
 * [ ] Add `NX-SDS` in-situ proof-test UI page and NAND-SD certificate generation.
 * [ ] Implement `PowerEstimator` class tracking active states against MAX17048.
@@ -240,4 +251,5 @@ While **NX-AIS** observes external environmental and physiological context, **NX
 * [ ] Implement Magnus-Tetens dew point and 3-hour barometric storm gradient.
 * [ ] Implement MAX30102 $R\text{-}R$ peak detector and RMSSD stress score.
 * [ ] Implement BNO085 wrist-flip wake interrupt routine.
+
 

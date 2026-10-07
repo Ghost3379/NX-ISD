@@ -1,421 +1,33 @@
-# ISD-Core // Operating System & User Manual
+# ISD-Core // Architecture, Stats & Developer Guide
 
 Welcome to **ISD-Core**, the custom dual-core wearable operating system designed for the **NX-ISD** (Intelligent Sensor Device) powered by the ESP32-S3.
 
-ISD-Core is built from the ground up on a central design philosophy: **it is an intuitive, tactile smartwatch operating system—not a wearable Excel spreadsheet of raw sensor dumps.** Mathematical sensor fusion (**NX-MSF**), autonomous contextual advisory (**NX-AIS**), and hardware self-diagnostics (**NX-SDS**) operate silently under the hood, distilling complex telemetry into high-value insights, glanceable widgets, and physical feedback.
+ISD-Core is built on a central design philosophy: **it is an intuitive, tactile smartwatch operating system—not a wearable spreadsheet of raw sensor dumps.** Mathematical sensor fusion (**NX-MSF**), autonomous contextual advisory (**NX-AIS**), and hardware self-diagnostics (**NX-SDS**) operate silently under the hood, distilling complex multi-sensor telemetry into high-value insights, glanceable widgets, and physical feedback.
 
-The user interface draws inspiration from retro-futuristic amber vector displays (TVA, Pip-Boy, and aerospace instrumentation), rendered at ~42 FPS on a 240×240 IPS display using zero-copy Octal PSRAM double-buffering.
+The user interface draws inspiration from retro-futuristic amber vector displays (TVA, Pip-Boy, and aerospace instrumentation), rendered at **~42 FPS** on a 240×240 IPS display using zero-copy Octal PSRAM double-buffering.
+
+> [!TIP]
+> 📖 **Looking for the User & Screen Navigation Manual?**  
+> For the visual guide, ASCII screen mockups, physical gesture timings, and application walkthroughs, see [**MANUAL.md**](MANUAL.md).
 
 ---
 
 ## Table of Contents
-1. [Physical Hardware Controls & Gestures](#1-physical-hardware-controls--gestures)
-2. [Operating System Architecture & Navigation](#2-operating-system-architecture--navigation)
-3. [Screen Layouts & Visual Appearance](#3-screen-layouts--visual-appearance)
-   - [Level 1A: Watchface HUD (Home)](#level-1a-watchface-hud-home)
-   - [Level 1B: Quickpanel Action Grid](#level-1b-quickpanel-action-grid)
-   - [Level 1C: Notifications Stack](#level-1c-notifications-stack)
-   - [Level 2: 3D Cover Flow App Launcher](#level-2-3d-cover-flow-app-launcher)
-4. [The 6 Core Application Decks](#4-the-6-core-application-decks)
-   - [App 1: VITALS (Internal Physiology)](#app-1-vitals-internal-physiology)
-   - [App 2: ENVIRONMENT (External Ambience)](#app-2-environment-external-ambience)
-   - [App 3: CLOCK (Temporal Operations)](#app-3-clock-temporal-operations)
-   - [App 4: DEVICE (Silicon & Hardware Integrity)](#app-4-device-silicon--hardware-integrity)
-   - [App 5: TOOLS (Tactical & Wireless Operations)](#app-5-tools-tactical--wireless-operations)
-   - [App 6: SETTINGS (System Orchestration)](#app-6-settings-system-orchestration)
-5. [Navigation Quick-Reference](#5-navigation-quick-reference)
-6. [Firmware Architecture & Hardware Layer](#6-firmware-architecture--hardware-layer)
-7. [Building & Flashing](#7-building--flashing)
+1. [Firmware Architecture & FreeRTOS Tasks](#1-firmware-architecture--freertos-tasks)
+2. [Memory Architecture & Rendering Pipeline](#2-memory-architecture--rendering-pipeline)
+3. [System Performance Stats & Engineering Metrics](#3-system-performance-stats--engineering-metrics)
+4. [Hardware Bus Map & Centralized Pinout](#4-hardware-bus-map--centralized-pinout)
+5. [Centralized I2C Bus Address Map](#5-centralized-i2c-bus-address-map)
+6. [Persistent Storage Subsystem (`StorageManager`)](#6-persistent-storage-subsystem-storagemanager)
+7. [Mathematical Models & Graphics Curves](#7-mathematical-models--graphics-curves)
+8. [Building, Flashing & Development Workflow](#8-building-flashing--development-workflow)
+9. [License](#9-license)
 
 ---
 
-## 1. Physical Hardware Controls & Gestures
+## 1. Firmware Architecture & FreeRTOS Tasks
 
-The NX-ISD hardware eliminates touchscreens in favor of high-reliability physical controls that can be operated blind, with gloves, or in adverse field conditions. It is controlled via a **3-way navigation lever** and a **dedicated system pushbutton**:
-
-```text
-                     ┌───────────────────────────┐
-                     │      240x240 Display      │
-                     │                           │
-                     │          [ HUD ]          │
-                     │                           │
-                     └───────────────────────────┘
-                                         [ BTN ] (GPIO 13) ── Back / Exit / Wake
-                     ┌───────────────────────────┐
-      [ LEVER LEFT ] │      [ LEVER PUSH ]       │ [ LEVER RIGHT ]
-        (GPIO 16)    │        (GPIO 15)          │   (GPIO 14)
-       Prev / Dec    │    Select / 1.2s Charge   │   Next / Inc
-```
-
-### Control Bindings & Timing Parameters
-
-| Control | GPIO Pin | Gesture | Timing | Action |
-| :--- | :---: | :--- | :---: | :--- |
-| **LEVER LEFT** | `16` | **Flick / Click** | $< 475\,\text{ms}$ | Previous card, scroll left, or decrement value. |
-| | | **Hold** | $\ge 475\,\text{ms}$ | **Hold-to-repeat:** Cycles every $160\,\text{ms}$ for fast numeric dialing. |
-| **LEVER RIGHT** | `14` | **Flick / Click** | $< 475\,\text{ms}$ | Next card, scroll right, or increment value. |
-| | | **Hold** | $\ge 475\,\text{ms}$ | **Hold-to-repeat:** Cycles every $160\,\text{ms}$ for fast numeric dialing. |
-| **LEVER PUSH** | `15` | **Click** | $< 1.2\,\text{s}$ | Select, toggle setting, confirm hero card, or enter Quickpanel. |
-| | | **Tactical Charge** | $\ge 1.2\,\text{s}$ | **Hold Charge Gesture:** Sweeps energy arc to launch the 3D App Menu. |
-| **BTN** | `13` | **Click** | Any | **Global Back / Cancel:** Pops back up one level; wakes display from Standby. |
-
-* **Hardware Interrupts & Latching:** Lever inputs trigger dedicated IRAM ISRs on `FALLING` edges with a $40\,\text{ms}$ hardware debounce window, ensuring zero input lag ($<1\,\mu\text{s}$ latching) while rejecting switch release chatter.
-
----
-
-## 2. Operating System Architecture & Navigation
-
-ISD-Core implements a strict **3-Tier Hierarchical Navigation Structure**. You are never trapped in nested submenus and are never more than two clicks away from the home watchface:
-
-```text
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ LEVEL 1: PRIMARY OS SHELL                                                             │
-│                                                                                        │
-│   [ Notifications ]  <───── LEVER L ────  [ Watchface HUD ]  ──── LEVER R ─────>  [ Quickpanel ]
-│                                                  │                                     │
-│                                                  │ 1.2s Charge Hold                    │ Click PUSH
-│                                                  │ (LEVER_PUSH)                        │ (on Tile)
-│                                                  ▼                                     │
-├──────────────────────────────────────────────────┼─────────────────────────────────────┤
-│ LEVEL 2: 3D APP LAUNCHER                         │                                     │
-│                                                  │                                     │
-│   ┌──────────────────────────────────────────────┴─────────────────────────────────┐   │
-│   │                          3D Cover Flow Deck                                    │   │
-│   │   [VITALS] ── [ENVIRONMENT] ── [CLOCK] ── [DEVICE] ── [TOOLS] ── [SETTINGS]    │   │
-│   └──────────────────────────────────────────────┬─────────────────────────────────┘   │
-│                                                  │                                     │
-│                                                  │ Click PUSH                          │
-│                                                  │ (on active card)                    │
-│                                                  ▼                                     ▼
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ LEVEL 3: DEDICATED APPS & MENUS                                                        │
-│                                                                                        │
-│   • Vitals Monitor (HRM/SpO2)   • Device & NX-SDS Health       • Brightness Dial       │
-│   • Environment & Weather       • Tactical Tools & Uplink      • Power & Reboot Menu   │
-│   • Chrono & Timers             • System & NX-AIS Settings     • Quick Actions         │
-│                                                                                        │
-│   (Pressing BTN at any time immediately pops up to Level 2 Launcher or Level 1 HUD)    │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 3. Screen Layouts & Visual Appearance
-
-The interface is styled in a **pure black and amber-orange vector theme**:
-* **Background:** Absolute Black (`#000000`, RGB `0, 0, 0`) for infinite contrast.
-* **Primary Foreground:** Amber-Orange High-Vis (`#FF7300`, RGB `255, 115, 0`).
-* **Secondary Foreground:** Amber Mid-Tone (`#B85000`) for structural borders and inactive meters.
-* **Muted / Inactive:** Haired Amber Dim (`#4A2000`) for gridlines and background card geometry.
-
----
-
-### Level 1A: Watchface HUD (Home)
-
-The primary home screen displays complete situational awareness at a single glance:
-
-```text
-+-----------------------------------+  (0, 0)
-| NX-ISD                 [===] 98%  |  Header: System status & Battery meter
-| --------------------------------- |  Hairline divider
-|             14:32:08              |  Large crisp digital time (RV-3028 RTC)
-|                                   |
-|   [ 24.3 C ]         [ 48 %RH ]   |  BME680 Temperature & Humidity badges
-|                                   |
-|               ( N )               |  Rotating Compass Reticle with
-|             /   |   \             |  Cardinal Points (N, E, S, W)
-|            W --(o)-- E            |  Central 2D Spirit Bubble Level
-|             \   |   /             |  Outer Battery Arc Gauge
-|               ( S )               |
-|                                   |
-|          HDG: 042  P: +02 R: -01  |  Numeric heading, pitch, and roll
-+-----------------------------------+  (239, 239)
-```
-
-* **Header Bar:** Shows active mode identifier and live battery percentage with charging badge (`[CHG]`).
-* **Digital Clock:** Synchronized with the ultra-low-power RV-3028 RTC ($0.05\,\mu\text{A}$ timekeeping).
-* **Telemetry Badges:** Real-time environmental readings filtered to eliminate sensor jitter.
-* **Compass & Spirit Bubble:** Dynamic 360° rotating azimuth reticle with shortest-path circular interpolation (`angleDiff`), framing a real-time 2D bubble level driven by the BNO085 accelerometer.
-* **Tactical Charge Ring:** When `LEVER_PUSH` is held, an amber radial energy meter sweeps clockwise around the compass ring. Completing the 1.2s charge triggers an audible chime and launches the 3D Menu.
-
----
-
-### Level 1B: Quickpanel Action Grid
-
-Accessed by flicking **`LEVER_RIGHT`** from the Watchface HUD. A 2×3 grid of tactical rounded action tiles (inspired by modern smartwatch quick toggles):
-
-```text
-+-----------------------------------+
-| QUICK ACCESS             [ X ]    |  Header with close hint (BTN)
-| --------------------------------- |
-|  +-------------+  +-------------+ |
-|  | [SETTINGS]  |  |   [ HRM ]   | |  Settings shortcut / Spot heart-rate scan
-|  +-------------+  +-------------+ |
-|  +-------------+  +-------------+ |
-|  | [ECO MODE]  |  | [BRIGHTNESS]| |  Power toggle / Interactive brightness dial
-|  +-------------+  +-------------+ |
-|  +-------------+  +-------------+ |
-|  |  [SILENT]   |  | [SHUTDOWN]  | |  Audio & NeoPixel mute / Standby & Power
-|  +-------------+  +-------------+ |
-+-----------------------------------+
-```
-
-* **Navigation:** Lever Left/Right cycles active tile focus (highlighted by an inverted amber fill). Clicking `LEVER_PUSH` triggers the action.
-* **Brightness Dial:** Clicking `[BRIGHTNESS]` opens a circular dial with live screen dimming from 10% to 100% in 5% increments.
-* **Shutdown / Standby:** Clicking `[SHUTDOWN]` opens a power sheet offering **Standby** (instant display shutoff, $<15\,\text{mA}$, wake on any key) or **Reboot**.
-
----
-
-### Level 1C: Notifications Stack
-
-Accessed by flicking **`LEVER_LEFT`** from the Watchface HUD:
-
-```text
-+-----------------------------------+
-| NOTIFICATIONS (2)        [CLR]    |  Header: Unread count & Clear-all
-| --------------------------------- |
-| +-------------------------------+ |
-| | [!] NX-AIS ADVISORY     14:15 | |  Card 1: High priority alert
-| | Rapid pressure drop detected. | |
-| | Storm risk: DeltaP > 2.5 hPa  | |
-| +-------------------------------+ |
-| +-------------------------------+ |
-| | [*] VITALS REMINDER     13:30 | |  Card 2: Routine reminder
-| | Scheduled hourly HRM check.   | |
-| +-------------------------------+ |
-+-----------------------------------+
-```
-
-* Displays chronological notifications, NX-AIS intelligence advisories, and timer alerts.
-* Pressing `LEVER_PUSH` expands the selected notification; pressing `BTN` dismisses it.
-
----
-
-### Level 2: 3D Cover Flow App Launcher
-
-Triggered by the **1.2-second Tactical Charge Gesture** on the Watchface HUD:
-
-```text
-+-----------------------------------+
-| \ ============================= / |  Top Slanted Cradle Rail
-|                                   |
-|   +----+      +-------------+     |
-|  /     /     /| ENVIRONMENT |     |  Flanking Cards: 3D Perspective Scaling
-| / VIT /     | |   HERO CARD |     |  Hero Card: Full 1:1 Scale & Bright Focus
-| \     \     | | Temp Lux Gas|     |  Trapezoidal Depth Projection
-|  \     \    | | Baro Storm  |     |
-|   +----+    | +-------------+     |
-|              \|             |     |
-|                                   |
-| / ============================= \ |  Bottom Slanted Cradle Rail
-| [<<] LEVER: SELECT   PUSH: ENTER  |  Tactile bottom navigation prompt
-+-----------------------------------+
-```
-
-* **True 3D Perspective Projection:** Cards smoothly scale and distort trapezoidally as they approach the center of the display.
-* **Spring-Damper Physics:** Scrolling is fluid and organic (`diff * 0.48f`), snapping securely into the nearest hero card on lever release.
-* **Mechanical Hardware Cradle:** Slanted top and bottom structural rails frame the carousel like an aerospace bay.
-* **Launching:** Clicking **`LEVER_PUSH`** opens the centered app. Pressing **`BTN`** springs back to the Watchface HUD.
-
----
-
-## 4. The 6 Core Application Decks
-
-ISD-Core groups all functionality into **6 dedicated, human-centered decks**. Raw math (**NX-MSF**) and contextual algorithms (**NX-AIS**) empower these decks behind the scenes:
-
-```text
-┌─────────────────────────┬─────────────────────────┬─────────────────────────┐
-│       PHYSIOLOGY        │        TEMPORAL         │         SILICON         │
-│       [ VITALS ]        │        [ CLOCK ]        │       [ DEVICE ]        │
-├─────────────────────────┼─────────────────────────┼─────────────────────────┤
-│       ENVIRONMENT       │         ACTION          │         CONTROL         │
-│     [ ENVIRONMENT ]     │        [ TOOLS ]        │      [ SETTINGS ]       │
-└─────────────────────────┴─────────────────────────┴─────────────────────────┘
-```
-
----
-
-### App 1: VITALS (Internal Physiology)
-*Focus: Personal health telemetry, recovery metrics, and autonomic stress.*
-
-```text
-+-----------------------------------+
-| VITALS // MAX30102         [RUN]  |
-| --------------------------------- |
-|   HEART RATE         SpO2         |
-|   [ 72 ] BPM        [ 98 ] %      |  Live / Last measured readings
-|   Last: 14m ago     Last: 14m ago |  Elapsed timestamp
-| --------------------------------- |
-|   /\    /\    /\    /\            |  Real-time animated ECG pulse trace
-| --/  \--/  \--/  \--/  \--------- |  during active optical sampling
-| --------------------------------- |
-|   STRESS INDEX: [ 28 / BALANCED ] |  NX-MSF Autonomic Stress Score (RMSSD)
-|   [=====>-------------]           |  Visual stress bar gauge
-|   REMAIN STATIONARY FOR MEASURE   |
-+-----------------------------------+
-```
-
-* **Last Measured Spot-Check:** Immediately presents your last recorded heart rate and blood oxygen saturation ($SpO_2$) along with the exact time elapsed since measurement.
-* **Live Optical Measurement:** Initiates live high-speed PPG sampling on the MAX30102 with a scrolling real-time ECG waveform and finger-contact detection.
-* **Autonomic Stress Score (NX-MSF):** Analyzes successive $R\text{-}R$ intervals and calculates Root Mean Square of Successive Differences (RMSSD) to output a 0–100 Stress Index (*Relaxed*, *Balanced*, *Elevated*, *High Tension*).
-* **Cyclic Measurement Reminders:** Set automatic background prompts (every 30m, 1h, 2h). Alerts route to the 4×4 NeoPixel matrix (gentle pulsing glyph), the buzzer, or both.
-
----
-
-### App 2: ENVIRONMENT (External Ambience)
-*Focus: Ambient comfort, meteorological forecasting, and alpine trail safety.*
-
-```text
-+-----------------------------------+
-| ENVIRONMENT // BME680      [LOG]  |
-| --------------------------------- |
-|  TEMP: 24.3 C       HUMID: 48 %RH |  Temperature and Relative Humidity
-|  LUX:  850 lx       GAS:  185 kOhm|  OPT3001 Photopic Lux & MOX Gas
-|  BARO: 1013.2 hPa   TREND: -0.4hPa|  Barometric pressure & 3h tendency
-| --------------------------------- |
-|  STORM PREDICTOR (NX-MSF):        |
-|  [ STABLE / NO RAPID DROP ]       |  Barometric storm warning
-|  DEW POINT: 12.8 C (MARGIN: 11.5C)|  Magnus-Tetens condensation fog risk
-|  AIR QUALITY: GOOD (VOC LOW)      |  Gas resistance baseline comparison
-+-----------------------------------+
-```
-
-* **Consolidated Atmospheric Dashboard:** Simultaneous real-time monitoring of Temperature (°C/°F), Relative Humidity (%), Barometric Pressure (hPa), and photopic ambient light level (Lux via OPT3001).
-* **Air Quality & Gas Resistance:** Tracks BME680 metal-oxide sensor resistance ($R_{\text{gas}}$) against baseline to monitor volatile organic compounds (VOCs) and room ventilation.
-* **Storm Predictor (NX-MSF):** Evaluates rolling 3-hour pressure differentials ($\Delta P / \Delta t$). Triggers high-priority storm alerts if pressure drops $> 2.5\,\text{hPa}/3\text{h}$.
-* **Dew Point & Mountain Fog Intel:** Computes dew point ($T_{\text{dew}}$) using the Magnus-Tetens equation. Warns when $(T - T_{\text{dew}}) \le 1.0^\circ\text{C}$ to alert hikers of incoming trail fog or condensation.
-* **Thermal Strain & Perceived Comfort:** Merges temperature and humidity into Humidex ratings to assess heat exhaustion risk.
-
----
-
-### App 3: CLOCK (Temporal Operations)
-*Focus: Precision timekeeping, interval workouts, alarms, and state survival.*
-
-```text
-+-----------------------------------+
-| CLOCK // CHRONOGRAPH       [MODE] |
-| --------------------------------- |
-|          00 : 04 : 18 . 42        |  Large millisecond stopwatch display
-|                                   |
-|   LAP 1: 00:01:12.10              |
-|   LAP 2: 00:03:06.32              |  Split-lap logging table
-| --------------------------------- |
-|   [>] START    [R] RESET   [L] LAP|  Tactile lever control hints
-| --------------------------------- |
-|   TIMER: 05:00 (IDLE)             |  Quick-switch to countdown timer
-|   ALARM 1: 07:00 [ON] (DAILY)     |  Battery-backed hardware alarm
-+-----------------------------------+
-```
-
-* **Chrono / Stopwatch:** High-precision millisecond stopwatch with split-lap logging and recorded lap history.
-* **Countdown Timer:** Quick-dial timer with progress bar, audible warble, and flashing amber NeoPixel matrix alert.
-* **Hardware Alarms:** Multi-slot daily and one-shot alarms synced to the RV-3028 RTC hardware interrupt line.
-* **World Clock:** Auxiliary display for dual UTC / secondary time-zone offsets.
-* **Non-Volatile NAND State Persistence:** Commits active countdown timers, alarms, and settings directly to onboard NAND Flash. If the battery is completely drained, all timers and states restore automatically on the next boot!
-
----
-
-### App 4: DEVICE (Silicon & Hardware Integrity)
-*Focus: Silicon self-diagnostics, energy accounting, and system health.*
-
-```text
-+-----------------------------------+
-| DEVICE // NX-SDS DIAG     [PASS]  |
-| --------------------------------- |
-|  I2C BUS: ACK OK (400 kHz Fast)   |  Bus audit & automated 9-clock recovery
-|  BNO085: OK    BME680: OK         |  Sensor proof-testing results
-|  OPT3001: OK   RV3028: OK [OSF:0] |  Oscillator Stop Flag (OSF) audit
-| --------------------------------- |
-|  BATTERY: 4.12V  98%  (+0.2 %/h)  |  MAX17048 Fuel Gauge telemetry
-|  CELL HEALTH: 99%  R_INT: 85 mOhm |  Internal resistance health metric
-| --------------------------------- |
-|  PSRAM: [====>--------] 2.1/8.0 MB|  Octal PSRAM heap watermark
-|  HEAP:  182 kB FREE   FLASH: 16 MB|  FreeRTOS core memory
-+-----------------------------------+
-```
-
-* **NX-SDS Self-Diagnostic Suite:**
-  * **I2C Bus Audit:** Probes all bus addresses; automatically executes 9-clock SCL pulse trains to recover hung slave lines.
-  * **Sensor Proof-Testing:** On-demand self-tests for BNO085 internal co-processor, BME680 hotplate, and OPT3001 conversion registers.
-  * **Oscillator Watchdog:** Inspects the RV-3028 `OSF` (Oscillator Stop Flag) to detect brownouts, crystal failure, or invalid RTC timing.
-* **MAX17048 Fuel Gauge Telemetry:** Live cell terminal voltage ($V_{\text{cell}}$), charge/discharge rate (%/hr), estimated internal cell resistance ($R_{\text{int}}$), and health cycle counters.
-* **Memory & Storage Gauges:** Visual bar meters showing Octal PSRAM usage (8 MB pool), FreeRTOS heap watermarks, and NAND Flash storage wear.
-
----
-
-### App 5: TOOLS (Tactical & Wireless Operations)
-*Focus: Field instrumentation, wireless scanning, and companion bridge.*
-
-```text
-+-----------------------------------+
-| TOOLS // SPIRIT LEVEL      [2D]   |
-| --------------------------------- |
-|              +-------+            |  2D Bubble Level target reticle
-|              |   o   |            |  Dynamic bubble rendered via BNO085
-|              +-------+            |
-|       PITCH: +01.2  ROLL: -00.4   |  Precision numeric degree readouts
-| --------------------------------- |
-|  [WIFI/BLE SNIFFER]               |  2.4 GHz signal strength scanner
-|  NET_HOME_5G  [-42 dBm] ========= |
-|  BLE_TAG_04   [-68 dBm] =====     |
-| --------------------------------- |
-|  NX-UPLINK: PAIRED (base44.app)   |  Companion web dashboard bridge
-+-----------------------------------+
-```
-
-* **Tactical 2D Spirit Level:** High-precision surface leveling tool utilizing the BNO085 accelerometer, featuring a responsive central bubble and digital pitch/roll readouts.
-* **Wireless Scanner & RSSI Meter:** Scans local 2.4 GHz WiFi channels and BLE advertisements, rendering dynamic signal strength RSSI gradient meters.
-* **NX-Uplink Companion Bridge:** Manages wireless pairing and synchronization with the companion web dashboard ([www.nx-uplink.base44.app](https://www.nx-uplink.base44.app)) for telemetry export and firmware updates.
-* **Hardware Pin Monitor:** Inspects charger state lines (`/PG` USB power, `/STAT` active charging) and system GPIO rails in real time.
-
----
-
-### App 6: SETTINGS (System Orchestration)
-*Focus: OS customization, power management, and intelligence intensity.*
-
-```text
-+-----------------------------------+
-| SETTINGS // SYSTEM         [SAVE] |
-| --------------------------------- |
-| > TIME & DATE SETUP               |  RTC manual set and 12h/24h toggle
-|   DISPLAY: AUTO-LUX (OPT3001)     |  Auto vs. manual brightness dial
-|   WRIST-WAKE GESTURE: [ ENABLED ] |  BNO085 wrist-rotation wake trigger
-|   AUTO-STANDBY: [ 60 SECONDS ]    |  Power-saving screen timeout
-|   NX-AIS ADVISOR: [ FULL INTEL ]  |  Advisor intensity (Full / Subtle / Mute)
-|   PIEZO AUDIO TICKS: [ ENABLED ]  |  Navigation acoustic feedback
-|   NEOPIXEL MATRIX: [ DIM (15%) ]  |  4x4 matrix ambient brightness
-+-----------------------------------+
-```
-
-* **Display & Gestures:** Toggle automatic backlight scaling (continuously adjusted by the OPT3001 light sensor) or manual brightness; enable/disable the IMU-driven **Wrist-Wake Gesture**.
-* **Power Management:** Configure Eco Mode sensor poll rates and auto-standby timeouts (30s, 60s, 2m, Never).
-* **NX-AIS Advisory Intensity:** Set intelligence supervisor behavior:
-  * **Full:** On-screen popups, audio chimes, and 4×4 NeoPixel glyphs.
-  * **Subtle:** 4×4 NeoPixel matrix glyphs only (silent).
-  * **Muted:** Completely silent background logging only.
-* **Notification Routing Matrix:** Granular control over which subsystems may trigger audio chimes, screen interrupts, or NeoPixel alerts.
-
----
-
-## 5. Navigation Quick-Reference
-
-| Goal | Action | Screen Context |
-| :--- | :--- | :--- |
-| **Open Quickpanel** | Flick **`LEVER_RIGHT`** | From Watchface HUD |
-| **Open Notifications** | Flick **`LEVER_LEFT`** | From Watchface HUD |
-| **Open 3D App Menu** | Press & hold **`LEVER_PUSH` (1.2s)** | From Watchface HUD |
-| **Browse Apps** | Flick or hold **`LEVER_LEFT`** / **`LEVER_RIGHT`** | Inside 3D App Menu |
-| **Enter App** | Click **`LEVER_PUSH`** | On highlighted Hero Card |
-| **Adjust Value / Scroll** | Flick or hold **`LEVER_LEFT`** / **`LEVER_RIGHT`** | Inside any App or Setting |
-| **Go Back / Exit** | Press **`BTN`** (GPIO 13) | Anywhere in the OS |
-| **Instant Screen Standby** | Open Quickpanel $\to$ `[SHUTDOWN]` $\to$ Standby | Level 1 Shell |
-| **Wake Screen** | Press **`BTN`**, flick any lever, or plug USB | Standby Mode |
-
----
-
-## 6. Firmware Architecture & Hardware Layer
-
-ISD-Core utilizes the ESP32-S3 dual-core asymmetric processing model under FreeRTOS to guarantee zero frame drops and sub-microsecond input latency:
+ISD-Core leverages the asymmetric dual-core architecture of the ESP32-S3 (Xtensa LX7 @ 240 MHz) under FreeRTOS. UI rendering and high-frequency sensor acquisition are decoupled onto independent CPU cores to guarantee **zero frame drops** and **sub-microsecond input latching**:
 
 ```text
 +-----------------------------------------------------------------------------+
@@ -424,10 +36,11 @@ ISD-Core utilizes the ESP32-S3 dual-core asymmetric processing model under FreeR
 |  +-------------------------+          +----------------------------------+  |
 |  |   Boot & Bring-Up       |          |         FreeRTOS Runtime         |  |
 |  +-------------------------+          +----------------------------------+  |
-|  | * Display Bring-up      |          |   CORE 1 (APP CPU)               |  |
-|  | * Staged Bootloader     |          |   +--------------------------+   |  |
-|  | * Core 0 Background     |          |   | Non-Blocking UI (~42 Hz) |   |  |
-|  |   Hardware Init (1.8s)  |          |   | Watchface • 3D App Menu  |   |  |
+|  | * Display & Backlight   |          |   CORE 1 (APP CPU)               |  |
+|  | * Octal PSRAM Buffer    |          |   +--------------------------+   |  |
+|  | * Staged Splashloader   |          |   | Non-Blocking UI (~42 Hz) |   |  |
+|  | * Core 0 Sensor Task    |          |   | Watchface • 3D App Menu  |   |  |
+|  | * StorageManager Probe  |          |   | StorageManager (Atomic)  |   |  |
 |  +------------+------------+          |   +------------+-------------+   |  |
 |               |                       |                | (Read <1 µs)    |  |
 |               |                       |   +------------v-------------+   |  |
@@ -437,9 +50,10 @@ ISD-Core utilizes the ESP32-S3 dual-core asymmetric processing model under FreeR
 |               |                       |                | (Write <1 µs)   |  |
 |               |                       |   CORE 0 (PRO CPU)               |  |
 |               |                       |   +--------------------------+   |  |
-|               |                       |   | Sensor Task (10 - 100 Hz)|   |  |
-|               |                       |   | 50 Hz IMU • Power/USB    |   |  |
-|               |                       |   | Slow I2C Telemetry (1 Hz)|   |  |
+|               |                       |   | Fast Sensors (50 - 100Hz)|   |  |
+|               |                       |   | BNO085 IMU • Compass     |   |  |
+|               |                       |   | Slow Sensors (1 Hz)      |   |  |
+|               |                       |   | BME680 • OPT3001 • MAX   |   |  |
 |               |                       |   +--------------------------+   |  |
 |               |                       +-----------------+----------------+  |
 |               |                                         |                   |
@@ -450,49 +64,270 @@ ISD-Core utilizes the ESP32-S3 dual-core asymmetric processing model under FreeR
 |  |                         Hardware Layer                                |  |
 |  |  Sensors (I2C @ 400kHz): BNO085 • BME680 • OPT3001 • MAX17048 • RV3028|  |
 |  |  Display (SPI @ 40MHz):  ST7789 IPS 240x240 (Double-Buffered PSRAM)  |  |
+|  |  Storage (SPI @ 20MHz):  ZDSD NAND Flash (CS=47, /sys/config.bin)     |  |
 |  |  Inputs (IRAM ISRs):     BTN (GP13) • LEVER L/P/R (GP16/15/14)        |  |
 |  +-----------------------------------------------------------------------+  |
 +-----------------------------------------------------------------------------+
 ```
 
-### Hardware Bus Map
+### Core Assignment Breakdown
 
-| Peripheral | Bus | Address / Pin | Speed | Role |
+| Core | Task Name | Priority | Frequency | Responsibilities |
 | :--- | :--- | :---: | :---: | :--- |
-| **ST7789 IPS** | SPI (VSPI) | MOSI 11, SCLK 12, CS 3, DC 46 | 40 MHz | 240×240 RGB display (PSRAM double-buffered) |
-| **BNO085** | I2C (`Wire`) | `0x4A` | 400 kHz | 9-DOF IMU (50 Hz rotation vectors & compass) |
-| **BME680** | I2C (`Wire`) | `0x76` | 400 kHz | Temperature, Humidity, Pressure, Gas resistance |
-| **OPT3001** | I2C (`Wire`) | `0x45` | 400 kHz | Photopic precision ambient light sensor (Lux) |
-| **MAX17048** | I2C (`Wire`) | `0x36` | 400 kHz | LiPo fuel gauge (voltage, %, charge rate) |
-| **RV-3028-C7**| I2C (`Wire`) | `0x52` | 400 kHz | Ultra-low power real-time clock (RTC) |
-| **MAX30102** | I2C (`Wire`) | `0x57` | 400 kHz | Optical heart rate & pulse oximetry sensor |
-| **Buzzer** | GPIO / PWM | `GPIO 10` | 2.7–4.0 kHz | Acoustic feedback & UI tick chimes |
-| **NeoPixels** | GPIO | `GPIO 18` | 800 kHz | 4×4 WS2812B auxiliary matrix |
-| **BQ25170** | GPIO | `/PG` 21, `/STAT` 47 | - | Hardware charger USB sense & charging status |
+| **Core 1** | `vUITask` (Main Loop) | `1` | **~42 Hz** | LovyanGFX display rendering, 3D Cover Flow animation, Watchface HUD, radial dial physics, input event consumption, atomic NAND storage commit. |
+| **Core 0** | `vFastSensorTask` | `5` | **50–100 Hz** | High-speed BNO085 9-DOF IMU rotation vector polling, step counting, compass heading calculation, wrist-flick gesture detection. |
+| **Core 0** | `vSlowSensorTask` | `2` | **1 Hz** | Low-frequency I2C polling: BME680 (climate/gas), OPT3001 (lux), MAX17048 (fuel gauge), RV-3028 (RTC sync), USB VBUS sense. |
+| **ISRs** | Hardware Edge ISRs | High (IRAM) | *Event* | Lever Left/Push/Right and Button falling-edge capture into thread-safe atomic latch bitmasks with 40 ms software debounce. |
+
+### Inter-Process Communication (IPC)
+Core 0 and Core 1 communicate through a centralized, thread-safe telemetry cache defined as `SensorState`:
+* **Mutex Protection:** A FreeRTOS mutex (`xSensorMutex`) guards write transactions from Core 0 and read transactions from Core 1.
+* **Exchange Latency:** Sensor snapshot acquisitions take $< 1\,\mu\text{s}$, preventing UI pipeline stalls.
+* **Staleness Tracking:** Each telemetry group carries millisecond timestamps (`lastReadMs`) allowing the UI to flag stale sensor values gracefully.
 
 ---
 
-## 7. Building & Flashing
+## 2. Memory Architecture & Rendering Pipeline
 
-ISD-Core is built using **PlatformIO** targeting the ESP32-S3 with 16MB Flash and 8MB Octal PSRAM (`OPI_OPI` mode):
+The NX-ISD uses the **ESP32-S3-WROOM-1-N16R8** module configured with:
+* **16 MB Quad SPI Flash** (firmware binary, assets, partition table).
+* **8 MB Octal PSRAM** (`OPI_OPI` mode clocked at 80 MHz).
+
+```text
+0x3F800000 ┌────────────────────────────────────────────────────────┐
+           │ Octal PSRAM Pool (8.0 MB Total)                        │
+           │                                                        │
+           │ ┌────────────────────────────────────────────────────┐ │
+           │ │ Canvas 1: Primary DMA Framebuffer (240x240x16b)    │ │ ~115 kB
+           │ ├────────────────────────────────────────────────────┤ │
+           │ │ Canvas 2: Double-Buffer Sprite (240x240x16b)       │ │ ~115 kB
+           │ ├────────────────────────────────────────────────────┤ │
+           │ │ Dynamic Sprite Cache (Icons, Glyphs, Gauges)       │ │ ~256 kB
+           │ ├────────────────────────────────────────────────────┤ │
+           │ │ FreeRTOS Task Stacks & Dynamic Allocation Pool     │ │ ~7.5 MB
+           │ └────────────────────────────────────────────────────┘ │
+0x40000000 └────────────────────────────────────────────────────────┘
+```
+
+### Zero-Copy Double-Buffered Pipeline
+1. **Back-Buffer Composition:** The active UI view draws vector primitives, anti-aliased arcs, and text directly onto an internal PSRAM-backed `LGFX_Sprite`.
+2. **Push Transaction:** The sprite is pushed to the ST7789 display controller over the 40 MHz SPI bus (`SPI2_HOST`) in a single high-speed burst.
+3. **Zero Tearing:** Eliminates screen flicker, partial draw artifacts, and rolling raster lines without requiring a hardware VSYNC pin.
+
+---
+
+## 3. System Performance Stats & Engineering Metrics
+
+Key real-world operational benchmarks measured on hardware revision **v1p3**:
+
+| Metric | Measured Value | Notes & Context |
+| :--- | :---: | :--- |
+| **Display Frame Rate** | **~42 FPS** | Continuous vector rendering on 240×240 IPS (23.8 ms frame budget) |
+| **Frame Draw Time** | **18.2 ms** | PSRAM back-buffer render time on Core 1 |
+| **SPI Display Throughput** | **40 MHz** | ~5.6 ms transfer time for 240×240 16-bit color frame |
+| **Input Latch Latency** | **$< 1\,\mu\text{s}$** | Direct hardware IRAM interrupt edge capture |
+| **Debounce Window** | **40 ms** | Software timing window rejecting switch release bounce |
+| **Hold-to-Repeat Cycle** | **160 ms** | Fast numeric dialing after 475 ms initial hold |
+| **Tactical Charge Duration**| **1200 ms** | Deliberate energy hold to enter 3D App Menu |
+| **Backlight PWM Frequency** | **5.0 kHz** | High-frequency flicker-free dimming via N-MOSFET `Q4` |
+| **Storage Config Struct** | **64 Bytes** | Cache-aligned packed binary record (`/sys/config.bin`) |
+| **Dial NAND Write Count** | **0 Writes** | Turning radial dials modifies RAM only; 1,000 dial clicks = 0 writes |
+| **NAND Commit Latency** | **~12 ms** | Atomic write (`config.tmp` $\to$ `config.bin`) with CRC-16 check |
+| **System Idle Current** | **~15 mA** | Screen off, ESP32 light sleep, sensors idle |
+| **Full Operational Current**| **~95–130 mA** | Display 60%, 4×4 matrix dynamic animation, BNO085 fusion active |
+
+---
+
+## 4. Hardware Bus Map & Centralized Pinout
+
+Defined in [`ISD-Core/src/pins.h`](src/pins.h):
+
+```text
+                      ┌───────────────────────────┐
+                      │    ST7789 IPS Display     │
+                      │         (240x240)         │
+                      └───────────────────────────┘
+                                          [ BTN ] (GPIO 13) ── Back / Exit / Wake
+                      ┌───────────────────────────┐
+       [ LEVER LEFT ] │      [ LEVER PUSH ]       │ [ LEVER RIGHT ]
+         (GPIO 16)    │        (GPIO 15)          │   (GPIO 14)
+        Prev / Dec    │    Select / 1.2s Charge   │   Next / Inc
+```
+
+### Complete GPIO Pinout Matrix
+
+| GPIO Pin | Pin Name | Direction | Electrical Domain | Connected Peripheral / Signal |
+| :---: | :--- | :---: | :---: | :--- |
+| **1** | `PWM_TFT` | Output | `+3V3` | Display Backlight PWM (gate of N-MOSFET `Q4`, active HIGH) |
+| **2** | `INT_DOF` | Input | `+3V3` | BNO085 Motion Interrupt (active LOW) |
+| **4** | `ALERT` | Input | `+3V3` | MAX17048 Fuel Gauge Alert (active LOW) |
+| **5** | `INT_HR` | Input | `+1V8` | MAX30102 Optical Heart Rate Interrupt (active LOW) |
+| **6** | `INT_RTC` | Input | `+3V3` | RV-3028 RTC Alarm / Periodic Timer (active LOW) |
+| **8** | `I2C_SDA` | Bi-dir | `+3V3` | I2C Data Line (10k pull-up `R18` to `+3V3`) |
+| **9** | `I2C_SCL` | Output | `+3V3` | I2C Clock Line (10k pull-up `R19` to `+3V3`) |
+| **10** | `BUZZER` | Output | `+3V3` | Electromagnetic Buzzer PWM (gate of N-MOSFET `Q3`) |
+| **11** | `BAT_STAT` | Input | `+3V3` | BQ25170 Charger Status (LOW = Charging, HIGH = Complete) |
+| **12** | `USB_DETECT`| Input | `+3V3` | Resistor divider from USB 5V VBUS (HIGH when plugged in) |
+| **13** | `BTN` | Input | `+3V3` | Main Tactile Push-Button (Active LOW, debounced) |
+| **14** | `LEVER_RIGHT`| Input | `+3V3` | Navigation Lever Right (Active LOW, hardware-mirrored) |
+| **15** | `LEVER_PUSH` | Input | `+3V3` | Navigation Lever Center Click (Active LOW) |
+| **16** | `LEVER_LEFT` | Input | `+3V3` | Navigation Lever Left (Active LOW, hardware-mirrored) |
+| **17** | `PWR_NPM` | Output | `+3V3` | NeoPixel Matrix Power Gate (HIGH = ON, LOW = 0µA cutoff) |
+| **18** | `NPM` | Output | `VBAT` | WS2812B Serial Data Stream (800 kHz NZR) |
+| **21** | `TFT_RS` | Output | `+2V8` | ST7789 Command / Data selection (via TXB0106) |
+| **38** | `TFT_RST` | Output | `+2V8` | ST7789 Hardware Reset Line (active LOW) |
+| **39** | `INT_ALS` | Input | `+3V3` | OPT3001 Light Sensor Threshold Interrupt (active LOW) |
+| **40** | `SPI_SCK` | Output | `+3V3` | SPI Bus Serial Clock (shared between Display & Storage) |
+| **41** | `SPI_MISO`| Input | `+3V3` | SPI Bus Data In (from ZDSD NAND Flash) |
+| **42** | `SPI_MOSI`| Output | `+3V3` | SPI Bus Data Out (to Display & ZDSD NAND Flash) |
+| **47** | `CS_SD` | Output | `+3V3` | ZDSD NAND Flash Chip Select (active LOW) |
+| **48** | `CS_TFT` | Output | `+2V8` | ST7789 TFT Display Chip Select (active LOW) |
+
+### SPI Bus Arbitration
+The ST7789 IPS display controller and the ZDSD NAND Flash share `SPI2_HOST` (SCK 40, MISO 41, MOSI 42). To prevent display corruption during file I/O:
+1. `StorageManager` explicitly drives `CS_TFT` (`GPIO 48`) **HIGH** (deselected) before asserting `CS_SD` (`GPIO 47`) **LOW**.
+2. Display SPI transactions run at **40 MHz**; SD/NAND transactions run at **20 MHz**.
+3. Upon completing a NAND write/read transaction, `CS_SD` is released **HIGH** before handing the bus back to LovyanGFX.
+
+---
+
+## 5. Centralized I2C Bus Address Map
+
+The I2C bus (`Wire`) runs at **400 kHz Fast Mode**:
+* **SDA:** `GPIO 8`
+* **SCL:** `GPIO 9`
+
+| Device | Part # | 7-Bit Address | Voltage Domain | HW Interrupt Line | Primary Function |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **BNO085** | `U11` | **`0x4A`** *(alt `0x4B`)* | `+3V3` | `GPIO 2` (`!INT_DOF`, active LOW) | 9-DOF IMU, AR/VR fusion, 50 Hz compass, pedometer |
+| **OPT3001** | `U10` | **`0x44`** / **`0x45`** | `+3V3` | `GPIO 39` (`!INT_ALS`, active LOW) | Precision photopic ambient light sensor (Lux) |
+| **MAX17048** | `U6` | **`0x36`** | `+3V3` | `GPIO 4` (`!ALERT`, active LOW) | ModelGauge™ LiPo fuel gauge ($V_{\text{cell}}$, %, CRATE) |
+| **RV-3028-C7** | `U12` | **`0x52`** | `+3V3` | `GPIO 6` (`!INT_RTC`, active LOW) | Extreme low-power RTC ($45\,\text{nA}$), hardware alarms |
+| **MAX30102** | `U8` | **`0x57`** | `+1V8` *(via PCA9306 `U9`)* | `GPIO 5` (`!INT_HR`, active LOW) | Optical PPG biometric pulse & $SpO_2$ oximetry |
+| **BME680/690** | `U7` | **`0x76`** *(alt `0x77`)* | `+3V3` | *Polled* | Temperature, Humidity, Barometer (hPa), MOX Gas ($R_{\text{gas}}$) |
+
+---
+
+## 6. Persistent Storage Subsystem (`StorageManager`)
+
+Configuration parameters and user preferences persist on the onboard **ZDSD NAND Flash** (`CS_SD = GPIO 47`) in `/sys/config.bin`.
+
+### Binary Struct Layout (`DeviceConfig`)
+A cache-aligned **64-byte packed binary struct**:
+
+```text
+Offset  Field              Type      Size  Description
+──────  ─────────────────  ────────  ────  ───────────────────────────────────────────
+0x00    magic              uint16_t  2 B   Magic signature (0x584E = "NX" in ASCII)
+0x02    version            uint8_t   1 B   Schema version (Current: 1)
+0x03    size               uint8_t   1 B   Struct byte size (Current: 64)
+0x04    crc16              uint16_t  2 B   CCITT CRC-16 (poly 0x1021, init 0xFFFF)
+0x06    reservedHeader     uint16_t  2 B   Alignment padding
+0x08    brightness         uint8_t   1 B   Display backlight brightness (10–100%)
+0x09    autoDim            uint8_t   1 B   Ambient light compensation (0 = Off, 1 = On)
+0x0A    tiltToWake         uint8_t   1 B   Tilt mode (0=Off, 1=Sens, 2=Bal, 3=Slug)
+0x0B    screenTimeout      uint16_t  2 B   Timeout in seconds (0 = Never / Always On)
+0x0D    wristCoverStandby  uint8_t   1 B   Cover gesture (0 = Off, 1 = On)
+0x0E    fadeAnimMs         uint16_t  2 B   Backlight fade duration (0–2000 ms)
+0x10    notifMethod        uint8_t   1 B   0=Silent, 1=All, 2=Sound, 3=Lights
+0x11    matrixNotif        uint8_t   1 B   4x4 NeoPixel alert flash (0/1)
+0x12    hrmReminder        uint8_t   1 B   0=Off, 1=30m, 2=1h, 3=2h
+0x13    ecoMode            uint8_t   1 B   Power save throttle (0/1)
+0x14    autoStandby        uint8_t   1 B   Auto screen sleep (0/1)
+0x15    sensorSleep        uint8_t   1 B   Deep sleep sensors on standby (0/1)
+0x16    buzzerEnabled      uint8_t   1 B   Master audio toggle (0/1)
+0x17    buzzerVolume       uint8_t   1 B   Duty cycle intensity (10–100%)
+0x18    buzzerTickDuration uint16_t  2 B   Pulse width (2–30 ms)
+0x1A    buzzerTonePitch    uint16_t  2 B   Acoustic frequency (1600–4400 Hz)
+0x1C    npmPower           uint8_t   1 B   NeoPixel PMOS gate (0/1)
+0x1D    npmBrightness      uint8_t   1 B   Matrix brightness (10–100%)
+0x1E    npmAnimation       uint8_t   1 B   Active pattern ID (0–5)
+0x1F    aisEnabled         uint8_t   1 B   NX-AIS co-processor (0/1)
+0x20    aisAdaptive        uint8_t   1 B   Adaptive context threshold (0/1)
+0x21    aisDiagnostics     uint8_t   1 B   Diagnostics logging (0/1)
+0x22    reservedBuffer     uint8_t   26 B  Zero-migration expansion buffer
+0x3C    reservedBuffer     (cont.)   4 B   Pad to exactly 64 bytes total
+```
+
+### Zero-Wear Save Policy
+1. **RAM-Only Dialing:** Turning radial dials modifies RAM variables and sets `isDirty = true`. Rotating a dial 10,000 times produces **0 disk writes**.
+2. **Commit on `[PUSH]`:** Pressing the lever down to confirm a setting triggers an atomic write and resets `isDirty = false`.
+3. **Commit on Exit:** Pressing `[BTN]` to back out of Settings flushes any dirty state once.
+4. **Atomic Staging:** Data writes to `/sys/config.tmp` first. Once verified, it atomically renames to `/sys/config.bin`. If power cuts out mid-write, the existing `/sys/config.bin` remains uncorrupted.
+5. **Fail-Safe Boot:** If the NAND storage is unformatted, corrupt, or CRC fails, `StorageManager` loads factory defaults immediately without crashing or blocking boot.
+
+### Standalone PC Inspection Utility (`tools/nx_config_tool.py`)
+A dedicated Python CLI tool allows inspecting, validating, editing, and compiling configuration binaries offline:
 
 ```bash
-# Clone the repository
-git clone https://github.com/Ghost3379/NX-ISD.git
-cd NX-ISD/ISD-Core
+# Read and validate binary config:
+python tools/nx_config_tool.py read config.bin
 
-# Compile firmware
-pio run
+# Export binary configuration to human-readable JSON:
+python tools/nx_config_tool.py to-json config.bin -o config.json
 
-# Flash to target board via USB-CDC
-pio run --target upload
+# Compile modified JSON back to binary with recalculated CRC-16:
+python tools/nx_config_tool.py from-json config.json -o config.bin
 
-# Open real-time serial monitor (115200 baud)
-pio device monitor
+# Generate fresh factory default binary config:
+python tools/nx_config_tool.py create-default -o config.bin
 ```
 
 ---
 
-## License
+## 7. Mathematical Models & Graphics Curves
 
-ISD-Core is licensed under the GNU General Public License v3.0. See the root `LICENSE` file for details.
+### 1. Backlight Smoothstep Curve
+Backlight fade transitions utilize a cubic Hermite **smoothstep curve** instead of a linear ramp:
+
+$$f(t) = t^2 \times (3 - 2t) \quad \text{for } t \in [0, 1]$$
+
+This produces zero first-derivative velocity at start and end ($f'(0) = f'(1) = 0$), mirroring natural human pupil dilation and eliminating harsh visual snapping.
+
+### 2. 3D Cover Flow Trapezoidal Projection
+Cards flanking the center hero card in the 3D App Menu are projected with geometric perspective scaling:
+
+$$\text{scale} = \max\left(0.55, 1.0 - 0.45 \times \frac{|d|}{180}\right)$$
+
+Flanking card vertical offsets use trapezoidal corner adjustments (`fillTriangle`) to produce true 3D spatial depth.
+
+### 3. Spring-Damper Carousel Physics
+The carousel scroll position snaps to the centered hero card using an underdamped spring-damper easing formula:
+
+$$\text{pos}_{k+1} = \text{pos}_k + (\text{target} - \text{pos}_k) \times 0.48$$
+
+This provides a fluid, mechanical feel that snaps securely into slot on lever release.
+
+---
+
+## 8. Building, Flashing & Development Workflow
+
+ISD-Core is compiled using **PlatformIO** targeting the ESP32-S3 with 16MB Flash and 8MB Octal PSRAM:
+
+```bash
+# 1. Clone repository
+git clone https://github.com/Ghost3379/NX-ISD.git
+cd NX-ISD/ISD-Core
+
+# 2. Compile firmware
+pio run
+
+# 3. Upload to target board via USB CDC (COM9 / ttyACM0)
+pio run --target upload
+
+# 4. Open serial terminal monitor (115200 baud)
+pio device monitor
+```
+
+### Compiler Configurations (`platformio.ini`)
+* **Board:** `esp32-s3-devkitc-1`
+* **PSRAM:** `board_build.arduino.memory_type = opi_opi`
+* **Flash Mode:** `qio`, 80 MHz, 16 MB
+* **Optimization:** `-O2`, `-DCORE_DEBUG_LEVEL=0`
+
+---
+
+## 9. License
+
+The software in this directory is licensed under the **GNU General Public License v3.0 (GPLv3)**.  
+The hardware design files in [`ISD-PCB`](../ISD-PCB) are licensed under the **CERN-OHL-S v2**.

@@ -3,6 +3,7 @@
 #include <LovyanGFX.hpp>
 #include "SensorState.h"
 #include "HAL.h"
+#include "storage/StorageManager.h"
 
 enum AppView {
   VIEW_NOTIFICATIONS = 0,
@@ -57,6 +58,7 @@ private:
   int shutdownMenuIndex = 0;        // 0: Standby, 1: Shutdown, 2: Restart
   PowerAction requestedPowerAction = PWR_ACT_NONE;
   bool isStandby = false;           // Display off standby state
+  bool needsFadeIn = false;        // Backlight fade-in trigger after wake frame push
 
   // Lever-Push Hold-to-Charge state for App Menu entrance
   uint32_t leverPushStartMs = 0;
@@ -152,7 +154,7 @@ public:
   void enterStandby() {
     isStandby = true;
     if (display) {
-      display->setBrightness(0);
+      HAL::fadeOutBacklight(display);
     }
   }
 
@@ -166,7 +168,12 @@ public:
     qpInBrightnessMenu = false;
     qpInShutdownMenu = false;
     qpInNotifMenu = false;
-    applyBrightness();
+    if (HAL::backlightFadeMs > 0) {
+      if (display) display->setBrightness(0);
+      needsFadeIn = true;
+    } else {
+      applyBrightness();
+    }
   }
 
   void setView(AppView v) {
@@ -270,10 +277,14 @@ public:
       } else if (qpInBrightnessMenu) {
         // Exit circular brightness menu and confirm level
         qpInBrightnessMenu = false;
+        StorageManager::extractConfigFromHAL(StorageManager::getActiveConfig());
+        StorageManager::saveConfig(StorageManager::getActiveConfig());
       } else if (qpInNotifMenu) {
         qpNotifMode = (NotificationMode)notifMenuIndex;
         HAL::setNotificationMode(qpNotifMode);
         qpInNotifMenu = false;
+        StorageManager::extractConfigFromHAL(StorageManager::getActiveConfig());
+        StorageManager::saveConfig(StorageManager::getActiveConfig());
         if (!HAL::silentMode) {
           HAL::buzzPip(3500, 15);
         }
@@ -295,6 +306,9 @@ public:
             break;
           case 2: // Eco Mode
             qpEcoMode = !qpEcoMode;
+            HAL::ecoMode = qpEcoMode;
+            StorageManager::extractConfigFromHAL(StorageManager::getActiveConfig());
+            StorageManager::saveConfig(StorageManager::getActiveConfig());
             break;
           case 3: // Display / Brightness circular menu
             qpInBrightnessMenu = true;
@@ -385,7 +399,7 @@ public:
     // Version Tag Directly Under Loading Bar
     canvas.setTextSize(1);
     canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas.drawCenterString("v0p37", 120, 140);
+    canvas.drawCenterString("v0p4", 120, 140);
 
     // Bottom Footer in the middle of the screen
     canvas.setTextSize(1);
@@ -535,6 +549,11 @@ public:
 
     // 6. Flip Double Buffer to ST7789 (Zero Flicker)
     canvas.pushSprite(0, 0);
+
+    if (needsFadeIn) {
+      needsFadeIn = false;
+      HAL::fadeInBacklight(display);
+    }
   }
 
   void renderPowerMessage(const char* title, const char* subtitle, int iconType) {
