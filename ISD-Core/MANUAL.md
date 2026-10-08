@@ -118,7 +118,7 @@ The home screen delivers immediate situational awareness without visual clutter:
 | --------------------------------- |  Hairline divider
 |             14:32:08              |  Large crisp digital time (RV-3028 RTC)
 |                                   |
-|   [ 24.3 C ]         [ 48 %RH ]   |  BME680 Temperature & Humidity badges
+|   [ 24.3 C ]         [ 48 %RH ]   |  BME690 Temperature & Humidity badges
 |                                   |
 |               ( N )               |  Rotating Compass Reticle with
 |             /   |   \             |  Cardinal Points (N, E, S, W)
@@ -267,49 +267,65 @@ ISD-Core groups all functionality into **6 dedicated, human-centered decks**:
 +-----------------------------------+
 | ISD-Core // ENVIRONMENT     98%   |
 | --------------------------------- |
-| [BARO: 1014hPa ▲] [CLIM: 22C 48%] |  Top Telemetry Pods: Pressure & Climate
-| [STABLE / FAIR  ] [DEW: 11C COMF] |
+```text
++-----------------------------------+
+| ISD-Core // ENVIRONMENT     [98%] |  Master Pinned Header Bar
+| --------------------------------- |
+| [ATMOSPHERE  ] [CLIMATE         ] |  Top Telemetry Pods: Pressure & Climate
+| [1014 hPa FAIR] [24.2C   48% RH  ] |
 |        \                 /        |  Tactile Blueprint Leader Lines
 |         (O)─ . - . ─(O)           |  with (O) Atmospheric Anchor Nodes
 |             :  3D :               |  Real-Time 3D Rotating Vector Earth
 |         (O)─ ' - ' ─(O)           |  tilted at 23.4° with live continents
 |        /                 \        |
-| [AIR: 142kΩ GOOD] [LUX: 480 INDO] |  Bottom Telemetry Pods: VOC & Photometrics
-| [■■■■■□□□] IAQ    [☼☼☼░░░░] ROOM  |
-| --------------------------------- |
-| [▼] SCROLL FOR SCHEMATICS   [0/4] |  Vertical Card Position Strip & Back Prompt
+| [AIR QUALITY ] [PHOTOMETRICS    ] |  Bottom Telemetry Pods: BME690 & OPT3001
+| [142 kΩ  CLEAN] [850 lx DAYLIGHT ] |
+| --------------------------------- | [===] Side Scrollbar (Card 0/5)
 +-----------------------------------+
 ```
 
-The Environment deck uses a **5-card vertical hierarchical card architecture**:
-1. **Card 0: Master Environmental HUD (The Overview):**
-   * **Real-Time 3D Rotating Vector Earth:** Rendered live at 60 FPS on the ESP32-S3's hardware FPU with Earth's real $23.4^\circ$ axial tilt, rotating longitude meridians, projected latitude parallels (Equator and Tropics), 3D projected vector continents, and an outer exosphere halo.
-   * **Tactical Blueprint Leader Lines:** Circuit traces with `(O)` anchor nodes pin Earth's atmosphere directly to 4 corner telemetry pods (`BARO`, `CLIM`, `AIR QUALITY`, `PHOTOMETRICS`).
-2. **Card 1: ATMOSPHERE & ALTITUDE (Barometer Deep-Dive):**
-   * **Mountain Elevation Profile:** Vector mountain silhouette with a dynamic altitude target line calculating real-time elevation ($m$ & $ft$) from the BME680 barometric formula.
-   * **16-Bar Historical Isobaric Sparkline:** Oscilloscope-style pressure trend graph showing pressure changes over time.
-   * **`[PUSH]`:** Zero relative elevation ($QNH$ calibration).
-3. **Card 2: CLIMATE & THERMAL (Psychrometrics Deep-Dive):**
-   * **Vector Thermometer Capillary Tube:** Mercury fluid column dynamically rising and falling with temperature, with session min/max memory ticks.
-   * **Vector Moisture Droplet Hygrometer:** Relative humidity percentage readout.
-   * **2D Psychrometric Comfort Matrix:** Maps temperature versus dew point with an active cursor dot showing whether you are in the human comfort envelope.
-   * **`[PUSH]`:** Toggles between $^\circ\text{C} \longleftrightarrow ^\circ\text{F}$.
-4. **Card 3: AIR QUALITY & VOC (BME680 Sensor Deep-Dive):**
-   * **MEMS Gas Chamber Cutaway:** Blueprint cutaway showing the diffusion mesh, metal oxide substrate, and $300^\circ\text{C}$ heating coil.
-   * **8-Segment Tactical IAQ Meter:** Real-time air purity rating (`CLEAN` $\to$ `MODERATE` $\to$ `HAZARDOUS`) and MOX gas resistance in $\text{k}\Omega$.
-   * **`[PUSH]`:** Triggers a forced-mode heater burn pulse for fresh air sampling.
-5. **Card 4: PHOTOMETRICS & SOLAR (OPT3001 Light Deep-Dive):**
-   * **Dynamic Optical Aperture:** A 6-blade camera iris that physically dilates based on ambient Lux.
-   * **180° Celestial Daylight Horizon Arc:** Sweeping horizon arc marking lighting zones (`NIGHT` $\to$ `ROOM LIGHT` $\to$ `DIRECT SUN`) with an illuminated sun satellite pip.
+The Environment deck uses a **6-card vertical hierarchical card architecture** with a **smooth spring-damper sliding transition** between cards and a tactical side scrollbar:
 
-#### Navigation & Control Bindings
-* **`LEVER RIGHT` (or Down):** Smoothly scrolls down to the next sensor card ($0 \to 1 \to 2 \to 3 \to 4$).
-* **`LEVER LEFT` (or Up):** Smoothly scrolls up to the previous sensor card ($4 \to 3 \to 2 \to 1 \to 0$).
+1. **Card 0: Master Environmental Command HUD:**
+   * **Real-Time 3D Rotating Vector Earth:** Rendered live on the ESP32-S3 hardware FPU with Earth's genuine $23.4^\circ$ axial tilt, rotating longitude meridians, projected latitude parallels, and 3D vector continent coastlines.
+   * **Tactical Blueprint Leader Lines:** Circuit traces with `(O)` anchor nodes pin Earth's atmosphere directly to 4 corner telemetry pods (`ATMOSPHERE`, `CLIMATE`, `AIR QUALITY`, `PHOTOMETRICS`).
+2. **Card 1: WEATHER & METEOROLOGICAL FORECAST:**
+   * **Dynamic Vector Weather Glyphs:** Custom vector icons reflecting real-time conditions (☀️ `CLEAR / FAIR`, ⛅ `PARTLY CLOUDY`, ☁️ `OVERCAST`, 🌧️ `RAIN LIKELY`, ⛈️ `STORM ALERT`).
+   * **3-Hour Barometric Tendency ($\Delta P / \Delta t$):** Analyzes rolling barometric slope to detect incoming storm fronts before rain arrives.
+   * **Dew Point & Trail Fog Sentinel:** Calculates condensation margin via Magnus-Tetens formula; warns hikers if trail fog or dew convergence is imminent ($(T - T_{\text{dew}}) \le 1.5^\circ\text{C}$).
+3. **Card 2: ATMOSPHERE & ALTITUDE (Barometer Deep-Dive):**
+   * **Mountain Elevation Profile:** Vector mountain silhouette with a dynamic altitude target line calculating real-time elevation ($m$ & $ft$) from the BME690 barometric formula.
+   * **16-Bar Historical Isobaric Sparkline:** Real-time pressure trend graph showing atmospheric pressure changes across rolling samples.
+   * **`[PUSH]`:** Zero relative elevation ($QNH$ baseline calibration).
+4. **Card 3: CLIMATE & THERMAL (Psychrometrics Deep-Dive):**
+   * **Vector Thermometer Capillary Tube:** Mercury fluid column dynamically rising and falling with temperature, with etched tick marks and session min/max memory.
+   * **Psychrometric Comfort Envelope:** Maps temperature versus humidity with an active cursor dot indicating the human comfort target zone.
+   * **`[PUSH]`:** Toggles between $^\circ\text{C} \longleftrightarrow ^\circ\text{F}$.
+5. **Card 4: AIR QUALITY & VOC (BME690 Sensor Fusion Deep-Dive):**
+   * **Hero IAQ & Tier Metric:** Real-time 0–500 Air Quality Index (German UBA standard) with tactical status tier badge (`EXCELLENT`, `GOOD`, `MODERATE`, `POOR`, `HAZARDOUS`).
+   * **16-Segment Air Purity Gauge:** Calibrated 0–100% purity meter tracking live compensated gas resistance relative to the clean-air baseline.
+   * **Quad Telemetry Pods:** Four live metrics in dual rows:
+     * $e\text{CO}_2$: Estimated carbon dioxide ($400\text{--}3600\text{ ppm}$) from metabolic VOC correlation.
+     * $\text{bVOC}$: Total breath/volatile organics ($0.05\text{--}5.0\text{ ppm}$).
+     * $R_{\text{gas}}$: Moisture- and temperature-compensated MOX resistance ($\text{k}\Omega$).
+     * $R_0$: Dynamic adaptive clean-air baseline reference ($\text{k}\Omega$).
+   * **VOC Plume Sentinel:** High-speed $\Delta R/\Delta t$ rate-of-change detector warning on sudden chemical spikes (`▲ PLUME SPIKE ⚠️`, `● AIR STEADY`, `▼ PURGING AIR`).
+   * **16-Bar Real-Time Sparkline:** Chronological history graph tracking VOC levels with a dotted clean-air baseline reference line.
+   * **`[PUSH]`:** Triggers an on-demand $300^\circ\text{C}$ MOX heater burn cycle with thermal pulse animation.
+6. **Card 5: PHOTOMETRICS & SOLAR (OPT3001 Light Deep-Dive):**
+   * **Dynamic Optical Aperture:** A 6-blade mechanical camera iris that physically dilates based on ambient Lux.
+   * **180° Celestial Daylight Horizon Arc:** Sweeping horizon arc marking lighting zones (`NIGHT` $\to$ `INDOORS` $\to$ `DAYLIGHT`) with a logarithmic sun satellite pip.
+
+#### Navigation & Tactical Side Scrollbar
+* **Smooth Vertical Sliding:** Moving between cards smoothly slides the entire canvas up or down with spring-damper easing. Content is strictly clipped between the top header and bottom frame, eliminating visual clutter.
+* **Tactical Right Side Scrollbar:** A clean vertical indicator track at the right display edge indicates your active position across the 6 cards with an illuminated amber thumb, completely removing the need for a cramped bottom footer.
+* **`LEVER RIGHT` (or Down):** Slides down to the next card ($0 \to 1 \to 2 \to 3 \to 4 \to 5$).
+* **`LEVER LEFT` (or Up):** Slides up to the previous card ($5 \to 4 \to 3 \to 2 \to 1 \to 0$).
 * **`LEVER PUSH`:** 
-  * On Master HUD (Card 0): Jumps directly to Card 1.
-  * On Deep-Dive Cards: Triggers contextual action (Zero Altitude, Toggle $^\circ\text{C}/^\circ\text{F}$, Pulse Gas Sensor).
+  * On Master HUD (Card 0): Jumps directly to Weather & Forecast (Card 1).
+  * On Deep-Dive Cards: Triggers contextual action (Zero Elevation, Toggle $^\circ\text{C}/^\circ\text{F}$, Pulse BME690 Heater).
 * **`BTN` (Back):**
-  * On Deep-Dive Cards ($1 \dots 4$): Snaps straight back up to Master HUD (Card 0).
+  * On Deep-Dive Cards ($1 \dots 5$): Snaps straight back up to Master HUD (Card 0).
   * On Master HUD (Card 0): Exits back to 3D App Menu.
 
 ---
@@ -349,7 +365,7 @@ The Environment deck uses a **5-card vertical hierarchical card architecture**:
 | DEVICE // NX-SDS DIAG     [PASS]  |
 | --------------------------------- |
 |  I2C BUS: ACK OK (400 kHz Fast)   |  Bus audit & automated 9-clock recovery
-|  BNO085: OK    BME680: OK         |  Sensor proof-testing results
+|  BNO085: OK    BME690: OK         |  Sensor proof-testing results
 |  OPT3001: OK   RV3028: OK [OSF:0] |  Oscillator Stop Flag (OSF) audit
 | --------------------------------- |
 |  BATTERY: 4.12V  98%  (+0.2 %/h)  |  MAX17048 Fuel Gauge telemetry
@@ -362,7 +378,7 @@ The Environment deck uses a **5-card vertical hierarchical card architecture**:
 
 * **NX-SDS Self-Diagnostic Suite:**
   * **I2C Bus Audit:** Probes all bus addresses; automatically executes 9-clock SCL pulse trains to recover hung slave lines.
-  * **Sensor Proof-Testing:** On-demand self-tests for BNO085 internal co-processor, BME680 hotplate, and OPT3001 conversion registers.
+  * **Sensor Proof-Testing:** On-demand self-tests for BNO085 internal co-processor, BME690 hotplate, and OPT3001 conversion registers.
   * **Oscillator Watchdog:** Inspects the RV-3028 `OSF` (Oscillator Stop Flag) to detect brownouts, crystal failure, or invalid RTC timing.
 * **MAX17048 Fuel Gauge Telemetry:** Live cell terminal voltage ($V_{\text{cell}}$), charge/discharge rate (%/hr), estimated internal cell resistance ($R_{\text{int}}$), and health cycle counters.
 * **Memory & Storage Gauges:** Visual bar meters showing Octal PSRAM usage (8 MB pool), FreeRTOS heap watermarks, and NAND Flash storage wear.

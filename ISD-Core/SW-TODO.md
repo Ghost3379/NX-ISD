@@ -17,10 +17,12 @@ This document tracks implementation status across the 6 core application decks, 
 * [x] **Temperature:** Ambient temperature sensing with capillary mercury tube & min/max bounds
 * [x] **Humidity:** Relative humidity sensing with teardrop hygrometer
 * [x] **Light Intensity:** Photopic ambient illuminance (`OPT3001` via I2C `0x44`/`0x45`) with 6-blade optical aperture
-* [x] **MSF Calculated Weather Info:** 3-hour $\Delta P/\Delta t$ barometric storm prediction & Magnus-Tetens dew point calculation
-* [x] **3D Vector Earth Engine:** 60 FPS real-time rotating planetary wireframe with 23.4° tilt and continents
-* [x] **5-Card Vertical Hierarchy:** Master HUD + 4 dedicated deep-dive sensor analysis cards
+* [x] **Weather & Meteorological Forecast:** Dynamic vector glyphs (Sun, Partly Cloudy, Overcast, Rain, Storm), 3-hour $\Delta P/\Delta t$ gradient, Dew point fog sentinel
+* [x] **3D Vector Earth Engine:** Real-time rotating planetary wireframe with 23.4° tilt and vector continents
+* [x] **6-Card Vertical Hierarchy:** Master HUD + Weather & Forecast + 4 deep-dive sensor cards with vertical sliding animation
+* [x] **Tactical Side Scrollbar:** Right-edge track & position thumb (replaces cluttered bottom footer bar)
 * [x] **Altimeter:** Barometric elevation calculation with relative zero and QNH calibration
+* [x] **Air Quality & VOC Fusion:** NX-MSF environmental engine with moisture-compensated MOX resistance, dynamic $R_0$ baseline tracking, 0–500 IAQ index, estimated $e\text{CO}_2$ & bVOC, VOC plume sentinel, and 16-bar live sparkline graph
 
 ### 3. Clock (Temporal Operations)
 * [ ] **Timer:** Countdown timer with progress bar and acoustic/NPM alert

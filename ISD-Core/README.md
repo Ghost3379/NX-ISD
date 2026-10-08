@@ -53,7 +53,7 @@ ISD-Core leverages the asymmetric dual-core architecture of the ESP32-S3 (Xtensa
 |               |                       |   | Fast Sensors (50 - 100Hz)|   |  |
 |               |                       |   | BNO085 IMU • Compass     |   |  |
 |               |                       |   | Slow Sensors (1 Hz)      |   |  |
-|               |                       |   | BME680 • OPT3001 • MAX   |   |  |
+|               |                       |   | BME690 • OPT3001 • MAX   |   |  |
 |               |                       |   +--------------------------+   |  |
 |               |                       +-----------------+----------------+  |
 |               |                                         |                   |
@@ -62,7 +62,7 @@ ISD-Core leverages the asymmetric dual-core architecture of the ESP32-S3 (Xtensa
 |                                    v                                        |
 |  +-----------------------------------------------------------------------+  |
 |  |                         Hardware Layer                                |  |
-|  |  Sensors (I2C @ 400kHz): BNO085 • BME680 • OPT3001 • MAX17048 • RV3028|  |
+|  |  Sensors (I2C @ 400kHz): BNO085 • BME690 • OPT3001 • MAX17048 • RV3028|  |
 |  |  Display (SPI @ 40MHz):  ST7789 IPS 240x240 (Double-Buffered PSRAM)  |  |
 |  |  Storage (SPI @ 20MHz):  ZDSD NAND Flash (CS=47, /sys/config.bin)     |  |
 |  |  Inputs (IRAM ISRs):     BTN (GP13) • LEVER L/P/R (GP16/15/14)        |  |
@@ -76,7 +76,7 @@ ISD-Core leverages the asymmetric dual-core architecture of the ESP32-S3 (Xtensa
 | :--- | :--- | :---: | :---: | :--- |
 | **Core 1** | `vUITask` (Main Loop) | `1` | **~42 Hz** | LovyanGFX display rendering, 3D Cover Flow animation, Watchface HUD, radial dial physics, input event consumption, atomic NAND storage commit. |
 | **Core 0** | `vFastSensorTask` | `5` | **50–100 Hz** | High-speed BNO085 9-DOF IMU rotation vector polling, step counting, compass heading calculation, wrist-flick gesture detection. |
-| **Core 0** | `vSlowSensorTask` | `2` | **1 Hz** | Low-frequency I2C polling: BME680 (climate/gas), OPT3001 (lux), MAX17048 (fuel gauge), RV-3028 (RTC sync), USB VBUS sense. |
+| **Core 0** | `vSlowSensorTask` | `2` | **1 Hz** | Low-frequency I2C polling: BME690 (climate/gas), OPT3001 (lux), MAX17048 (fuel gauge), RV-3028 (RTC sync), USB VBUS sense. |
 | **ISRs** | Hardware Edge ISRs | High (IRAM) | *Event* | Lever Left/Push/Right and Button falling-edge capture into thread-safe atomic latch bitmasks with 40 ms software debounce. |
 
 ### Inter-Process Communication (IPC)
@@ -204,7 +204,7 @@ The I2C bus (`Wire`) runs at **400 kHz Fast Mode**:
 | **MAX17048** | `U6` | **`0x36`** | `+3V3` | `GPIO 4` (`!ALERT`, active LOW) | ModelGauge™ LiPo fuel gauge ($V_{\text{cell}}$, %, CRATE) |
 | **RV-3028-C7** | `U12` | **`0x52`** | `+3V3` | `GPIO 6` (`!INT_RTC`, active LOW) | Extreme low-power RTC ($45\,\text{nA}$), hardware alarms |
 | **MAX30102** | `U8` | **`0x57`** | `+1V8` *(via PCA9306 `U9`)* | `GPIO 5` (`!INT_HR`, active LOW) | Optical PPG biometric pulse & $SpO_2$ oximetry |
-| **BME680/690** | `U7` | **`0x76`** *(alt `0x77`)* | `+3V3` | *Polled* | Temperature, Humidity, Barometer (hPa), MOX Gas ($R_{\text{gas}}$) |
+| **BME690** | `U7` | **`0x76`** *(alt `0x77`)* | `+3V3` | *Polled* | Temperature, Humidity, Barometer (hPa), MOX Gas ($R_{\text{gas}}$) |
 
 ---
 

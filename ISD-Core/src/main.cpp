@@ -172,7 +172,7 @@ void vSensorTask(void* pvParameters) {
       }
     }
 
-    // 3. Slow Sensor polling (every 1000ms: Fuel Gauge, RTC, BME680)
+    // 3. Slow Sensor polling (every 1000ms: Fuel Gauge, RTC, BME690)
     // Executed OUTSIDE the mutex so stateMutex lock time is strictly < 1 microsecond!
     bool doSlowPoll = (now - lastSlowPoll >= 1000);
     float slowVolt = 0.0f, slowPct = 0.0f, slowRate = 0.0f;
@@ -203,7 +203,7 @@ void vSensorTask(void* pvParameters) {
         slowRtcOk = true;
       }
 
-      // BME680 Environmental (Temp, Humidity, Pressure, Gas)
+      // BME690 Environmental (Temp, Humidity, Pressure, Gas)
       if (HAL::envSensorReady) {
         if (HAL::envSensor.fetchData()) {
           HAL::envSensor.getData(slowEnvData);
