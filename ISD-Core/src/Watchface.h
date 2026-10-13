@@ -153,6 +153,11 @@ public:
 
   void enterStandby() {
     isStandby = true;
+    if (HAL::heartRateReady) {
+      HAL::heartRateSensor.setPulseAmplitudeRed(0);
+      HAL::heartRateSensor.setPulseAmplitudeIR(0);
+      HAL::heartRateSensor.shutDown();
+    }
     if (display) {
       HAL::fadeOutBacklight(display);
     }
@@ -399,7 +404,7 @@ public:
     // Version Tag Directly Under Loading Bar
     canvas.setTextSize(1);
     canvas.setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas.drawCenterString("v0p4", 120, 140);
+    canvas.drawCenterString("v0p42", 120, 140);
 
     // Bottom Footer in the middle of the screen
     canvas.setTextSize(1);

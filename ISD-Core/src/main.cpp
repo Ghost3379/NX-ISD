@@ -606,6 +606,9 @@ void loop() {
           tiltSleepStartMs = millis();
         } else if (millis() - tiltSleepStartMs >= 400) {
           Serial.println("[PWR] Tilt Back to Sleep -> Entering Standby");
+          if (currentScreen == SCREEN_APP_VITALS) {
+            appVitals.stopSensor();
+          }
           watchface.enterStandby();
           wasViewing = false;
           tiltSleepStartMs = 0;
@@ -627,6 +630,9 @@ void loop() {
         } else if (millis() - palmCoverStartMs >= 250) {
           Serial.println("[PWR] Wrist Cover to Sleep detected -> Entering Standby");
           HAL::buzzPip(2400, 12);
+          if (currentScreen == SCREEN_APP_VITALS) {
+            appVitals.stopSensor();
+          }
           watchface.enterStandby();
           palmCoverStartMs = 0;
           return;
@@ -639,11 +645,16 @@ void loop() {
     }
 
     // C. Inactivity Standby Timeout Check (0 = NEVER)
-    if (navBtn || navLeft || navPush || navRight || curPush || curBtn || curLeft || curRight || localState.fingerDetected) {
+    // Note: Pause display timeout during active HRM measurement session in AppVitals
+    bool hrmMeasuring = (currentScreen == SCREEN_APP_VITALS && appVitals.isMeasuring());
+    if (navBtn || navLeft || navPush || navRight || curPush || curBtn || curLeft || curRight || localState.fingerDetected || hrmMeasuring) {
       lastActivityMs = millis();
     } else if (HAL::screenTimeoutSec > 0) {
       if (millis() - lastActivityMs >= (uint32_t)HAL::screenTimeoutSec * 1000UL) {
         Serial.println("[PWR] Inactivity timeout reached -> Entering Standby");
+        if (currentScreen == SCREEN_APP_VITALS) {
+          appVitals.stopSensor();
+        }
         watchface.enterStandby();
         return;
       }
@@ -687,6 +698,9 @@ void loop() {
     if (pwrAct != PWR_ACT_NONE) {
       if (pwrAct == PWR_ACT_STANDBY) {
         Serial.println("[PWR] Entering Standby mode (Display off)...");
+        if (currentScreen == SCREEN_APP_VITALS) {
+          appVitals.stopSensor();
+        }
         watchface.enterStandby();
         return;
       } else if (pwrAct == PWR_ACT_RESTART) {
