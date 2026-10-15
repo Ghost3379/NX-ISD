@@ -6,7 +6,7 @@ Upcoming hardware revision tasks for the NX-ISD PCB.
 
 * [x] Change the LDO to a DC/DC buck converter
 * [x] Fix PMOS direction for high-side `VN` switching
-* [x] Change to the new USB-C port
+* [x] Change to a new USB-C port
 * [x] Adjust the board size for a 1200 mAh battery
 * [x] Change the NeoPixel matrix from 3x3 to 4x4
 
@@ -31,7 +31,8 @@ Upcoming hardware revision tasks for the NX-ISD PCB.
 * [ ] Fix BQ25170 Overheating problem at 600mA charging
 * [ ] Change EP pad vias of MAX17048 & BQ25170 to 0.45mm drill to reduce pcb costs
 * [ ] Clear 2V8 path
-* [ ] add hardware pull up to BTN
+* [ ] add hardware pull up to BTN (Because of deep sleep)
+* [ ] Remove U15 (TXB0106) level shifter for display SPI - route ESP32-S3 GPIOs directly to J2 (ST7789 IOVCC supports 3.3V; TXB0106 auto-sensing one-shot oscillates and overheats/fails at 40MHz SPI)
 
 ## v1p5
 
