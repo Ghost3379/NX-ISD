@@ -24,25 +24,25 @@ Upcoming hardware revision tasks for the NX-ISD PCB.
 
 ## v1p4
 
-* [ ] Fix the version tag position on the bottom silkscreen
-* [ ] Reposition the left-side mounting hole
-* [ ] Fix Lever button wiring
-* [ ] Move FPC-connector for the display a bit to the left
+* [x] Fix the version tag position on the bottom silkscreen
+* [x] Reposition the left-side mounting hole
+* [x] Fix Lever button wiring
+* [x] Move FPC-connector for the display a bit to the left
 * [ ] Fix BQ25170 Overheating problem at 600mA charging
 * [ ] Change EP pad vias of MAX17048 & BQ25170 to 0.45mm drill to reduce pcb costs
-* [ ] Clear 2V8 path
-* [ ] add hardware pull up to BTN (Because of deep sleep)
-* [ ] Remove U15 (TXB0106) level shifter for display SPI - route ESP32-S3 GPIOs directly to J2 (ST7789 IOVCC supports 3.3V; TXB0106 auto-sensing one-shot oscillates and overheats/fails at 40MHz SPI)
+* [x] Clear 2V8 path
+* [ ] Check all Decouple capacities for right pathing { 3V3 -> Cap+ -> VCC, Cap- -> GND }
+* [x] add hardware pull up to BTN (Because of deep sleep)
+* [x] Remove U15 (TXB0106) level shifter for display SPI - route ESP32-S3 GPIOs directly to J2 (ST7789 IOVCC supports 3.3V; TXB0106 auto-sensing one-shot oscillates and overheats/fails at 40MHz SPI)
 
-## v1p5
-
-* [ ] Change OPT3001 for a multispectral light sensor
 
 ## Future Ideas for a vXpY
 
 > NOTE: The higher up a point is the more likely I m planning to integrate it in a future verison.
 
+
 * [ ] PCB varient for SD-CARD isntead of Nand flash?
+* [ ] Change OPT3001 for a multispectral light sensor
 * [ ] Full speed flash storage, SD mode instead of pure SPI?
 * [ ] Add infrared transceiver and receiver?
 * [ ] MEMS Microphone?
