@@ -16,6 +16,14 @@ import struct
 import argparse
 from typing import Optional, Dict, Any, List
 
+# Ensure Windows terminal standard streams handle UTF-8 without charmap crashes
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 # Add parent directory / tools path for module discovery
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -287,8 +295,8 @@ def cmd_sensors(dev: ISDDevice):
         table.add_row(
             "Attitude (9-DOF)",
             "BNO085",
-            f"Roll: {roll:+.1f}° | Pitch: {pitch:+.1f}°",
-            f"Yaw: {yaw:+.1f}° (HDG: {head:03.0f}°)"
+            f"Roll: {roll:+.1f} deg | Pitch: {pitch:+.1f} deg",
+            f"Yaw: {yaw:+.1f} deg (HDG: {head:03.0f} deg)"
         )
 
         temp = data.get("temp", 0.0)
@@ -298,7 +306,7 @@ def cmd_sensors(dev: ISDDevice):
         table.add_row(
             "Atmosphere",
             "BME690",
-            f"Temp: {temp:.1f}°C | Hum: {hum:.1f}%",
+            f"Temp: {temp:.1f} C | Hum: {hum:.1f}%",
             f"Baro: {press:.1f} hPa (~{alt:.0f}m)"
         )
 
@@ -309,7 +317,7 @@ def cmd_sensors(dev: ISDDevice):
             "Air Quality",
             "BME690 MOX",
             f"IAQ Index: {iaq} ({iaq_txt})",
-            f"MOX Resistance: {gas/1000.0:.1f} kΩ"
+            f"MOX Resistance: {gas/1000.0:.1f} kOhm"
         )
 
         lux = data.get("lux", 0.0)
@@ -460,11 +468,11 @@ def cmd_monitor(dev: ISDDevice):
 
         content = (
             f"[bold cyan]9-DOF ORIENTATION[/bold cyan]\n"
-            f"  Roll:  {roll:+6.1f}°  Pitch: {pitch:+6.1f}°  Yaw: {yaw:+6.1f}°\n"
+            f"  Roll:  {roll:+6.1f} deg  Pitch: {pitch:+6.1f} deg  Yaw: {yaw:+6.1f} deg\n"
             f"  Level Reticle: [{bubble_str}]\n\n"
             f"[bold green]ENVIRONMENT & AIR QUALITY[/bold green]\n"
-            f"  Temp:  {temp:5.1f} °C   Humidity: {hum:5.1f} %\n"
-            f"  Baro:  {press:6.1f} hPa  Gas Res: {gas/1000.0:6.1f} kΩ\n"
+            f"  Temp:  {temp:5.1f} C   Humidity: {hum:5.1f} %\n"
+            f"  Baro:  {press:6.1f} hPa  Gas Res: {gas/1000.0:6.1f} kOhm\n"
             f"  IAQ:   {iaq:3d} ({get_iaq_tier(iaq)})\n\n"
             f"[bold yellow]POWER & BIOMETRICS[/bold yellow]\n"
             f"  Ambient: {lux:5.1f} Lux  Battery: {batt:3.0f}% ({volt:.2f}V) {'[bold green][CHARGING][/bold green]' if chg else ''}"
