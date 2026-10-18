@@ -36,18 +36,32 @@ private:
   static uint32_t customPixels[16];
 
   // Incoming serial line buffer
-  static char rxBuffer[256];
+  static char rxBuffer[512];
   static uint16_t rxIndex;
+
+  // Virtual navigation latches (injected into main loop)
+  static volatile bool virtualNavLeft;
+  static volatile bool virtualNavRight;
+  static volatile bool virtualNavPush;
+  static volatile bool virtualNavBtn;
 
   static void processCommand(const char* cmd);
   static void updateMatrixAnimation();
 
 public:
   static void begin();
+  static void pollSerial();
   static void update(const SensorState& state);
+
+  // Virtual navigation consumption
+  static bool consumeNavLeft();
+  static bool consumeNavRight();
+  static bool consumeNavPush();
+  static bool consumeNavBtn();
 
   // Status accessors for UI
   static bool isStreamActive() { return streamActive; }
+  static void setStreamActive(bool active) { streamActive = active; }
   static void toggleStream() { streamActive = !streamActive; }
   static uint32_t getPacketsSent() { return packetsSent; }
   static const char* getLastCommand() { return lastCommand.c_str(); }
@@ -62,4 +76,5 @@ public:
 
   static MatrixPattern getMatrixPattern() { return currentPattern; }
   static void setMatrixPattern(MatrixPattern pat);
+  static void setCustomPixels(const uint32_t pixels[16]);
 };

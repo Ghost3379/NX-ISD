@@ -467,6 +467,9 @@ void loop() {
 
   uint32_t now = millis();
 
+  // 0. Poll USB serial immediately so remote commands and navigation are zero-lag
+  UplinkBridge::pollSerial();
+
   // Instant direct hardware pin reads
   bool curLeft  = (digitalRead(LEVER_LEFT) == LOW);
   bool curRight = (digitalRead(LEVER_RIGHT) == LOW);
@@ -528,6 +531,24 @@ void loop() {
     isrFlagBtn = false;
     navBtn = true;
     Serial.println("[NAV] BTN CLICK (ISR)");
+  }
+
+  // 1b. Consume virtual navigation clicks from NX-Uplink Companion Bridge
+  if (UplinkBridge::consumeNavLeft()) {
+    navLeft = true;
+    Serial.println("[NAV] VIRTUAL LEVER LEFT (UPLINK)");
+  }
+  if (UplinkBridge::consumeNavRight()) {
+    navRight = true;
+    Serial.println("[NAV] VIRTUAL LEVER RIGHT (UPLINK)");
+  }
+  if (UplinkBridge::consumeNavPush()) {
+    navPush = true;
+    Serial.println("[NAV] VIRTUAL LEVER PUSH (UPLINK)");
+  }
+  if (UplinkBridge::consumeNavBtn()) {
+    navBtn = true;
+    Serial.println("[NAV] VIRTUAL BTN CLICK (UPLINK)");
   }
 
   // 2. Fetch fresh sensor telemetry from thread-safe bridge (< 1 microsecond)

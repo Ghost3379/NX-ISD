@@ -1,8 +1,9 @@
 #include "UplinkBridge.h"
 #include "DisplayConfig.h"
+#include "../../nx-systems/NX-MSF.h"
 #include <time.h>
 
-bool UplinkBridge::streamActive = false; // Strictly DORMANT by default - only streams when activated in TOOLS
+bool UplinkBridge::streamActive = false; // Strictly DORMANT by default - only streams when activated in TOOLS or requested via USB
 uint32_t UplinkBridge::streamIntervalMs = 200; // 5 Hz when active
 uint32_t UplinkBridge::lastStreamTime = 0;
 uint32_t UplinkBridge::packetsSent = 0;
@@ -18,8 +19,13 @@ uint32_t UplinkBridge::lastMatrixFrame = 0;
 uint8_t UplinkBridge::matrixStep = 0;
 uint32_t UplinkBridge::customPixels[16] = {0};
 
-char UplinkBridge::rxBuffer[256] = {0};
+char UplinkBridge::rxBuffer[512] = {0};
 uint16_t UplinkBridge::rxIndex = 0;
+
+volatile bool UplinkBridge::virtualNavLeft = false;
+volatile bool UplinkBridge::virtualNavRight = false;
+volatile bool UplinkBridge::virtualNavPush = false;
+volatile bool UplinkBridge::virtualNavBtn = false;
 
 // Serpentine 4x4 LED index mapping (XL-1010RGBC matrix)
 // Row 0: 0, 1, 2, 3
@@ -92,6 +98,74 @@ void UplinkBridge::setMatrixPattern(MatrixPattern pat) {
   }
 }
 
+bool UplinkBridge::consumeNavLeft() {
+  if (virtualNavLeft) {
+    virtualNavLeft = false;
+    return true;
+  }
+  return false;
+}
+
+bool UplinkBridge::consumeNavRight() {
+  if (virtualNavRight) {
+    virtualNavRight = false;
+    return true;
+  }
+  return false;
+}
+
+bool UplinkBridge::consumeNavPush() {
+  if (virtualNavPush) {
+    virtualNavPush = false;
+    return true;
+  }
+  return false;
+}
+
+bool UplinkBridge::consumeNavBtn() {
+  if (virtualNavBtn) {
+    virtualNavBtn = false;
+    return true;
+  }
+  return false;
+}
+
+void UplinkBridge::setCustomPixels(const uint32_t pixels[16]) {
+  for (int i = 0; i < 16; i++) {
+    customPixels[i] = pixels[i];
+  }
+  currentPattern = PATTERN_CUSTOM;
+  if (!matrixPower) {
+    setMatrixPower(true);
+  }
+  if (HAL::neoPixels && matrixPower) {
+    for (uint8_t i = 0; i < 16; i++) {
+      uint8_t x = i % 4;
+      uint8_t y = i / 4;
+      uint8_t r = (customPixels[i] >> 16) & 0xFF;
+      uint8_t g = (customPixels[i] >> 8) & 0xFF;
+      uint8_t b = customPixels[i] & 0xFF;
+      HAL::neoPixels->setPixelColor(mapPixel(x, y), r, g, b);
+    }
+    HAL::neoPixels->show();
+  }
+}
+
+void UplinkBridge::pollSerial() {
+  while (Serial.available() > 0) {
+    char c = (char)Serial.read();
+    if (c == '\n' || c == '\r') {
+      if (rxIndex > 0) {
+        rxBuffer[rxIndex] = '\0';
+        processCommand(rxBuffer);
+        rxIndex = 0;
+      }
+    } else if (rxIndex < sizeof(rxBuffer) - 1) {
+      rxBuffer[rxIndex++] = c;
+    }
+  }
+}
+
 void UplinkBridge::processCommand(const char* cmd) {
   if (!cmd || strlen(cmd) == 0) return;
 
@@ -103,7 +177,92 @@ void UplinkBridge::processCommand(const char* cmd) {
     HAL::buzzPip(4000, 10);
   }
 
-  // 1. NeoPixel Matrix Power (npm.power=1 / 0)
+  // 1. Virtual Navigation Controls (companion dashboard remote clicks)
+  if (strcmp(cmd, "nav.left") == 0) {
+    virtualNavLeft = true;
+    Serial.println("{\"status\":\"ACK\",\"cmd\":\"nav.left\"}");
+    return;
+  }
+  if (strcmp(cmd, "nav.right") == 0) {
+    virtualNavRight = true;
+    Serial.println("{\"status\":\"ACK\",\"cmd\":\"nav.right\"}");
+    return;
+  }
+  if (strcmp(cmd, "nav.push") == 0) {
+    virtualNavPush = true;
+    Serial.println("{\"status\":\"ACK\",\"cmd\":\"nav.push\"}");
+    return;
+  }
+  if (strcmp(cmd, "nav.btn") == 0) {
+    virtualNavBtn = true;
+    Serial.println("{\"status\":\"ACK\",\"cmd\":\"nav.btn\"}");
+    return;
+  }
+
+  // 2. Stream Control (stream.start, stream.stop, stream.rate)
+  if (strcmp(cmd, "stream.start") == 0 || strcmp(cmd, "stream.on") == 0) {
+    streamActive = true;
+    Serial.println("{\"status\":\"ACK\",\"cmd\":\"stream.start\",\"active\":true}");
+    return;
+  }
+  if (strcmp(cmd, "stream.stop") == 0 || strcmp(cmd, "stream.off") == 0) {
+    streamActive = false;
+    Serial.println("{\"status\":\"ACK\",\"cmd\":\"stream.stop\",\"active\":false}");
+    return;
+  }
+  if (strncmp(cmd, "stream.rate=", 12) == 0) {
+    int hz = atoi(cmd + 12);
+    setStreamRateHz((uint8_t)constrain(hz, 1, 100));
+    Serial.printf("{\"status\":\"ACK\",\"cmd\":\"stream.rate\",\"val\":%d}\n", hz);
+    return;
+  }
+
+  // 3. Custom NeoPixel Matrix Frame (JSON {"npm.matrix":["#hex",...]} or {"led.matrix":[...]})
+  if (strstr(cmd, "npm.matrix") != nullptr || strstr(cmd, "led.matrix") != nullptr) {
+    uint8_t count = 0;
+    const char* p = cmd;
+    while (*p && count < 16) {
+      if (*p == '#') {
+        p++;
+        char hexBuf[7] = {0};
+        for (int i = 0; i < 6 && *p; i++, p++) {
+          hexBuf[i] = *p;
+        }
+        customPixels[count++] = (uint32_t)strtoul(hexBuf, nullptr, 16);
+      } else if (p[0] == '0' && (p[1] == 'x' || p[1] == 'X')) {
+        p += 2;
+        char hexBuf[7] = {0};
+        for (int i = 0; i < 6 && *p; i++, p++) {
+          hexBuf[i] = *p;
+        }
+        customPixels[count++] = (uint32_t)strtoul(hexBuf, nullptr, 16);
+      } else {
+        p++;
+      }
+    }
+
+    if (count > 0) {
+      currentPattern = PATTERN_CUSTOM;
+      if (!matrixPower) {
+        setMatrixPower(true);
+      }
+      if (HAL::neoPixels && matrixPower) {
+        for (uint8_t i = 0; i < count; i++) {
+          uint8_t x = i % 4;
+          uint8_t y = i / 4;
+          uint8_t r = (customPixels[i] >> 16) & 0xFF;
+          uint8_t g = (customPixels[i] >> 8) & 0xFF;
+          uint8_t b = customPixels[i] & 0xFF;
+          HAL::neoPixels->setPixelColor(mapPixel(x, y), r, g, b);
+        }
+        HAL::neoPixels->show();
+      }
+      Serial.printf("{\"status\":\"ACK\",\"cmd\":\"npm.matrix\",\"count\":%d}\n", count);
+      return;
+    }
+  }
+
+  // 4. NeoPixel Matrix Power (npm.power=1 / 0)
   if (strncmp(cmd, "npm.power=", 10) == 0) {
     int val = atoi(cmd + 10);
     matrixPower = (val != 0);
@@ -130,7 +289,7 @@ void UplinkBridge::processCommand(const char* cmd) {
     return;
   }
 
-  // 2. NeoPixel Matrix Brightness (npm.brightness=80)
+  // 5. NeoPixel Matrix Brightness (npm.brightness=80)
   if (strncmp(cmd, "npm.brightness=", 15) == 0) {
     int val = atoi(cmd + 15);
     matrixBrightness = (uint8_t)constrain(val, 0, 80);
@@ -141,7 +300,7 @@ void UplinkBridge::processCommand(const char* cmd) {
     return;
   }
 
-  // 3. NeoPixel Animation Pattern (npm.pattern=cyber_radar)
+  // 6. NeoPixel Animation Pattern (npm.pattern=cyber_radar)
   if (strncmp(cmd, "npm.pattern=", 12) == 0) {
     const char* pat = cmd + 12;
     if (strcmp(pat, "cyber_radar") == 0) currentPattern = PATTERN_CYBER_RADAR;
@@ -156,7 +315,7 @@ void UplinkBridge::processCommand(const char* cmd) {
     return;
   }
 
-  // 4. IMU & Telemetry Rate (sensor.imu.rate=50)
+  // 7. IMU & Telemetry Rate (sensor.imu.rate=50)
   if (strncmp(cmd, "sensor.imu.rate=", 16) == 0) {
     int hz = atoi(cmd + 16);
     if (hz >= 1 && hz <= 100) {
@@ -166,14 +325,14 @@ void UplinkBridge::processCommand(const char* cmd) {
     return;
   }
 
-  // 5. Environment Rate (sensor.env.rate=1)
+  // 8. Environment Rate (sensor.env.rate=1)
   if (strncmp(cmd, "sensor.env.rate=", 16) == 0) {
     float hz = atof(cmd + 16);
     Serial.printf("{\"status\":\"ACK\",\"cmd\":\"sensor.env.rate\",\"val\":%.1f}\n", hz);
     return;
   }
 
-  // 6. Display Brightness (display.brightness=140)
+  // 9. Display Brightness (display.brightness=140)
   if (strncmp(cmd, "display.brightness=", 19) == 0) {
     int val = atoi(cmd + 19);
     displayBrightness = (uint8_t)constrain(val, 0, 255);
@@ -183,7 +342,7 @@ void UplinkBridge::processCommand(const char* cmd) {
     return;
   }
 
-  // 7. Buzzer Enable (buzzer.enable=1 / 0)
+  // 10. Buzzer Enable (buzzer.enable=1 / 0)
   if (strncmp(cmd, "buzzer.enable=", 14) == 0) {
     int val = atoi(cmd + 14);
     buzzerEnabled = (val != 0);
@@ -191,7 +350,7 @@ void UplinkBridge::processCommand(const char* cmd) {
     return;
   }
 
-  // 8. RTC Sync (rtc.sync=1727989345)
+  // 11. RTC Sync (rtc.sync=1727989345)
   if (strncmp(cmd, "rtc.sync=", 9) == 0) {
     time_t epoch = (time_t)atol(cmd + 9);
     if (epoch > 1700000000 && HAL::rtcReady) {
@@ -204,14 +363,14 @@ void UplinkBridge::processCommand(const char* cmd) {
     return;
   }
 
-  // 9. Storage List (storage.list)
+  // 12. Storage List (storage.list)
   if (strcmp(cmd, "storage.list") == 0) {
     Serial.println("{\"roots\":[{\"name\":\"Internal Flash\",\"type\":\"flash\",\"totalBytes\":16777216,\"freeBytes\":12582912,\"entries\":[{\"name\":\"firmware\",\"type\":\"dir\",\"entries\":[{\"name\":\"isd-core.bin\",\"type\":\"file\",\"size\":1240000},{\"name\":\"bootloader.bin\",\"type\":\"file\",\"size\":32768},{\"name\":\"partitions.bin\",\"type\":\"file\",\"size\":4096}]},{\"name\":\"config\",\"type\":\"dir\",\"entries\":[{\"name\":\"settings.json\",\"type\":\"file\",\"size\":2048},{\"name\":\"calib.json\",\"type\":\"file\",\"size\":1024}]},{\"name\":\"logs\",\"type\":\"dir\",\"entries\":[{\"name\":\"sys.log\",\"type\":\"file\",\"size\":81920}]}]},{\"name\":\"NAND SD (ZDSD02G)\",\"type\":\"sd\",\"totalBytes\":268435456,\"freeBytes\":251658240,\"entries\":[{\"name\":\"telemetry.csv\",\"type\":\"file\",\"size\":409600},{\"name\":\"vitals.dat\",\"type\":\"file\",\"size\":65536}]}]}");
     return;
   }
 
-  // 10. Ping
-  if (strcmp(cmd, "ping") == 0) {
+  // 13. Ping / System Ping
+  if (strcmp(cmd, "ping") == 0 || strcmp(cmd, "sys.ping=1") == 0 || strcmp(cmd, "sys.ping") == 0) {
     Serial.printf("{\"status\":\"PONG\",\"ms\":%lu}\n", millis());
     return;
   }
@@ -221,7 +380,7 @@ void UplinkBridge::processCommand(const char* cmd) {
 }
 
 void UplinkBridge::updateMatrixAnimation() {
-  if (!matrixPower || !HAL::neoPixels || currentPattern == PATTERN_OFF) {
+  if (!matrixPower || !HAL::neoPixels || currentPattern == PATTERN_OFF || currentPattern == PATTERN_CUSTOM) {
     return;
   }
 
@@ -322,18 +481,7 @@ void UplinkBridge::updateMatrixAnimation() {
 
 void UplinkBridge::update(const SensorState& state) {
   // 1. Ingest Incoming Commands from Serial (USB-CDC)
-  while (Serial.available() > 0) {
-    char c = (char)Serial.read();
-    if (c == '\n' || c == '\r') {
-      if (rxIndex > 0) {
-        rxBuffer[rxIndex] = '\0';
-        processCommand(rxBuffer);
-        rxIndex = 0;
-      }
-    } else if (rxIndex < sizeof(rxBuffer) - 1) {
-      rxBuffer[rxIndex++] = c;
-    }
-  }
+  pollSerial();
 
   // 2. Stream Out Telemetry Packets (Line-delimited JSON)
   uint32_t now = millis();
@@ -341,16 +489,29 @@ void UplinkBridge::update(const SensorState& state) {
     lastStreamTime = now;
     packetsSent++;
 
+    static float gasBaselineKohm = 150.0f;
+    NX_MSF::AirQualityAnalysis air = NX_MSF::calculateAirQuality(state.gas, state.temp, state.hum, gasBaselineKohm);
+
+    float radRoll = state.roll * 0.0174532925f;
+    float radPitch = state.pitch * 0.0174532925f;
+    float calcAx = sinf(radPitch);
+    float calcAy = -sinf(radRoll);
+    float calcAz = cosf(radPitch) * cosf(radRoll);
+
     // Format clean JSON packet matching nx-uplink normalizer schema (all pure float/uint)
-    Serial.printf("{\"ts\":%lu,\"roll\":%.2f,\"pitch\":%.2f,\"yaw\":%.2f,\"ax\":0.01,\"ay\":0.02,\"az\":0.98,\"temp\":%.1f,\"hum\":%.1f,\"press\":%.1f,\"gas\":%.0f,\"lux\":%.1f,\"hr\":%.0f,\"spo2\":%.0f,\"batt\":%.0f,\"voltage\":%.2f,\"charging\":%s}\n",
+    Serial.printf("{\"ts\":%lu,\"roll\":%.2f,\"pitch\":%.2f,\"yaw\":%.2f,\"ax\":%.2f,\"ay\":%.2f,\"az\":%.2f,\"temp\":%.1f,\"hum\":%.1f,\"press\":%.1f,\"gas\":%.0f,\"iaq\":%d,\"lux\":%.1f,\"hr\":%.0f,\"spo2\":%.0f,\"batt\":%.0f,\"voltage\":%.2f,\"charging\":%s}\n",
       now,
       state.roll,
       state.pitch,
       state.yaw,
+      calcAx,
+      calcAy,
+      calcAz,
       state.temp,
       state.hum,
       state.press,
       state.gas,
+      air.iaqScore,
       state.lightLux,
       state.heartRate,
       state.spo2,
@@ -361,7 +522,7 @@ void UplinkBridge::update(const SensorState& state) {
   }
 
   // 3. Drive 4x4 NeoPixel Matrix Animation (only if powered and enabled)
-  if (matrixPower && currentPattern != PATTERN_OFF) {
+  if (matrixPower && currentPattern != PATTERN_OFF && currentPattern != PATTERN_CUSTOM) {
     updateMatrixAnimation();
   }
 }
