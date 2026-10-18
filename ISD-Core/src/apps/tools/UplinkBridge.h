@@ -27,6 +27,10 @@ private:
   static bool buzzerEnabled;
   static uint8_t displayBrightness;
 
+  // BLE state
+  static bool bleActive;
+  static bool bleConnected;
+
   // NeoPixel matrix state
   static bool matrixPower;
   static uint8_t matrixBrightness;
@@ -45,12 +49,12 @@ private:
   static volatile bool virtualNavPush;
   static volatile bool virtualNavBtn;
 
-  static void processCommand(const char* cmd);
   static void updateMatrixAnimation();
 
 public:
   static void begin();
   static void pollSerial();
+  static void processCommand(const char* cmd);
   static void update(const SensorState& state);
 
   // Virtual navigation consumption
@@ -77,4 +81,10 @@ public:
   static MatrixPattern getMatrixPattern() { return currentPattern; }
   static void setMatrixPattern(MatrixPattern pat);
   static void setCustomPixels(const uint32_t pixels[16]);
+
+  // BLE Uplink Bridge
+  static bool isBleActive() { return bleActive; }
+  static bool isBleConnected() { return bleConnected; }
+  static void setBleActive(bool active);
+  static void setBleConnected(bool connected) { bleConnected = connected; }
 };
