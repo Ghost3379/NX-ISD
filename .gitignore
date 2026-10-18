@@ -5,3 +5,5 @@
 .history/
 **/NX-ISD-backups/
 *.lck
+__pycache__/
+**/*.pyc
