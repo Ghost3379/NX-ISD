@@ -41,12 +41,6 @@ except ImportError:
     RICH_AVAILABLE = False
     console = None
 
-# Import standalone config tool logic for 100% binary parity
-try:
-    import nx_config_tool
-    CONFIG_TOOL_AVAILABLE = True
-except ImportError:
-    CONFIG_TOOL_AVAILABLE = False
 
 
 BANNER = r"""
@@ -499,16 +493,192 @@ def cmd_monitor(dev: ISDDevice):
 
 
 # ==============================================================================
-# SECTION 3: INTEGRATED CONFIGURATION MANAGEMENT (nx_config_tool)
+# SECTION 3: INTEGRATED CONFIGURATION MANAGEMENT (STANDALONE ENGINE)
 # ==============================================================================
 
+NX_CONFIG_MAGIC = 0x584E  # "NX" in ASCII
+NX_CONFIG_VERSION = 1
+STRUCT_SIZE = 64
+
+# Format string: Little-Endian (<)
+# Header:        <H B B H H   (magic, version, reserved1, structSize, crc16)
+# Display:       B B B B H H  (brightness, autoDim, tiltMode, wristCover, timeout, fadeMs)
+# Audio:         B B B B H    (silentMode, volume, duration, reservedAudio, freqHz)
+# Notif:         B B B B      (notifMode, matrixLed, hrmReminder, reservedNotif)
+# NPM:           B B B B      (npmPower, npmBrightness, npmPattern, reservedNpm)
+# Power:         B B B B      (ecoMode, autoStandby, sensorSleep, reservedPower)
+# AI:            B B H        (nxAisCoProc, adaptiveSensing, reservedAi)
+# Expansion:     26s          (futureExpansion: 26 bytes)
+STRUCT_FORMAT = "<H B B H H B B B B H H B B B B H B B B B B B B B B B B B B B H 26s"
+
+TILT_NAMES = ["OFF", "SENSITIVE", "BALANCED", "SLUGGISH"]
+NOTIF_NAMES = ["SILENT", "ALL", "SOUND ONLY", "LIGHTS ONLY"]
+NPM_PATTERNS = ["RADAR", "RAIN", "PLASMA", "TRACER", "BREATH", "OFF"]
+HRM_REMINDERS = ["OFF", "30m", "1h", "2h"]
+
+
+def compute_crc16(data: bytes) -> int:
+    """Computes CCITT CRC-16 (poly 0x1021, init 0xFFFF) across byte buffer."""
+    crc = 0xFFFF
+    for byte in data:
+        crc ^= (byte << 8)
+        for _ in range(8):
+            if crc & 0x8000:
+                crc = ((crc << 1) ^ 0x1021) & 0xFFFF
+            else:
+                crc = (crc << 1) & 0xFFFF
+    return crc
+
+
+def parse_config(data: bytes) -> dict:
+    if len(data) != STRUCT_SIZE:
+        raise ValueError(f"Invalid file size: {len(data)} bytes (expected {STRUCT_SIZE} bytes)")
+
+    unpacked = struct.unpack(STRUCT_FORMAT, data)
+
+    cfg = {
+        "magic": unpacked[0],
+        "version": unpacked[1],
+        "reserved1": unpacked[2],
+        "structSize": unpacked[3],
+        "crc16": unpacked[4],
+        # Display
+        "brightnessPercent": unpacked[5],
+        "autoDimEnabled": bool(unpacked[6]),
+        "tiltMode": unpacked[7],
+        "wristCoverSleep": bool(unpacked[8]),
+        "screenTimeoutSec": unpacked[9],
+        "backlightFadeMs": unpacked[10],
+        # Audio
+        "silentMode": bool(unpacked[11]),
+        "buzzerVolumePercent": unpacked[12],
+        "buzzerTickDurationMs": unpacked[13],
+        "buzzerBaseFreqHz": unpacked[15],
+        # Notifications
+        "notifMode": unpacked[16],
+        "matrixLedAlerts": bool(unpacked[17]),
+        "hrmReminderIdx": unpacked[18],
+        # NPM
+        "npmPower": bool(unpacked[20]),
+        "npmBrightnessPercent": unpacked[21],
+        "npmPatternIdx": unpacked[22],
+        # Power
+        "ecoMode": bool(unpacked[24]),
+        "autoStandby": bool(unpacked[25]),
+        "sensorSleep": bool(unpacked[26]),
+        # AI
+        "nxAisCoProc": bool(unpacked[28]),
+        "adaptiveSensing": bool(unpacked[29]),
+    }
+
+    calculated_crc = compute_crc16(data[8:])
+    cfg["crc_valid"] = (cfg["crc16"] == calculated_crc)
+    cfg["calculated_crc"] = calculated_crc
+    return cfg
+
+
+def pack_config(cfg: dict) -> bytes:
+    payload_before_crc = struct.pack(
+        "<H B B H",
+        NX_CONFIG_MAGIC,
+        cfg.get("version", NX_CONFIG_VERSION),
+        0,
+        STRUCT_SIZE,
+    )
+
+    payload_after_crc = struct.pack(
+        "<B B B B H H B B B B H B B B B B B B B B B B B B B H 26s",
+        int(cfg.get("brightnessPercent", 80)),
+        int(cfg.get("autoDimEnabled", False)),
+        int(cfg.get("tiltMode", 2)),
+        int(cfg.get("wristCoverSleep", True)),
+        int(cfg.get("screenTimeoutSec", 15)),
+        int(cfg.get("backlightFadeMs", 300)),
+        int(cfg.get("silentMode", True)),
+        int(cfg.get("buzzerVolumePercent", 80)),
+        int(cfg.get("buzzerTickDurationMs", 8)),
+        0,
+        int(cfg.get("buzzerBaseFreqHz", 2700)),
+        int(cfg.get("notifMode", 1)),
+        int(cfg.get("matrixLedAlerts", True)),
+        int(cfg.get("hrmReminderIdx", 0)),
+        0,
+        int(cfg.get("npmPower", False)),
+        int(cfg.get("npmBrightnessPercent", 50)),
+        int(cfg.get("npmPatternIdx", 0)),
+        0,
+        int(cfg.get("ecoMode", False)),
+        int(cfg.get("autoStandby", True)),
+        int(cfg.get("sensorSleep", False)),
+        0,
+        int(cfg.get("nxAisCoProc", False)),
+        int(cfg.get("adaptiveSensing", True)),
+        0,
+        b"\x00" * 26,
+    )
+
+    crc = compute_crc16(payload_after_crc)
+    full_struct = payload_before_crc + struct.pack("<H", crc) + payload_after_crc
+    return full_struct
+
+
+def print_formatted_config(cfg: dict, filepath: str):
+    """Plain-text diagnostic fallback report."""
+    crc_status = "VALID (OK)" if cfg["crc_valid"] else f"INVALID (Stored: 0x{cfg['crc16']:04X}, Expected: 0x{cfg['calculated_crc']:04X})"
+
+    print("=" * 60)
+    print(f"  NX-ISD CONFIGURATION DUMP: {filepath}")
+    print("=" * 60)
+    print(f" Magic:             0x{cfg['magic']:04X} {'[OK]' if cfg['magic'] == NX_CONFIG_MAGIC else '[ERROR]'}")
+    print(f" Schema Version:    v{cfg['version']}")
+    print(f" Struct Size:       {cfg['structSize']} bytes")
+    print(f" CRC-16 (CCITT):    0x{cfg['crc16']:04X} -> {crc_status}")
+    print("-" * 60)
+    print(" [DISPLAY]")
+    print(f"  * Brightness:     {cfg['brightnessPercent']}%")
+    print(f"  * Auto Dim:       {'ENABLED' if cfg['autoDimEnabled'] else 'DISABLED'}")
+    tilt_name = TILT_NAMES[cfg['tiltMode']] if 0 <= cfg['tiltMode'] < len(TILT_NAMES) else f"UNKNOWN({cfg['tiltMode']})"
+    print(f"  * Tilt to Wake:   {tilt_name}")
+    print(f"  * Wrist Sleep:    {'ENABLED' if cfg['wristCoverSleep'] else 'DISABLED'}")
+    timeout_str = "NEVER" if cfg['screenTimeoutSec'] == 0 else f"{cfg['screenTimeoutSec']}s"
+    print(f"  * Screen Timeout: {timeout_str}")
+    fade_str = "OFF (Instant)" if cfg['backlightFadeMs'] == 0 else f"{cfg['backlightFadeMs']} ms"
+    print(f"  * Backlight Fade: {fade_str}")
+    print("-" * 60)
+    print(" [AUDIO / BUZZER]")
+    print(f"  * Master Audio:   {'MUTED' if cfg['silentMode'] else 'ACTIVE'}")
+    print(f"  * Piezo Volume:   {cfg['buzzerVolumePercent']}%")
+    print(f"  * Tick Duration:  {cfg['buzzerTickDurationMs']} ms")
+    print(f"  * Base Frequency: {cfg['buzzerBaseFreqHz']} Hz")
+    print("-" * 60)
+    print(" [NOTIFICATIONS]")
+    notif_name = NOTIF_NAMES[cfg['notifMode']] if 0 <= cfg['notifMode'] < len(NOTIF_NAMES) else f"UNKNOWN({cfg['notifMode']})"
+    print(f"  * Alert Method:   {notif_name}")
+    print(f"  * Matrix LED:     {'ENABLED' if cfg['matrixLedAlerts'] else 'DISABLED'}")
+    hrm_name = HRM_REMINDERS[cfg['hrmReminderIdx']] if 0 <= cfg['hrmReminderIdx'] < len(HRM_REMINDERS) else f"UNKNOWN({cfg['hrmReminderIdx']})"
+    print(f"  * HRM Reminder:   {hrm_name}")
+    print("-" * 60)
+    print(" [NEOPIXEL MATRIX (NPM)]")
+    print(f"  * Matrix Power:   {'ON' if cfg['npmPower'] else 'OFF'}")
+    print(f"  * Brightness:     {cfg['npmBrightnessPercent']}%")
+    npm_pat = NPM_PATTERNS[cfg['npmPatternIdx']] if 0 <= cfg['npmPatternIdx'] < len(NPM_PATTERNS) else f"UNKNOWN({cfg['npmPatternIdx']})"
+    print(f"  * Pattern:        {npm_pat}")
+    print("-" * 60)
+    print(" [POWER & SYSTEM]")
+    print(f"  * Eco Mode:       {'ACTIVE' if cfg['ecoMode'] else 'OFF'}")
+    print(f"  * Auto Standby:   {'ENABLED' if cfg['autoStandby'] else 'DISABLED'}")
+    print(f"  * Sensor Sleep:   {'ENABLED' if cfg['sensorSleep'] else 'DISABLED'}")
+    print("-" * 60)
+    print(" [NX-AIS]")
+    print(f"  * Co-Processor:   {'ACTIVE' if cfg['nxAisCoProc'] else 'DORMANT'}")
+    print(f"  * Adaptive Sense: {'ENABLED' if cfg['adaptiveSensing'] else 'DISABLED'}")
+    print("=" * 60)
+
+
 def render_rich_config(cfg: dict, filepath: str):
-    """Renders a gorgeous styled Rich table for parsed config.bin."""
+    """Renders a styled Rich table for parsed config.bin."""
     if not RICH_AVAILABLE:
-        if CONFIG_TOOL_AVAILABLE:
-            nx_config_tool.print_formatted_config(cfg, filepath)
-        else:
-            print(json.dumps(cfg, indent=2))
+        print_formatted_config(cfg, filepath)
         return
 
     crc_valid = cfg.get("crc_valid", False)
@@ -525,9 +695,8 @@ def render_rich_config(cfg: dict, filepath: str):
     table.add_row("Header", "Integrity Check", crc_badge, f"Calculated: 0x{cfg.get('calculated_crc', 0):04X}")
 
     # Display
-    tilt_names = ["OFF", "SENSITIVE", "BALANCED", "SLUGGISH"]
     t_idx = cfg.get("tiltMode", 2)
-    t_str = tilt_names[t_idx] if 0 <= t_idx < len(tilt_names) else str(t_idx)
+    t_str = TILT_NAMES[t_idx] if 0 <= t_idx < len(TILT_NAMES) else str(t_idx)
     timeout = cfg.get("screenTimeoutSec", 15)
     t_disp = "NEVER (Always On)" if timeout == 0 else f"{timeout} seconds"
     table.add_row("Display", "Brightness", f"{cfg.get('brightnessPercent', 80)}%", "Auto-Dim: " + ("[green]ON[/green]" if cfg.get("autoDimEnabled") else "[dim]OFF[/dim]"))
@@ -537,15 +706,13 @@ def render_rich_config(cfg: dict, filepath: str):
     table.add_row("Audio", "Piezo Buzzer", f"{cfg.get('buzzerVolumePercent', 80)}% ({cfg.get('buzzerBaseFreqHz', 2700)} Hz)", "Audio: " + ("[dim]MUTED[/dim]" if cfg.get("silentMode") else "[green]ACTIVE[/green]"))
 
     # Notifications
-    notif_names = ["SILENT", "ALL", "SOUND ONLY", "LIGHTS ONLY"]
     n_idx = cfg.get("notifMode", 1)
-    n_str = notif_names[n_idx] if 0 <= n_idx < len(notif_names) else str(n_idx)
+    n_str = NOTIF_NAMES[n_idx] if 0 <= n_idx < len(NOTIF_NAMES) else str(n_idx)
     table.add_row("Notifications", "Alerts & Reminders", f"Mode: {n_str}", "Matrix LED: " + ("[green]ON[/green]" if cfg.get("matrixLedAlerts") else "[dim]OFF[/dim]"))
 
     # NPM
-    npm_pats = ["RADAR", "RAIN", "PLASMA", "TRACER", "BREATH", "OFF"]
     p_idx = cfg.get("npmPatternIdx", 0)
-    p_str = npm_pats[p_idx] if 0 <= p_idx < len(npm_pats) else str(p_idx)
+    p_str = NPM_PATTERNS[p_idx] if 0 <= p_idx < len(NPM_PATTERNS) else str(p_idx)
     table.add_row("Matrix", "4x4 RGB NeoPixel", f"Pattern: {p_str} | {cfg.get('npmBrightnessPercent', 50)}%", "Power: " + ("[green]ON[/green]" if cfg.get("npmPower") else "[dim]OFF[/dim]"))
 
     # Power & AI
@@ -562,11 +729,11 @@ def config_read_file(filepath: str):
     with open(filepath, "rb") as f:
         data = f.read()
 
-    if CONFIG_TOOL_AVAILABLE:
-        cfg = nx_config_tool.parse_config(data)
+    try:
+        cfg = parse_config(data)
         render_rich_config(cfg, filepath)
-    else:
-        log_err("nx_config_tool module not found in tools directory.")
+    except Exception as e:
+        log_err(f"Failed to parse config file: {e}")
 
 
 def config_to_json_file(bin_path: str, out_path: Optional[str] = None):
@@ -576,15 +743,14 @@ def config_to_json_file(bin_path: str, out_path: Optional[str] = None):
     with open(bin_path, "rb") as f:
         data = f.read()
 
-    if not CONFIG_TOOL_AVAILABLE:
-        log_err("nx_config_tool module not found.")
-        return
-
-    cfg = nx_config_tool.parse_config(data)
-    target = out_path or os.path.splitext(bin_path)[0] + ".json"
-    with open(target, "w") as f:
-        json.dump(cfg, f, indent=2)
-    log_success(f"Exported configuration to JSON: [bold cyan]{target}[/bold cyan]")
+    try:
+        cfg = parse_config(data)
+        target = out_path or os.path.splitext(bin_path)[0] + ".json"
+        with open(target, "w") as f:
+            json.dump(cfg, f, indent=2)
+        log_success(f"Exported configuration to JSON: [bold cyan]{target}[/bold cyan]")
+    except Exception as e:
+        log_err(f"Failed to export JSON: {e}")
 
 
 def config_from_json_file(json_path: str, out_path: Optional[str] = None):
@@ -594,15 +760,14 @@ def config_from_json_file(json_path: str, out_path: Optional[str] = None):
     with open(json_path, "r") as f:
         cfg = json.load(f)
 
-    if not CONFIG_TOOL_AVAILABLE:
-        log_err("nx_config_tool module not found.")
-        return
-
-    packed = nx_config_tool.pack_config(cfg)
-    target = out_path or "config.bin"
-    with open(target, "wb") as f:
-        f.write(packed)
-    log_success(f"Generated binary config ({len(packed)} bytes) at: [bold cyan]{target}[/bold cyan]")
+    try:
+        packed = pack_config(cfg)
+        target = out_path or "config.bin"
+        with open(target, "wb") as f:
+            f.write(packed)
+        log_success(f"Generated binary config ({len(packed)} bytes) at: [bold cyan]{target}[/bold cyan]")
+    except Exception as e:
+        log_err(f"Failed to generate config.bin: {e}")
 
 
 def config_create_default(out_path: Optional[str] = None):
@@ -630,14 +795,14 @@ def config_create_default(out_path: Optional[str] = None):
         "nxAisCoProc": False,
         "adaptiveSensing": True,
     }
-    if not CONFIG_TOOL_AVAILABLE:
-        log_err("nx_config_tool module not found.")
-        return
-    packed = nx_config_tool.pack_config(default_cfg)
-    target = out_path or "config.bin"
-    with open(target, "wb") as f:
-        f.write(packed)
-    log_success(f"Created factory default [bold cyan]{target}[/bold cyan] ({len(packed)} bytes)")
+    try:
+        packed = pack_config(default_cfg)
+        target = out_path or "config.bin"
+        with open(target, "wb") as f:
+            f.write(packed)
+        log_success(f"Created factory default [bold cyan]{target}[/bold cyan] ({len(packed)} bytes)")
+    except Exception as e:
+        log_err(f"Failed to create default config: {e}")
 
 
 # ==============================================================================
@@ -803,7 +968,7 @@ def main():
     p_mat.add_argument("value", nargs="?", default=None, help="Value (e.g. brightness 0-80)")
 
     # config
-    p_cfg = subparsers.add_parser("config", help="Binary /sys/config.bin inspection & generation (nx_config_tool)")
+    p_cfg = subparsers.add_parser("config", help="Binary /sys/config.bin inspection, verification & generation")
     cfg_subs = p_cfg.add_subparsers(dest="config_action", help="Config operations")
 
     p_c_read = cfg_subs.add_parser("read", help="Parse and inspect config.bin")
@@ -817,7 +982,7 @@ def main():
     p_c_from_json.add_argument("file", help="Path to JSON file")
     p_c_from_json.add_argument("-o", "--output", help="Output .bin path (default: config.bin)")
 
-    p_c_def = cfg_subs.add_parser("default", help="Generate factory default config.bin")
+    p_c_def = cfg_subs.add_parser("default", aliases=["create-default"], help="Generate factory default config.bin")
     p_c_def.add_argument("-o", "--output", help="Output .bin path (default: config.bin)")
 
     # info
@@ -843,7 +1008,7 @@ def main():
             config_to_json_file(args.file, args.output)
         elif args.config_action == "from-json":
             config_from_json_file(args.file, args.output)
-        elif args.config_action == "default":
+        elif args.config_action in ("default", "create-default"):
             config_create_default(args.output)
         else:
             p_cfg.print_help()

@@ -242,7 +242,7 @@ While **NX-AIS** observes external environmental and physiological context, **NX
 * [x] Persistent Storage Subsystem (`StorageManager`, onboard 2 Gbit ZDSD NAND Flash via SPI CS 47).
 * [x] 64-byte packed binary struct (`/sys/config.bin`) with Magic signature `0x584E`, Schema `v1`, and CRC-16 CCITT.
 * [x] Zero-wear save policy (dial in RAM, atomic commit only on `[PUSH]` or Settings exit).
-* [x] Standalone configuration CLI inspection and JSON conversion tool (`tools/nx_config_tool.py`).
+* [x] Unified host CLI & configuration tool (`tools/isd_cli.py` / `isd-cli`).
 * [ ] Implement `NX-AIS` rule evaluation engine and background supervisor.
 * [ ] Implement `NX-SDS` core engine (I2C 9-clock recovery, silicon audit, and battery internal resistance probe).
 * [ ] Add `NX-SDS` in-situ proof-test UI page and NAND-SD certificate generation.

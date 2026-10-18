@@ -41,7 +41,7 @@ This document tracks implementation status across the 6 core application decks, 
   * [x] 64-byte packed binary struct (`/sys/config.bin`) with CRC-16 CCITT validation
   * [x] Zero-wear save policy (RAM-only dialing, write on `[PUSH]` confirmation or menu exit)
   * [x] Atomic staging writes (`/sys/config.tmp` $\to$ `/sys/config.bin`)
-  * [x] Standalone PC inspection & JSON conversion CLI tool (`tools/nx_config_tool.py`)
+  * [x] Unified host CLI & configuration tool (`tools/isd_cli.py` / `isd-cli`)
 * [ ] **Firmware Version & OTA Updates:** Wireless OTA sync via [NX-Uplink](https://nx-uplink.base44.app)
 
 ### 5. Tools (Tactical & Field Operations)

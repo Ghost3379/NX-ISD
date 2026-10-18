@@ -256,21 +256,21 @@ Offset  Field              Type      Size  Description
 4. **Atomic Staging:** Data writes to `/sys/config.tmp` first. Once verified, it atomically renames to `/sys/config.bin`. If power cuts out mid-write, the existing `/sys/config.bin` remains uncorrupted.
 5. **Fail-Safe Boot:** If the NAND storage is unformatted, corrupt, or CRC fails, `StorageManager` loads factory defaults immediately without crashing or blocking boot.
 
-### Standalone PC Inspection Utility (`tools/nx_config_tool.py`)
+### Standalone PC Inspection Utility (`tools/isd_cli.py` / `isd-cli`)
 A dedicated Python CLI tool allows inspecting, validating, editing, and compiling configuration binaries offline:
 
 ```bash
 # Read and validate binary config:
-python tools/nx_config_tool.py read config.bin
+.\isd-cli config read config.bin
 
 # Export binary configuration to human-readable JSON:
-python tools/nx_config_tool.py to-json config.bin -o config.json
+.\isd-cli config to-json config.bin -o config.json
 
 # Compile modified JSON back to binary with recalculated CRC-16:
-python tools/nx_config_tool.py from-json config.json -o config.bin
+.\isd-cli config from-json config.json -o config.bin
 
 # Generate fresh factory default binary config:
-python tools/nx_config_tool.py create-default -o config.bin
+.\isd-cli config default -o config.bin
 ```
 
 ---

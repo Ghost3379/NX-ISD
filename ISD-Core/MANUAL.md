@@ -567,21 +567,21 @@ All settings persist across power cuts and full battery drains on the onboard **
 4. **Atomic Safety:** Data is written to `/sys/config.tmp` first; once fully flushed, it atomically renames to `/sys/config.bin`. If power cuts out mid-write, your previous configuration remains 100% intact.
 5. **Fail-Safe Boot:** If the NAND storage is absent or corrupted, the system boots into factory defaults immediately without hanging.
 
-### Offline PC Configuration Tool
-You can inspect, backup, and modify configuration files offline using the included Python CLI tool:
+### Unified Host CLI & Offline Configuration Tool
+You can inspect, backup, and modify configuration files offline using the included CLI tool (`tools/isd_cli.py` or `isd-cli`):
 
 ```bash
 # Read and inspect a config.bin file:
-python tools/nx_config_tool.py read config.bin
+.\isd-cli config read config.bin
 
 # Export binary configuration to human-readable JSON:
-python tools/nx_config_tool.py to-json config.bin -o config.json
+.\isd-cli config to-json config.bin -o config.json
 
 # Compile modified JSON back to binary with verified CRC-16:
-python tools/nx_config_tool.py from-json config.json -o config.bin
+.\isd-cli config from-json config.json -o config.bin
 
 # Generate fresh factory default binary config:
-python tools/nx_config_tool.py create-default -o config.bin
+.\isd-cli config default -o config.bin
 ```
 
 ---
