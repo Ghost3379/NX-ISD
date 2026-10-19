@@ -6,6 +6,11 @@ This document tracks implementation status across the 6 core application decks, 
 
 ## Application Decks & Core Concepts
 
+
+
+### 0 Watchface
+* [ ] **Handheld mode** flips the dispaly by 90°, so the user can hold the ISD in one jhand controlling the lever button and the back BTN, with his fingers, usbc port will be at the top an sensor head points ot the bottom.
+
 ### 1. Vitals (Internal Physiology)
 * [x] **HRM:** Spot and live optical PPG sampling (`MAX30102`)
 * [x] **SpO2:** Blood oxygen calculation and perfusion index
@@ -84,4 +89,5 @@ This document tracks implementation status across the 6 core application decks, 
   * [x] Background Co-Processor Supervisor toggle
   * [x] Adaptive Environmental Context toggle
   * [x] Sensor Diagnostics check
-
+  [ ] **DOOM**
+  * [ ] if it has a display, it runs doom.

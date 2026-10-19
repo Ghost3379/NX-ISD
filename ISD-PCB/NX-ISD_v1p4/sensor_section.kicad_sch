@@ -3875,6 +3875,17 @@
 		)
 		(uuid "4ade78ac-0ed6-4a8a-87c2-f08b0e1cd9af")
 	)
+	(text "NOTE:\n!INT_ALS IS NOT CONNECTED.\nTHIS IS DUE TO THE LACK OF\nA SERIOUS FUNCTIONAL \nADVANTAGE."
+		(exclude_from_sim no)
+		(at 160.528 115.824 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "5bb62afc-7357-425f-9e60-5d640e06059c")
+	)
 	(junction
 		(at 266.7 63.5)
 		(diameter 0)
@@ -3906,7 +3917,7 @@
 		(uuid "3e87279e-18fc-4226-b571-8d2b9aad7209")
 	)
 	(junction
-		(at 173.99 137.16)
+		(at 163.83 137.16)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "44901e07-2450-4b68-a7c8-5ab0b62a5db5")
@@ -3984,7 +3995,7 @@
 		(uuid "b69272e7-28a8-4b57-a9cb-3a7630847bc2")
 	)
 	(junction
-		(at 173.99 134.62)
+		(at 163.83 134.62)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "ba447e1e-5928-4156-8a6f-fcd99abf51c7")
@@ -4036,6 +4047,10 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "fffb6a26-c71b-46ce-9ee1-6603b23b4d05")
+	)
+	(no_connect
+		(at 161.29 124.46)
+		(uuid "064728f7-6572-404c-9e66-11d9a92e4edf")
 	)
 	(no_connect
 		(at 261.62 128.27)
@@ -4143,7 +4158,7 @@
 	)
 	(wire
 		(pts
-			(xy 171.45 132.08) (xy 173.99 132.08)
+			(xy 161.29 132.08) (xy 163.83 132.08)
 		)
 		(stroke
 			(width 0)
@@ -4253,7 +4268,7 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 129.54) (xy 140.97 129.54)
+			(xy 129.54 129.54) (xy 130.81 129.54)
 		)
 		(stroke
 			(width 0)
@@ -4493,7 +4508,7 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 132.08) (xy 140.97 132.08)
+			(xy 129.54 132.08) (xy 130.81 132.08)
 		)
 		(stroke
 			(width 0)
@@ -4573,7 +4588,7 @@
 	)
 	(wire
 		(pts
-			(xy 124.46 133.35) (xy 124.46 135.89)
+			(xy 114.3 133.35) (xy 114.3 135.89)
 		)
 		(stroke
 			(width 0)
@@ -4663,7 +4678,7 @@
 	)
 	(wire
 		(pts
-			(xy 173.99 137.16) (xy 173.99 138.43)
+			(xy 163.83 137.16) (xy 163.83 138.43)
 		)
 		(stroke
 			(width 0)
@@ -4683,7 +4698,7 @@
 	)
 	(wire
 		(pts
-			(xy 171.45 134.62) (xy 173.99 134.62)
+			(xy 161.29 134.62) (xy 163.83 134.62)
 		)
 		(stroke
 			(width 0)
@@ -4733,7 +4748,7 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 119.38) (xy 140.97 119.38)
+			(xy 129.54 119.38) (xy 130.81 119.38)
 		)
 		(stroke
 			(width 0)
@@ -4993,23 +5008,13 @@
 	)
 	(wire
 		(pts
-			(xy 171.45 137.16) (xy 173.99 137.16)
+			(xy 161.29 137.16) (xy 163.83 137.16)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "9c1a0f71-5c5f-4376-b0b5-5763930d34db")
-	)
-	(wire
-		(pts
-			(xy 171.45 124.46) (xy 176.53 124.46)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9e011177-86e8-452f-b8b6-ff5a9c535d3d")
 	)
 	(wire
 		(pts
@@ -5103,7 +5108,7 @@
 	)
 	(wire
 		(pts
-			(xy 173.99 132.08) (xy 173.99 134.62)
+			(xy 163.83 132.08) (xy 163.83 134.62)
 		)
 		(stroke
 			(width 0)
@@ -5393,7 +5398,7 @@
 	)
 	(wire
 		(pts
-			(xy 173.99 134.62) (xy 173.99 137.16)
+			(xy 163.83 134.62) (xy 163.83 137.16)
 		)
 		(stroke
 			(width 0)
@@ -5433,7 +5438,7 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 118.11) (xy 139.7 119.38)
+			(xy 129.54 118.11) (xy 129.54 119.38)
 		)
 		(stroke
 			(width 0)
@@ -5643,7 +5648,7 @@
 	)
 	(wire
 		(pts
-			(xy 124.46 119.38) (xy 124.46 125.73)
+			(xy 114.3 119.38) (xy 114.3 125.73)
 		)
 		(stroke
 			(width 0)
@@ -5704,7 +5709,7 @@
 		(uuid "5e54bdc9-0eae-4762-8cc1-23a179988d83")
 	)
 	(label "Ambient Light Sensor"
-		(at 130.81 109.22 0)
+		(at 120.65 109.22 0)
 		(effects
 			(font
 				(size 4 4)
@@ -5786,7 +5791,7 @@
 	)
 	(hierarchical_label "SCL_1"
 		(shape input)
-		(at 139.7 129.54 180)
+		(at 129.54 129.54 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -5797,7 +5802,7 @@
 	)
 	(hierarchical_label "SDA_1"
 		(shape bidirectional)
-		(at 139.7 132.08 180)
+		(at 129.54 132.08 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -5872,18 +5877,7 @@
 		)
 		(uuid "c0679a27-1c66-43f5-9793-9ba06ed1ba80")
 	)
-	(hierarchical_label "!INT_ALS"
-		(shape output)
-		(at 176.53 124.46 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "cd03327f-b103-4925-bf43-184ab08c9b22")
-	)
-	(hierarchical_label "!INT_H"
+	(hierarchical_label "!INT_DOF"
 		(shape output)
 		(at 152.4 59.69 180)
 		(effects
@@ -6235,7 +6229,7 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 139.7 118.11 0)
+		(at 129.54 118.11 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -6246,7 +6240,7 @@
 		(fields_autoplaced yes)
 		(uuid "11c3fc7b-d229-4b39-bd4d-9757da8c85f4")
 		(property "Reference" "#PWR069"
-			(at 139.7 121.92 0)
+			(at 129.54 121.92 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6257,7 +6251,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 139.7 113.03 0)
+			(at 129.54 113.03 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -6267,7 +6261,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 139.7 118.11 0)
+			(at 129.54 118.11 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6278,7 +6272,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 139.7 118.11 0)
+			(at 129.54 118.11 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6289,7 +6283,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3V3\""
-			(at 139.7 118.11 0)
+			(at 129.54 118.11 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6429,7 +6423,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 124.46 135.89 0)
+		(at 114.3 135.89 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -6440,7 +6434,7 @@
 		(fields_autoplaced yes)
 		(uuid "1f3a66fc-da57-4703-ba60-d4d5d3887ce8")
 		(property "Reference" "#PWR064"
-			(at 124.46 142.24 0)
+			(at 114.3 142.24 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6451,7 +6445,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 124.46 140.97 0)
+			(at 114.3 140.97 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6462,7 +6456,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 124.46 135.89 0)
+			(at 114.3 135.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6473,7 +6467,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 124.46 135.89 0)
+			(at 114.3 135.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6484,7 +6478,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 124.46 135.89 0)
+			(at 114.3 135.89 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7219,7 +7213,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 124.46 129.54 0)
+		(at 114.3 129.54 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -7229,7 +7223,7 @@
 		(dnp no)
 		(uuid "43a4af79-47a6-4d72-8e07-8f91c4d05ecb")
 		(property "Reference" "C18"
-			(at 120.904 131.318 90)
+			(at 110.744 131.318 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7240,7 +7234,7 @@
 			)
 		)
 		(property "Value" "100n"
-			(at 128.016 131.572 90)
+			(at 117.856 131.572 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7251,7 +7245,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
-			(at 125.4252 133.35 0)
+			(at 115.2652 133.35 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7262,7 +7256,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 124.46 129.54 0)
+			(at 114.3 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7273,7 +7267,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 124.46 129.54 0)
+			(at 114.3 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7897,7 +7891,7 @@
 	)
 	(symbol
 		(lib_id "OPT3001DNPR:OPT3001DNPR")
-		(at 156.21 129.54 0)
+		(at 146.05 129.54 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -7907,7 +7901,7 @@
 		(dnp no)
 		(uuid "511f646b-ce0b-415e-8005-4d2b4c47457b")
 		(property "Reference" "U10"
-			(at 156.21 141.732 0)
+			(at 146.05 141.732 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7917,7 +7911,7 @@
 			)
 		)
 		(property "Value" "OPT3001DNPR"
-			(at 156.21 144.272 0)
+			(at 146.05 144.272 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7927,7 +7921,7 @@
 			)
 		)
 		(property "Footprint" "Global Footprints:SON65P200X200X65-7N"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7939,7 +7933,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7950,7 +7944,7 @@
 			)
 		)
 		(property "Description" "Digital ambient light sensor (ALS) with high-precision human-eye response"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7962,7 +7956,7 @@
 			)
 		)
 		(property "MF" "Texas Instruments"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7974,7 +7968,7 @@
 			)
 		)
 		(property "MOUSER-PURCHASE-URL" "https://snapeda.com/shop?store=Mouser&id=194428"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7986,7 +7980,7 @@
 			)
 		)
 		(property "PACKAGE" "USON-6 Texas Instruments"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7998,7 +7992,7 @@
 			)
 		)
 		(property "PRICE" "None"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8010,7 +8004,7 @@
 			)
 		)
 		(property "Package" "USON-6 Texas Instruments"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8022,7 +8016,7 @@
 			)
 		)
 		(property "Check_prices" "https://www.snapeda.com/parts/OPT3001DNPR/Texas+Instruments/view-part/?ref=eda"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8034,7 +8028,7 @@
 			)
 		)
 		(property "Price" "None"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8046,7 +8040,7 @@
 			)
 		)
 		(property "SnapEDA_Link" "https://www.snapeda.com/parts/OPT3001DNPR/Texas+Instruments/view-part/?ref=snap"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8058,7 +8052,7 @@
 			)
 		)
 		(property "MP" "OPT3001DNPR"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8070,7 +8064,7 @@
 			)
 		)
 		(property "TEXAS_INSTRUMENTS-PURCHASE-URL" "https://snapeda.com/shop?store=Texas+Instruments&id=194428"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8082,7 +8076,7 @@
 			)
 		)
 		(property "Purchase-URL" "https://www.snapeda.com/api/url_track_click_mouser/?unipart_id=194428&manufacturer=Texas Instruments&part_name=OPT3001DNPR&search_term=opt3001dnpr"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8094,7 +8088,7 @@
 			)
 		)
 		(property "Availability" "In Stock"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8106,7 +8100,7 @@
 			)
 		)
 		(property "ARROW_ELECTRONICS-PURCHASE-URL" "https://snapeda.com/shop?store=Arrow+Electronics&id=194428"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8118,7 +8112,7 @@
 			)
 		)
 		(property "AVAILABILITY" "Good"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8130,7 +8124,7 @@
 			)
 		)
 		(property "DIGIKEY-PURCHASE-URL" "https://snapeda.com/shop?store=DigiKey&id=194428"
-			(at 156.21 129.54 0)
+			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8810,7 +8804,7 @@
 	)
 	(symbol
 		(lib_id "power:+3V3")
-		(at 124.46 119.38 0)
+		(at 114.3 119.38 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -8821,7 +8815,7 @@
 		(fields_autoplaced yes)
 		(uuid "6432d5ae-fd28-4fec-9b69-4352bd37c721")
 		(property "Reference" "#PWR063"
-			(at 124.46 123.19 0)
+			(at 114.3 123.19 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8832,7 +8826,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 124.46 114.3 0)
+			(at 114.3 114.3 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -8842,7 +8836,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 124.46 119.38 0)
+			(at 114.3 119.38 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8853,7 +8847,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 124.46 119.38 0)
+			(at 114.3 119.38 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8864,7 +8858,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3V3\""
-			(at 124.46 119.38 0)
+			(at 114.3 119.38 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9012,7 +9006,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 173.99 138.43 0)
+		(at 163.83 138.43 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -9023,7 +9017,7 @@
 		(fields_autoplaced yes)
 		(uuid "6967967a-14e7-4df7-9403-43f80bd9e603")
 		(property "Reference" "#PWR074"
-			(at 173.99 144.78 0)
+			(at 163.83 144.78 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9034,7 +9028,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 173.99 143.51 0)
+			(at 163.83 143.51 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9045,7 +9039,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 173.99 138.43 0)
+			(at 163.83 138.43 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9056,7 +9050,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 173.99 138.43 0)
+			(at 163.83 138.43 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9067,7 +9061,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 173.99 138.43 0)
+			(at 163.83 138.43 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
