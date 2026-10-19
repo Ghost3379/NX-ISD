@@ -222,7 +222,7 @@ $$P_{\text{in}} = \frac{V_{\text{out}} \times I_{\text{out}}}{\eta} \implies I_{
 
 | Peripheral | Designator | Chip Select (CS) | Additional Control Lines | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **ST7789 TFT** | `J2` | `GPIO 48` (`CS_TFT`) | `GPIO 21` (`DC`/`RS`)<br>`GPIO 38` (`RST`)<br>`GPIO 1` (`PWM_TFT`) | 240×240 IPS Panel, PWM backlight via Q4 |
+| **ST7789 TFT** | `J2` | `GPIO 48` (`CS_TFT`) | `GPIO 21` (`DC`/`RS`)<br>`GPIO 38` (`RST`)<br>`GPIO 1` (`PWM_TFT`) | 1.54" 240×240 IPS Panel ([ST7789V2 on AliExpress](https://de.aliexpress.com/item/1005007654038756.html)), PWM backlight via Q4 |
 | **NAND-SD Flash** | `U14` | `GPIO 47` (`CS_SD`) | Shared SCK/MOSI/MISO | 2 Gbit (250 MB) storage for logs/certs |
 
 ---

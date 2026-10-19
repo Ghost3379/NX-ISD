@@ -447,7 +447,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Connector:Micro_SD_Card"
+		(symbol "1051620001:1051620001"
 			(pin_names
 				(offset 1.016)
 			)
@@ -456,8 +456,8 @@
 			(on_board yes)
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "J4"
-				(at 0 15.494 0)
+			(property "Reference" "J3"
+				(at 0 20.32 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -466,8 +466,8 @@
 					)
 				)
 			)
-			(property "Value" "Micro_SD_Card"
-				(at 0 -13.716 0)
+			(property "Value" "1051620001"
+				(at 0 17.78 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -476,8 +476,8 @@
 					)
 				)
 			)
-			(property "Footprint" ""
-				(at 29.21 7.62 0)
+			(property "Footprint" "1051620001:105162-0001_MOL"
+				(at -32.766 15.24 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(hide yes)
@@ -485,9 +485,10 @@
 					(font
 						(size 1.27 1.27)
 					)
+					(justify bottom)
 				)
 			)
-			(property "Datasheet" "https://www.we-online.com/components/products/datasheet/693072010801.pdf"
+			(property "Datasheet" ""
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -498,7 +499,7 @@
 					)
 				)
 			)
-			(property "Description" "Micro SD Card Socket"
+			(property "Description" ""
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -509,8 +510,8 @@
 					)
 				)
 			)
-			(property "ki_keywords" "connector SD microsd"
-				(at 0 0 0)
+			(property "MFR_NAME" "Molex Connector Corporation"
+				(at -32.766 15.24 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(hide yes)
@@ -518,10 +519,11 @@
 					(font
 						(size 1.27 1.27)
 					)
+					(justify bottom)
 				)
 			)
-			(property "ki_fp_filters" "microSD*"
-				(at 0 0 0)
+			(property "MANUFACTURER_PART_NUMBER" "1051620001"
+				(at -32.766 15.24 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(hide yes)
@@ -529,13 +531,232 @@
 					(font
 						(size 1.27 1.27)
 					)
+					(justify bottom)
 				)
 			)
-			(symbol "Micro_SD_Card_0_1"
+			(symbol "1051620001_0_0"
+				(pin passive line
+					(at -40.64 -16.51 0)
+					(length 7.62)
+					(name "GND_2"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "G1"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -40.64 -19.05 0)
+					(length 7.62)
+					(name "GND_3"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "G2"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -40.64 -21.59 0)
+					(length 7.62)
+					(name "GND_4"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "G3"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -40.64 -24.13 0)
+					(length 7.62)
+					(name "GND"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "G4"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at -40.64 -26.67 0)
+					(length 7.62)
+					(name "DAT2"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "P1"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 45.72 -15.24 180)
+					(length 7.62)
+					(name "CMD"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "P3"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 45.72 -12.7 180)
+					(length 7.62)
+					(name "VDD"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "P4"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 45.72 -10.16 180)
+					(length 7.62)
+					(name "CLK"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "P5"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 45.72 -7.62 180)
+					(length 7.62)
+					(name "VSS"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "P6"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 45.72 -5.08 180)
+					(length 7.62)
+					(name "DAT0"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "P7"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin bidirectional line
+					(at 45.72 -2.54 180)
+					(length 7.62)
+					(name "DAT1"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "P8"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 45.72 0 180)
+					(length 7.62)
+					(name "DET"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+					(number "P9"
+						(effects
+							(font
+								(size 1.016 1.016)
+							)
+						)
+					)
+				)
+			)
+			(symbol "1051620001_0_1"
 				(polyline
 					(pts
-						(xy -8.89 -11.43) (xy -8.89 8.89) (xy -1.27 8.89) (xy 2.54 12.7) (xy 3.81 12.7) (xy 3.81 11.43)
-						(xy 6.35 11.43) (xy 7.62 12.7) (xy 20.32 12.7) (xy 20.32 -11.43) (xy -8.89 -11.43)
+						(xy -7.366 -10.922) (xy -7.366 9.398) (xy 0.254 9.398) (xy 4.064 13.208) (xy 5.334 13.208) (xy 5.334 11.938)
+						(xy 7.874 11.938) (xy 9.144 13.208) (xy 21.844 13.208) (xy 21.844 -10.922) (xy -7.366 -10.922)
 					)
 					(stroke
 						(width 0.254)
@@ -546,8 +767,8 @@
 					)
 				)
 				(rectangle
-					(start -7.62 8.255)
-					(end -5.08 6.985)
+					(start -6.096 8.763)
+					(end -3.556 7.493)
 					(stroke
 						(width 0)
 						(type default)
@@ -557,8 +778,8 @@
 					)
 				)
 				(rectangle
-					(start -7.62 5.715)
-					(end -5.08 4.445)
+					(start -6.096 6.223)
+					(end -3.556 4.953)
 					(stroke
 						(width 0)
 						(type default)
@@ -568,8 +789,8 @@
 					)
 				)
 				(rectangle
-					(start -7.62 3.175)
-					(end -5.08 1.905)
+					(start -6.096 3.683)
+					(end -3.556 2.413)
 					(stroke
 						(width 0)
 						(type default)
@@ -579,8 +800,8 @@
 					)
 				)
 				(rectangle
-					(start -7.62 0.635)
-					(end -5.08 -0.635)
+					(start -6.096 1.143)
+					(end -3.556 -0.127)
 					(stroke
 						(width 0)
 						(type default)
@@ -590,8 +811,8 @@
 					)
 				)
 				(rectangle
-					(start -7.62 -1.905)
-					(end -5.08 -3.175)
+					(start -6.096 -1.397)
+					(end -3.556 -2.667)
 					(stroke
 						(width 0)
 						(type default)
@@ -601,8 +822,8 @@
 					)
 				)
 				(rectangle
-					(start -7.62 -4.445)
-					(end -5.08 -5.715)
+					(start -6.096 -3.937)
+					(end -3.556 -5.207)
 					(stroke
 						(width 0)
 						(type default)
@@ -612,8 +833,8 @@
 					)
 				)
 				(rectangle
-					(start -7.62 -6.985)
-					(end -5.08 -8.255)
+					(start -6.096 -6.477)
+					(end -3.556 -7.747)
 					(stroke
 						(width 0)
 						(type default)
@@ -623,8 +844,8 @@
 					)
 				)
 				(rectangle
-					(start -7.62 -9.525)
-					(end -5.08 -10.795)
+					(start -6.096 -9.017)
+					(end -3.556 -10.287)
 					(stroke
 						(width 0)
 						(type default)
@@ -635,7 +856,8 @@
 				)
 				(polyline
 					(pts
-						(xy 16.51 12.7) (xy 16.51 13.97) (xy -19.05 13.97) (xy -19.05 -16.51) (xy 16.51 -16.51) (xy 16.51 -11.43)
+						(xy 18.034 13.208) (xy 18.034 14.478) (xy -17.526 14.478) (xy -17.526 -16.002) (xy 18.034 -16.002)
+						(xy 18.034 -10.922)
 					)
 					(stroke
 						(width 0.254)
@@ -646,165 +868,21 @@
 					)
 				)
 			)
-			(symbol "Micro_SD_Card_1_1"
-				(pin bidirectional line
-					(at -22.86 3.81 0)
-					(length 3.81)
-					(name "DAT2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin bidirectional line
-					(at -22.86 1.27 0)
-					(length 3.81)
-					(name "DAT3/CD"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -22.86 -6.35 0)
-					(length 3.81)
-					(name "CMD"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at -11.43 17.78 270)
-					(length 3.81)
-					(name "VDD"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -22.86 -3.81 0)
-					(length 3.81)
-					(name "CLK"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at -11.43 -20.32 90)
-					(length 3.81)
-					(name "VSS"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin bidirectional line
-					(at -22.86 8.89 0)
-					(length 3.81)
-					(name "DAT0"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin bidirectional line
-					(at -22.86 6.35 0)
-					(length 3.81)
-					(name "DAT1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "8"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
+			(symbol "1051620001_1_0"
 				(pin passive line
-					(at 20.32 -15.24 180)
-					(length 3.81)
-					(name "SHIELD"
+					(at -35.56 -29.21 0)
+					(length 2.54)
+					(name "CD/DAT3"
 						(effects
 							(font
-								(size 1.27 1.27)
+								(size 1.016 1.016)
 							)
 						)
 					)
-					(number "SH"
+					(number "P2"
 						(effects
 							(font
-								(size 1.27 1.27)
+								(size 1.016 1.016)
 							)
 						)
 					)
@@ -3069,6 +3147,12 @@
 		(uuid "992bfcfc-f9b9-4583-89ed-d1dabe8f3d5a")
 	)
 	(junction
+		(at 102.87 187.96)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c48a2d22-3533-4696-b7c6-0f50a2fb7d18")
+	)
+	(junction
 		(at 170.18 46.99)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3128,6 +3212,16 @@
 	)
 	(wire
 		(pts
+			(xy 102.87 187.96) (xy 100.33 187.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "03cf7d67-02fb-498d-8e62-8440e74bd0cb")
+	)
+	(wire
+		(pts
 			(xy 44.45 53.34) (xy 44.45 52.07)
 		)
 		(stroke
@@ -3168,16 +3262,6 @@
 	)
 	(wire
 		(pts
-			(xy 59.69 166.37) (xy 74.93 166.37)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0e3e92f1-ef6c-4efc-89f6-9ba887f9241a")
-	)
-	(wire
-		(pts
 			(xy 123.19 118.11) (xy 124.46 118.11)
 		)
 		(stroke
@@ -3205,6 +3289,16 @@
 			(type default)
 		)
 		(uuid "105da278-9a7c-452c-8576-87c0aa559fea")
+	)
+	(wire
+		(pts
+			(xy 100.33 187.96) (xy 100.33 186.69)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "10a9eac3-e5db-49b9-bd64-f26f787dff53")
 	)
 	(wire
 		(pts
@@ -3268,6 +3362,16 @@
 	)
 	(wire
 		(pts
+			(xy 54.61 167.64) (xy 73.66 167.64)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1f814522-64c2-4061-9194-820110f453d5")
+	)
+	(wire
+		(pts
 			(xy 69.85 53.34) (xy 71.12 53.34)
 		)
 		(stroke
@@ -3318,16 +3422,6 @@
 	)
 	(wire
 		(pts
-			(xy 118.11 182.88) (xy 119.38 182.88)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2474a6b9-905f-4718-ab52-4014e78b6c6a")
-	)
-	(wire
-		(pts
 			(xy 96.52 74.93) (xy 97.79 74.93)
 		)
 		(stroke
@@ -3338,16 +3432,6 @@
 	)
 	(wire
 		(pts
-			(xy 86.36 148.59) (xy 86.36 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "24973722-4d5e-4af8-94e2-539e5a2c722c")
-	)
-	(wire
-		(pts
 			(xy 106.68 99.06) (xy 107.95 99.06)
 		)
 		(stroke
@@ -3355,6 +3439,16 @@
 			(type default)
 		)
 		(uuid "26f2c602-8087-4d73-8360-b11fe119099e")
+	)
+	(wire
+		(pts
+			(xy 54.61 172.72) (xy 73.66 172.72)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "27107c77-742d-4340-8c32-bb91da1d8677")
 	)
 	(wire
 		(pts
@@ -3548,6 +3642,16 @@
 	)
 	(wire
 		(pts
+			(xy 54.61 162.56) (xy 73.66 162.56)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4a5f260f-a8d2-4390-8dc0-faae65bd4bff")
+	)
+	(wire
+		(pts
 			(xy 76.2 53.34) (xy 81.28 53.34)
 		)
 		(stroke
@@ -3648,26 +3752,6 @@
 	)
 	(wire
 		(pts
-			(xy 44.45 158.75) (xy 74.93 158.75)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "584b4812-d946-4b9b-adc7-3cb3b56b0255")
-	)
-	(wire
-		(pts
-			(xy 36.83 171.45) (xy 74.93 171.45)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "59b53052-b520-4c72-81bd-af05ad869155")
-	)
-	(wire
-		(pts
 			(xy 256.54 62.23) (xy 255.27 62.23)
 		)
 		(stroke
@@ -3765,16 +3849,6 @@
 			(type default)
 		)
 		(uuid "648fa7bf-623c-4375-844d-f6706a70173c")
-	)
-	(wire
-		(pts
-			(xy 119.38 182.88) (xy 119.38 184.15)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "657002c8-fd16-4089-a9e1-00a9821be119")
 	)
 	(wire
 		(pts
@@ -3928,7 +4002,7 @@
 	)
 	(wire
 		(pts
-			(xy 86.36 187.96) (xy 86.36 189.23)
+			(xy 95.25 186.69) (xy 95.25 187.96)
 		)
 		(stroke
 			(width 0)
@@ -4028,6 +4102,16 @@
 	)
 	(wire
 		(pts
+			(xy 102.87 186.69) (xy 102.87 187.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "82ba605e-cd28-41ad-8aab-4f27529bd914")
+	)
+	(wire
+		(pts
 			(xy 231.14 147.32) (xy 231.14 148.59)
 		)
 		(stroke
@@ -4095,6 +4179,16 @@
 			(type default)
 		)
 		(uuid "86e96037-f06f-4b79-b768-1321782e033a")
+	)
+	(wire
+		(pts
+			(xy 102.87 187.96) (xy 105.41 187.96)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "881e4e65-6efa-4083-8910-32fd40ee91f9")
 	)
 	(wire
 		(pts
@@ -4248,13 +4342,13 @@
 	)
 	(wire
 		(pts
-			(xy 64.77 173.99) (xy 74.93 173.99)
+			(xy 86.36 148.59) (xy 86.36 151.13)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "9ea42e59-2d18-4351-95b5-ef531b4e95d5")
+		(uuid "9d59d679-2f0c-4c99-abe8-644370bbd5e4")
 	)
 	(wire
 		(pts
@@ -4275,6 +4369,16 @@
 			(type default)
 		)
 		(uuid "9fc024de-1992-404b-b655-2c0cc1d2da32")
+	)
+	(wire
+		(pts
+			(xy 54.61 165.1) (xy 73.66 165.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a04f5f39-fed8-48a7-afb7-2233b1bf70f2")
 	)
 	(wire
 		(pts
@@ -4518,6 +4622,26 @@
 	)
 	(wire
 		(pts
+			(xy 105.41 187.96) (xy 105.41 186.69)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bb42d420-1c94-4cad-951a-5774c1a34ea9")
+	)
+	(wire
+		(pts
+			(xy 54.61 175.26) (xy 73.66 175.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bbd26e8a-e1b0-473e-8ade-0f43113c2843")
+	)
+	(wire
+		(pts
 			(xy 69.85 118.11) (xy 71.12 118.11)
 		)
 		(stroke
@@ -4568,6 +4692,16 @@
 	)
 	(wire
 		(pts
+			(xy 54.61 160.02) (xy 73.66 160.02)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c49c982a-76c0-41e8-a7f7-0b76b61eeea3")
+	)
+	(wire
+		(pts
 			(xy 86.36 148.59) (xy 130.81 148.59)
 		)
 		(stroke
@@ -4605,16 +4739,6 @@
 			(type default)
 		)
 		(uuid "cd6b8ed4-c7f9-4002-9d55-5fe78b765b3b")
-	)
-	(wire
-		(pts
-			(xy 54.61 163.83) (xy 74.93 163.83)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ce134b06-9f3c-4606-8946-eea280e7c8db")
 	)
 	(wire
 		(pts
@@ -4878,16 +5002,6 @@
 	)
 	(wire
 		(pts
-			(xy 49.53 161.29) (xy 74.93 161.29)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f765fc5a-3a0f-4729-9544-c93ca819225d")
-	)
-	(wire
-		(pts
 			(xy 80.01 121.92) (xy 80.01 120.65)
 		)
 		(stroke
@@ -5037,7 +5151,7 @@
 	)
 	(hierarchical_label "SD_DAT1"
 		(shape bidirectional)
-		(at 30.48 170.18 180)
+		(at 54.61 162.56 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -5070,7 +5184,7 @@
 	)
 	(hierarchical_label "SD_DAT3"
 		(shape bidirectional)
-		(at 30.48 175.26 180)
+		(at 54.61 167.64 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -5114,7 +5228,7 @@
 	)
 	(hierarchical_label "SD_DAT2"
 		(shape bidirectional)
-		(at 30.48 172.72 180)
+		(at 54.61 165.1 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -5147,7 +5261,7 @@
 	)
 	(hierarchical_label "SD_DAT0"
 		(shape bidirectional)
-		(at 30.48 167.64 180)
+		(at 54.61 160.02 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -5158,7 +5272,7 @@
 	)
 	(hierarchical_label "SD_CMD"
 		(shape bidirectional)
-		(at 30.48 163.83 180)
+		(at 54.61 175.26 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -5169,7 +5283,7 @@
 	)
 	(hierarchical_label "SD_CLK"
 		(shape input)
-		(at 30.48 161.29 180)
+		(at 54.61 172.72 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9243,6 +9357,144 @@
 		)
 	)
 	(symbol
+		(lib_id "1051620001:1051620001")
+		(at 147.32 242.57 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9ad641e3-c575-4a6e-8255-e2dccd413830")
+		(property "Reference" "J3"
+			(at 147.32 222.25 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "1051620001"
+			(at 147.32 224.79 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "NX-AW-footprints:105162-0001_MOL"
+			(at 114.554 227.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify bottom)
+			)
+		)
+		(property "Datasheet" ""
+			(at 147.32 242.57 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 147.32 242.57 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MFR_NAME" "Molex Connector Corporation"
+			(at 114.554 227.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify bottom)
+			)
+		)
+		(property "MANUFACTURER_PART_NUMBER" "1051620001"
+			(at 114.554 227.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify bottom)
+			)
+		)
+		(pin "P5"
+			(uuid "8771039a-c90b-4093-a1c6-bd0f2e2db595")
+		)
+		(pin "P7"
+			(uuid "3ecd3b97-1174-466e-beef-7dcd87e8064f")
+		)
+		(pin "G2"
+			(uuid "9a7df4d6-a6c7-4722-a99d-b05acb79f25e")
+		)
+		(pin "P2"
+			(uuid "f60be864-fe0b-4ae2-a95e-b59850504c16")
+		)
+		(pin "G4"
+			(uuid "c1071bf3-f53f-463a-b5a5-79fbb04048fe")
+		)
+		(pin "P4"
+			(uuid "6831b9a1-c750-4fd3-8496-e79f7aba3fef")
+		)
+		(pin "G3"
+			(uuid "35480aa1-8570-45ea-95d3-7dfbe2adee43")
+		)
+		(pin "P3"
+			(uuid "9aa2f342-37cc-44f3-a056-9634ffaa26fc")
+		)
+		(pin "P8"
+			(uuid "545d6d7e-9516-44e7-a898-d9f84c03249b")
+		)
+		(pin "P1"
+			(uuid "71cab1ca-0f39-47af-8739-5f8aca87d49a")
+		)
+		(pin "G1"
+			(uuid "d1a8289b-a2ce-46b6-aabe-8730bda14e1d")
+		)
+		(pin "P6"
+			(uuid "e7821604-ad93-4ad9-8d0d-684af209ca27")
+		)
+		(pin "P9"
+			(uuid "d6191649-3c27-4076-9ca6-0546c5febe6a")
+		)
+		(instances
+			(project "NX-ISD_v1p4"
+				(path "/3830a648-69ee-45ab-8814-deeba52753c2/24102161-ffc9-4a9f-904b-68376e8a4e16"
+					(reference "J3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:VBUS")
 		(at 71.12 52.07 0)
 		(unit 1)
@@ -9809,7 +10061,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 86.36 189.23 0)
+		(at 95.25 187.96 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -9820,7 +10072,7 @@
 		(fields_autoplaced yes)
 		(uuid "ab888900-5bd1-46b2-a04a-e1f76c29898d")
 		(property "Reference" "#PWR0106"
-			(at 86.36 195.58 0)
+			(at 95.25 194.31 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9831,7 +10083,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 86.36 194.31 0)
+			(at 95.25 193.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9841,7 +10093,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 86.36 189.23 0)
+			(at 95.25 187.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9852,7 +10104,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 86.36 189.23 0)
+			(at 95.25 187.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9863,7 +10115,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 86.36 189.23 0)
+			(at 95.25 187.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10083,7 +10335,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 119.38 184.15 0)
+		(at 102.87 187.96 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -10094,7 +10346,7 @@
 		(fields_autoplaced yes)
 		(uuid "b3fa791e-e49f-46a2-999a-35c2bf3ed9aa")
 		(property "Reference" "#PWR0107"
-			(at 119.38 190.5 0)
+			(at 102.87 194.31 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10105,7 +10357,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 119.38 189.23 0)
+			(at 102.87 193.04 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -10115,7 +10367,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 119.38 184.15 0)
+			(at 102.87 187.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10126,7 +10378,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 119.38 184.15 0)
+			(at 102.87 187.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -10137,7 +10389,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 119.38 184.15 0)
+			(at 102.87 187.96 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11514,106 +11766,6 @@
 			(project "NX-ISD_v1p4"
 				(path "/3830a648-69ee-45ab-8814-deeba52753c2/24102161-ffc9-4a9f-904b-68376e8a4e16"
 					(reference "C28")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:Micro_SD_Card")
-		(at 97.79 167.64 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "e149b75a-a9dd-4237-b322-c4da2f28ad6f")
-		(property "Reference" "J4"
-			(at 97.79 152.146 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "Micro_SD_Card"
-			(at 97.79 181.356 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Connector_Card:microSD_HC_Wuerth_693072010801"
-			(at 127 160.02 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" "https://www.we-online.com/components/products/datasheet/693072010801.pdf"
-			(at 97.79 167.64 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Micro SD Card Socket"
-			(at 97.79 167.64 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "4"
-			(uuid "5327891b-9fb1-4e32-8d1f-f488d3deaa85")
-		)
-		(pin "2"
-			(uuid "cb384d39-d2f0-472b-a81d-54a34e16a504")
-		)
-		(pin "3"
-			(uuid "57670d8a-8159-43bc-8d30-330b5c4279c3")
-		)
-		(pin "8"
-			(uuid "2fdebed6-dfcc-4d95-b788-29312709aa60")
-		)
-		(pin "1"
-			(uuid "ea96c38f-72fb-4841-9b05-5041566dcf83")
-		)
-		(pin "6"
-			(uuid "635105d2-cb09-4eca-8183-9abb8652f924")
-		)
-		(pin "SH"
-			(uuid "f40bf0d1-60cd-4710-acb4-05898c6d5d6e")
-		)
-		(pin "5"
-			(uuid "fde8cf16-8b3e-4250-9205-d1d35a95d319")
-		)
-		(pin "7"
-			(uuid "df6f34e4-a36b-435f-bee2-1295698be35c")
-		)
-		(instances
-			(project "NX-ISD_v1p4"
-				(path "/3830a648-69ee-45ab-8814-deeba52753c2/24102161-ffc9-4a9f-904b-68376e8a4e16"
-					(reference "J4")
 					(unit 1)
 				)
 			)

@@ -16,23 +16,23 @@ The **NX-ISD** is a custom, highly integrated wearable and embedded development 
 ```text
 N X - I S D
 │     │
-│     └─► Intelligent Sensor Device
-│         (The hardware foundation)
+│     └─► Intelligent Sensor Device (Hardware Foundation)
+│           │
+│           ▼
+│       ISD-Core
+│           │
+│           ├─► Custom Operating System (Dual-Core FreeRTOS based)
+│           ├─► Built on PlatformIO / Arduino Framework
+│           │
+│           ├──► NX-MSF: Mathematical Sensor Fusion (Physics Models & Kalman Filters)
+│           ├──► NX-AIS: Advanced Information System (Contextual Advisory Engine)
+│           └──► NX-SDS: Self-Diagnostic System (Hardware Integrity & Proof-Testing)
 │
-└─► Prototyping Series
-    (Always in development, not a closed product, open for everyone)
-
-      │
-      ▼
-  ISD-Core
-      │
-      ├─► Custom Operating System (Dual-Core FreeRTOS based)
-      ├─► Built on PlatformIO / Arduino Framework
-      │
-      ├──► NX-MSF: Mathematical Sensor Fusion (Physics Models & Kalman Filters)
-      ├──► NX-AIS: Advanced Information System (Contextual Advisory Engine)
-      └──► NX-SDS: Self-Diagnostic System (Hardware Integrity & Proof-Testing)
+└─► Prototyping Series (Continuous Development Environment)
 ```
+
+* **Hardware Lineage:** Originally inspired by and iterated from the [Artemis Watch](https://circuitmess.com/products/nasa-artemis-watch) (and subsequently the [Artemis Watch 2.0](https://circuitmess.com/products/nasa-artemis-watch-2-0)) by CircuitMess, heavily expanded into a custom tactical multi-sensor wearable.
+* **The "NX" Philosophy:** Inspired by Starfleet's experimental registry designation ([Memory Alpha: NX](https://memory-alpha.fandom.com/wiki/NX)), the **NX** prefix denotes an active, pioneering prototyping environment. Rather than static consumer electronics, each build is a working experimental platform. Once a revision is tagged and published, that milestone is locked in history—quirks, bugs, and all. Lessons learned and hardware fixes either roll into small targeted follow-ups (e.g., `v1p31`) or drive the next major revision rework (e.g., `v1p4`).
 
 
 ## Hardware Specifications
@@ -54,7 +54,8 @@ N X - I S D
 * **Voltage Regulation:** Synchronous step-down buck converter (TLV62568, ~95% efficiency) for 3.3V system rail; dedicated low-noise LDOs (RT9193-18GB/28GB) for 1.8V and 2.8V sensor rails
 
 ### Peripherals & I/O
-* **Display:** 10-Pin 0.5mm FPC connector for SPI displays
+* **Display:** [1.54" 240×240 IPS Color TFT (ST7789V2)](https://de.aliexpress.com/item/1005007654038756.html) connected via a 10-pin 0.5mm FPC connector (`J2`).
+  *(Note on AliExpress pinout docs: The seller's listing has infamous translation errors—such as claiming `RS` is a "serial clock" instead of Command/Data, and stating 2.8V in one table while specifying 3.2V operating voltage in the specs. The display runs natively on 3.3V logic).*
 * **LEDs:** 16x WS2812B NeoPixel 4×4 Serpentine Matrix (XL-1010RGBC) with PMOS high-side power cutoff
 * **Audio:** Onboard SMD Buzzer
 * **Input:** Multi-Directional Lever-Switch and Push-Button

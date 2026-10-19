@@ -29,6 +29,7 @@ Upcoming hardware revision tasks for the NX-ISD PCB.
 * [x] Fix Lever button wiring
 * [x] Move FPC-connector for the display a bit to the left
 * [ ] Fix BQ25170 Overheating problem at 600mA charging
+* [ ] Replace NAND SD with Micro SD Card slot (4- Bit SDMMC).
 * [ ] Change EP pad vias of MAX17048 & BQ25170 to 0.45mm drill to reduce pcb costs
 * [x] Clear 2V8 path
 * [ ] Check all Decouple capacities for right pathing { 3V3 -> Cap+ -> VCC, Cap- -> GND }
