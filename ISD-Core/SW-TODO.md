@@ -38,6 +38,13 @@ This document tracks implementation status across the 6 core application decks, 
 * [x] **NAND State Persistence:** Storage subsystem ready to persist clock/alarm states
 
 ### 4. Device (Silicon & Hardware Integrity)
+* [ ] **Hardware Revision Target Switch (`pins.h`):**
+  * Make `pins.h` modular and revision-selectable via a single switch/define (e.g., `#define HW_REVISION_V1P4` vs `#define HW_REVISION_V1P3` or via PlatformIO env build flag).
+  * Separate pinout table for **v1.4**:
+    * **Display SPI (Dedicated HSPI):** `MOSI` (GPIO 38), `SCK` (GPIO 39), `RST` (GPIO 40), `DC` (GPIO 21), `CS_TFT` (GPIO 48), `PWM_TFT` (GPIO 47).
+    * **MicroSD (4-bit SDMMC via GPIO Matrix):** `SD_CLK` (GPIO 41), `SD_CMD` (GPIO 1), `SD_DAT0` (GPIO 43), `SD_DAT1` (GPIO 44), `SD_DAT2` (GPIO 42), `SD_DAT3` (GPIO 2).
+    * **Buttons & Interrupts:** Lever (`GPIO 14`, `15`, `16`), `BTN` (`GPIO 13`), RTC Wake (`GPIO 6`), IMU Wake (`GPIO 7`), Fuel Gauge (`GPIO 4`), PPG FIFO (`GPIO 5`).
+  * Allows seamless switching between testing firmware on the existing v1.3 prototype and building for the new v1.4 production PCB without code churn.
 * [x] **Battery Info:** Real-time cell voltage, capacity percentage, charge/discharge rate via `MAX17048` (`0x36`)
 * [ ] **Deep Battery Analytics:** Charge cycle tracking, runtime estimation, and cell internal resistance ($R_{\text{int}}$)
 * [ ] **NX-SDS (Self-Diagnostic System):** Continuous I2C 9-clock recovery, hardware proof-testing, and audit logging (`/sds/audit_log.txt`)

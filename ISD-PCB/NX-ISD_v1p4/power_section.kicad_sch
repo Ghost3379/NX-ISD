@@ -5508,7 +5508,7 @@
 	)
 	(wire
 		(pts
-			(xy 83.82 45.72) (xy 86.36 45.72)
+			(xy 83.82 45.72) (xy 96.52 45.72)
 		)
 		(stroke
 			(width 0)
@@ -5938,7 +5938,7 @@
 	)
 	(wire
 		(pts
-			(xy 83.82 48.26) (xy 86.36 48.26)
+			(xy 83.82 48.26) (xy 96.52 48.26)
 		)
 		(stroke
 			(width 0)
@@ -6344,7 +6344,7 @@
 	)
 	(hierarchical_label "D+"
 		(shape bidirectional)
-		(at 86.36 45.72 0)
+		(at 96.52 45.72 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -6368,7 +6368,7 @@
 	)
 	(hierarchical_label "D-"
 		(shape bidirectional)
-		(at 86.36 48.26 0)
+		(at 96.52 48.26 0)
 		(effects
 			(font
 				(size 1.27 1.27)

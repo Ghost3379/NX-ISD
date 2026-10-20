@@ -1728,16 +1728,6 @@
 	)
 	(wire
 		(pts
-			(xy 86.36 45.72) (xy 101.6 45.72)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0facd64e-3b0f-41d4-b7db-a7bb75c05e45")
-	)
-	(wire
-		(pts
 			(xy 71.12 35.56) (xy 71.12 40.64)
 		)
 		(stroke
@@ -1795,16 +1785,6 @@
 			(type default)
 		)
 		(uuid "2dc9091a-3931-4a73-9850-444d74b1ae98")
-	)
-	(wire
-		(pts
-			(xy 86.36 48.26) (xy 101.6 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "30653c86-15ba-4146-931b-65f448f203dc")
 	)
 	(wire
 		(pts
@@ -1875,6 +1855,16 @@
 			(type default)
 		)
 		(uuid "53356994-dd7f-427c-83fe-4f4fbce7c321")
+	)
+	(wire
+		(pts
+			(xy 101.6 45.72) (xy 86.36 45.72)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "64075e54-414a-40a6-903e-cf5c4d922983")
 	)
 	(wire
 		(pts
@@ -1968,6 +1958,16 @@
 	)
 	(wire
 		(pts
+			(xy 86.36 48.26) (xy 101.6 48.26)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "996e3873-3c2a-4cd4-9ede-4bc4a33c41fb")
+	)
+	(wire
+		(pts
 			(xy 36.83 109.22) (xy 36.83 110.49)
 		)
 		(stroke
@@ -1975,16 +1975,6 @@
 			(type default)
 		)
 		(uuid "999cab98-3dd6-49f7-b274-6bdcf49a4225")
-	)
-	(wire
-		(pts
-			(xy 38.1 53.34) (xy 55.88 53.34)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9be7af90-f1cf-4947-ba0c-50a778a3b6d1")
 	)
 	(wire
 		(pts
@@ -2054,7 +2044,7 @@
 			(width 0)
 			(type default)
 		)
-		(uuid "b5c98a56-4506-42c7-8a8f-5ad8180f0b45")
+		(uuid "b2dd25c4-2915-43f6-a360-97f9f54ba57b")
 	)
 	(wire
 		(pts
@@ -2178,6 +2168,16 @@
 	)
 	(wire
 		(pts
+			(xy 55.88 53.34) (xy 38.1 53.34)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f21c18be-2488-49d9-bc97-c3ddbf1f30ec")
+	)
+	(wire
+		(pts
 			(xy 86.36 58.42) (xy 101.6 58.42)
 		)
 		(stroke
@@ -2293,6 +2293,28 @@
 		)
 		(uuid "0b4438f4-0051-4c5a-9c60-8e7e720fe3a3")
 	)
+	(hierarchical_label "SD_CMD"
+		(shape bidirectional)
+		(at 101.6 45.72 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "0c624ef8-aad9-4857-a248-ba6b570499c9")
+	)
+	(hierarchical_label "SD_DAT0"
+		(shape bidirectional)
+		(at 101.6 48.26 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "104b5478-3f02-4a64-9615-55ccabe8e219")
+	)
 	(hierarchical_label "USB_DETECT"
 		(shape input)
 		(at 38.1 81.28 180)
@@ -2337,7 +2359,7 @@
 		)
 		(uuid "27287691-df65-403d-b2e2-29e7a64a8e9b")
 	)
-	(hierarchical_label "SD_DAT2"
+	(hierarchical_label "SD_DAT1"
 		(shape bidirectional)
 		(at 101.6 81.28 0)
 		(effects
@@ -2359,16 +2381,16 @@
 		)
 		(uuid "3278b5aa-2d2d-4bcb-b8b1-e56417c5fcf9")
 	)
-	(hierarchical_label "SCK"
+	(hierarchical_label "RST"
 		(shape output)
-		(at 101.6 73.66 0)
+		(at 101.6 76.2 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
 			(justify left)
 		)
-		(uuid "339320a9-9975-48b6-86e1-0c0bc67309df")
+		(uuid "3a6e24b1-8b1c-4245-93bc-c5c7795a7f9b")
 	)
 	(hierarchical_label "PWR_NPM"
 		(shape output)
@@ -2403,17 +2425,6 @@
 		)
 		(uuid "554d46cd-561b-465c-a45e-d4c7d331ef3a")
 	)
-	(hierarchical_label "CS_SD"
-		(shape bidirectional)
-		(at 38.1 55.88 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "5834f7c2-020e-44dc-b91d-c97d3c7bfb3b")
-	)
 	(hierarchical_label "!ALERT"
 		(shape input)
 		(at 38.1 60.96 180)
@@ -2424,6 +2435,28 @@
 			(justify right)
 		)
 		(uuid "5efe4caf-5a92-4132-94a2-0160bb635273")
+	)
+	(hierarchical_label "CS_SD"
+		(shape bidirectional)
+		(at 38.1 55.88 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "65a207f6-d58d-4b98-be32-adfbd189b2c8")
+	)
+	(hierarchical_label "MOSI"
+		(shape output)
+		(at 101.6 73.66 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "67301330-0d8f-48eb-8283-4bdf9554d810")
 	)
 	(hierarchical_label "SDA_1"
 		(shape bidirectional)
@@ -2457,17 +2490,6 @@
 			(justify left)
 		)
 		(uuid "75f48e73-260b-410b-9b27-669b83917b79")
-	)
-	(hierarchical_label "SD_DAT1"
-		(shape bidirectional)
-		(at 101.6 48.26 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "819f4750-9e1a-49c1-81de-92e8f1b0137c")
 	)
 	(hierarchical_label "DOUT_NPM"
 		(shape output)
@@ -2535,7 +2557,18 @@
 		)
 		(uuid "b18b19c5-4380-4d9f-a6bf-97376a8da9e1")
 	)
-	(hierarchical_label "RST"
+	(hierarchical_label "SD_DAT2"
+		(shape bidirectional)
+		(at 38.1 53.34 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "bd45ab38-7e26-4071-8a9b-58dc5e14a2af")
+	)
+	(hierarchical_label "SCK"
 		(shape output)
 		(at 101.6 71.12 0)
 		(effects
@@ -2544,7 +2577,7 @@
 			)
 			(justify left)
 		)
-		(uuid "cc7b577a-7260-45de-b5b4-cc820bd53e24")
+		(uuid "c97527d6-f9b0-4c7b-860f-074627b9de57")
 	)
 	(hierarchical_label "LEVER_LEFT"
 		(shape input)
@@ -2557,17 +2590,6 @@
 		)
 		(uuid "d04434c9-18ed-4428-9cfd-3e87c5fcacec")
 	)
-	(hierarchical_label "SD_CMD"
-		(shape bidirectional)
-		(at 38.1 53.34 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "d5a0d62d-d672-4c4c-b833-d49d6f9d2f7a")
-	)
 	(hierarchical_label "BUZZER"
 		(shape output)
 		(at 38.1 76.2 180)
@@ -2578,28 +2600,6 @@
 			(justify right)
 		)
 		(uuid "f2f245fb-86ae-414b-a33d-311ee9981b14")
-	)
-	(hierarchical_label "SD_DAT0"
-		(shape bidirectional)
-		(at 101.6 45.72 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "fe6093df-3e6f-48cf-a774-f9378fc160e8")
-	)
-	(hierarchical_label "MOSI"
-		(shape output)
-		(at 101.6 76.2 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "fed2b163-48f1-4c9f-ad8d-12c0a644a9ed")
 	)
 	(symbol
 		(lib_id "Jumper:SolderJumper_2_Open")
