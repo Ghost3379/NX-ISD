@@ -4,6 +4,12 @@
 	(generator_version "10.0")
 	(uuid "fbfdbcf0-d486-4999-8224-f61932a58bc5")
 	(paper "A4")
+	(title_block
+		(title "NX-ISD Version 1 Rev. 4")
+		(date "2026-10-16")
+		(rev "p4")
+		(comment 1 "IF NOT SPECIFID IN [0x0x] THEN ALL PASSIVE PARTS ARE IN: [0402]")
+	)
 	(lib_symbols
 		(symbol "BNO085:BNO085"
 			(pin_names
@@ -3854,16 +3860,6 @@
 			)
 			(embedded_fonts no)
 		)
-	)
-	(text "IF NOT SPECIFID IN [0x0x] THEN ALL PASSIVE PARTS ARE IN: [0402]"
-		(exclude_from_sim no)
-		(at 211.074 168.148 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-		)
-		(uuid "0aa4f445-4bbd-4fa8-84e6-4065b4da9d9f")
 	)
 	(text "[0603]"
 		(exclude_from_sim no)

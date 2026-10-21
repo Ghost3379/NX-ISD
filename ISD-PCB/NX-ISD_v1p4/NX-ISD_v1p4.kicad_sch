@@ -8,6 +8,7 @@
 		(title "NX-ISD Version 1 Rev. 4")
 		(date "2026-10-16")
 		(rev "p4")
+		(comment 1 "IF NOT SPECIFID IN [0x0x] THEN ALL PASSIVE PARTS ARE IN: [0402]")
 	)
 	(lib_symbols
 		(symbol "YC248-JR-074K7L:YC248-JR-074K7L"
@@ -1551,16 +1552,6 @@
 			(embedded_fonts no)
 		)
 	)
-	(text "IF NOT SPECIFEID IN [0x0x] THEN ALL PASSIVE PARTS ARE IN: [0402]"
-		(exclude_from_sim no)
-		(at 124.714 106.426 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-		)
-		(uuid "8863759e-bdec-4a5e-b7ae-2f811749540e")
-	)
 	(junction
 		(at 144.78 25.4)
 		(diameter 0)
@@ -2489,7 +2480,7 @@
 	)
 	(wire
 		(pts
-			(xy 77.47 95.25) (xy 82.55 95.25)
+			(xy 77.47 93.98) (xy 82.55 93.98)
 		)
 		(stroke
 			(width 0)
@@ -3588,7 +3579,7 @@
 			)
 		)
 		(pin "CTRL_PWR_NPM" input
-			(at 77.47 95.25 0)
+			(at 77.47 93.98 0)
 			(uuid "8c95cd73-49cb-4ffc-a30b-4d3f3d96993f")
 			(effects
 				(font
@@ -3793,7 +3784,7 @@
 			)
 		)
 		(pin "PWR_NPM" output
-			(at 82.55 95.25 180)
+			(at 82.55 93.98 180)
 			(uuid "0160cd9c-18e8-46d1-9585-ef3ffb85b782")
 			(effects
 				(font

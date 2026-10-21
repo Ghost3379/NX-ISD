@@ -4,6 +4,12 @@
 	(generator_version "10.0")
 	(uuid "41d1b345-026c-4a02-85b8-4812b125adbf")
 	(paper "A4")
+	(title_block
+		(title "NX-ISD Version 1 Rev. 4")
+		(date "2026-10-16")
+		(rev "p4")
+		(comment 1 "IF NOT SPECIFID IN [0x0x] THEN ALL PASSIVE PARTS ARE IN: [0402]")
+	)
 	(lib_symbols
 		(symbol "BQ25170DSGR:BQ25170DSGR"
 			(pin_names
@@ -4781,16 +4787,6 @@
 		)
 		(uuid "15407483-e4fd-46bb-95ed-8439449e9747")
 	)
-	(text "IF NOT SPECIFID IN [0x0x] THEN ALL PASSIVE PARTS ARE IN: [0402]"
-		(exclude_from_sim no)
-		(at 210.82 168.91 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-		)
-		(uuid "6202a450-dacc-4c7e-823f-cdb09e95e24b")
-	)
 	(text "[0603]"
 		(exclude_from_sim no)
 		(at 92.71 144.78 0)
@@ -4873,7 +4869,7 @@
 		)
 		(uuid "a6ce4f56-b8a5-4b1a-b2fc-193c8ded90df")
 	)
-	(text "500 Ω / 600 mA"
+	(text "604 Ω / ~500 mA"
 		(exclude_from_sim no)
 		(at 215.392 69.088 0)
 		(effects
@@ -8661,7 +8657,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "499"
+		(property "Value" "604"
 			(at 201.93 66.548 90)
 			(show_name no)
 			(do_not_autoplace no)
