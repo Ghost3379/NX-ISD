@@ -28,17 +28,17 @@ Upcoming hardware revision tasks for the NX-ISD PCB.
 * [x] Reposition the left-side mounting hole
 * [x] Fix Lever button wiring
 * [x] Move FPC-connector for the display a bit to the left
-* [x] Fix BQ25170 Overheating problem at 600mA charging -> now ~500mA with additional GND plating
+* [x] Fix BQ25170 Overheating problem at 600mA charging -> additional GND plating
 * [x] Replace NAND SD with Micro SD Card slot (4- Bit SDMMC).
 * [x] Change EP pad vias of MAX17048 & BQ25170 to 0.45mm drill to reduce pcb costs
 * [x] Clear 2V8 path
-* [ ] Check all Decouple capacities for right pathing { 3V3 -> Cap+ -> VCC, Cap- -> GND }
+* [x] Check all Decouple capacities for right pathing { 3V3 -> Cap+ -> VCC, Cap- -> GND }
 * [x] add hardware pull up to BTN (Because of deep sleep)
 * [x] Remove U15 (TXB0106) level shifter for display SPI - route ESP32-S3 GPIOs directly to J2 (ST7789 IOVCC supports 3.3V; TXB0106 auto-sensing one-shot oscillates and overheats/fails at 40MHz SPI)
 * [x] Add Decouple caps for NPM
-* [x] Add palting for GND and VUSB at USB-C Connector
-* [x] Perform the overall layout changes
-* [ ] Fix Neopixel silkscreeen (Point is pin one, but pin 1 is Data -> Use pin 3 GND, since it has a marking on top of the LED, to make production by hand easier)
+* [x] Add plating for GND and VUSB at USB-C Connector
+* [x] Perform the overall layout changes (overall plating and better routing)
+* [x] Fix Neopixel silkscreeen (Point is pin one, but pin 1 is Data Out -> Use pin 3 GND, since it has a marking on top of the LED, to make production by hand easier)
 
 
 ## Future Ideas for a vXpY
