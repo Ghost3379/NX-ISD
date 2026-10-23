@@ -54,13 +54,18 @@
 // ------------------------------------------------------------------------------
 #define HW_REVISION_STRING "v1.4"
 
-// Display (Dedicated 3.3V SPI Bus directly to J2 - No TXB0106 Level Shifter)
+// Display SPI Bus (Dedicated 3.3V Bus directly to J2 - No TXB0106 Level Shifter)
 #define TFT_SCK         38  // Display Serial Clock (FSPI SCK)
 #define TFT_MOSI        39  // Display Master-Out-Slave-In (FSPI MOSI)
 #define TFT_RS          21  // Display Command / Data (DC)
 #define TFT_RST         40  // Display Hardware Reset (Active LOW)
 #define CS_TFT          48  // Display Chip Select (Active LOW)
 #define TFT_PWM         47  // Backlight PWM (Q4 AO3400A Gate)
+
+// Display Bus Configuration
+// Direct 3.3V connection allows full 40 MHz SPI write clock (~43.5 FPS)
+#define TFT_SPI_FREQ    40000000
+#define TFT_BUS_SHARED  false // Dedicated SPI bus to display
 
 // Display SPI Bus Compatibility Aliases
 #define SPI_SCK         TFT_SCK
@@ -105,6 +110,14 @@
 // Display SPI Aliases
 #define TFT_SCK         SPI_SCK
 #define TFT_MOSI        SPI_MOSI
+
+// Display Bus Configuration & Bandwidth Restriction:
+// NOTE: The TXB0106 auto-direction-sensing level shifter (U15) on v1.3 cannot hold up
+// with the intended 40 MHz SPI clock. Signal edge rounding, propagation delay, and capacitive
+// loading cause severe pixel jitter, missed clock cycles, and periodic display corruption at 40 MHz.
+// We strictly cap v1.3 to 16 MHz for clean, reliable, flicker-free operation (~17.4 FPS).
+#define TFT_SPI_FREQ    16000000
+#define TFT_BUS_SHARED  true  // Shared SPI bus with ZDSD NAND Flash
 
 // Navigation Lever (Rotated 180° assembly on physical v1.3 carrier board)
 #define LEVER_LEFT      16  // Physical Left maps to GPIO 16

@@ -15,20 +15,17 @@ public:
 
       cfg.spi_host = SPI2_HOST; // FSPI on ESP32-S3
       cfg.spi_mode = 0;         // Mode 0
-      // 24 MHz: Maximum rated push-pull data rate for the TXB0106 level shifter
-      // (~24 Mbps). Delivers ~26 FPS (38.4ms per 240x240 16-bit frame).
-      // Prevents edge distortion, missed clock pulses, and periodic frame
-      // flickering during sensor power dips. NOTE for v1p4: Once U15 (TXB0106)
-      // is removed and the display runs directly on 3.3V, this clock can be
-      // boosted to 40 MHz (43.5 FPS) or 80 MHz (86.8 FPS).
-      cfg.freq_write = 40000000; // 40 MHz high-speed SPI write clock (~43.5 FPS)
+      // SPI write clock frequency defined per hardware target in pins.h:
+      //   - v1.4: 40 MHz (Direct 3.3V connection, ~43.5 FPS)
+      //   - v1.3: 16 MHz (TXB0106 level shifter bandwidth restriction)
+      cfg.freq_write = TFT_SPI_FREQ;
       cfg.freq_read = 10000000;
       cfg.spi_3wire = false;
       cfg.use_lock = true;
       cfg.dma_channel = SPI_DMA_CH_AUTO;
-      cfg.pin_sclk = SPI_SCK;  // GPIO 40
-      cfg.pin_mosi = SPI_MOSI; // GPIO 42
-      cfg.pin_miso = SPI_MISO; // GPIO 41
+      cfg.pin_sclk = SPI_SCK;  // GPIO 38 on v1.4, GPIO 40 on v1.3
+      cfg.pin_mosi = SPI_MOSI; // GPIO 39 on v1.4, GPIO 42 on v1.3
+      cfg.pin_miso = SPI_MISO; // GPIO -1 on v1.4, GPIO 41 on v1.3
       cfg.pin_dc = TFT_RS;     // GPIO 21
 
       _bus_instance.config(cfg);
@@ -39,7 +36,7 @@ public:
       auto cfg = _panel_instance.config();
 
       cfg.pin_cs = CS_TFT;   // GPIO 48
-      cfg.pin_rst = TFT_RST; // GPIO 38
+      cfg.pin_rst = TFT_RST; // GPIO 40 on v1.4, GPIO 38 on v1.3
       cfg.pin_busy = -1;
 
       cfg.panel_width = 240;
@@ -53,7 +50,7 @@ public:
       cfg.invert = true;     // 1.54" IPS panels require color inversion ON
       cfg.rgb_order = false; // RGB
       cfg.dlen_16bit = false;
-      cfg.bus_shared = true; // Shared SPI bus with SD card
+      cfg.bus_shared = TFT_BUS_SHARED; // false on v1.4 (dedicated), true on v1.3 (shared)
 
       _panel_instance.config(cfg);
     }

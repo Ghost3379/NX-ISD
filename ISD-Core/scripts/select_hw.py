@@ -133,10 +133,10 @@ if not target_version:
 # Apply build define
 if target_version == "v1p3":
     hw_define = "NX_ISD_HW_V1P3"
-    desc = "v1.3 (Prototype Board - Shared SPI / Legacy Pinout)"
+    desc = "v1.3 (Prototype Board - Display SPI capped at 16 MHz via TXB0106 Level Shifter)"
 else:
     hw_define = "NX_ISD_HW_V1P4"
-    desc = "v1.4 (Production Board - Dedicated Display SPI / New Pinout)"
+    desc = "v1.4 (Production Board - Dedicated 3.3V Display SPI @ 40 MHz)"
 
 env.Append(CPPDEFINES=[(hw_define, "1")])
 

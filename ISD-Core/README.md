@@ -154,40 +154,57 @@ Defined in [`ISD-Core/src/pins.h`](src/pins.h):
         Prev / Dec    │    Select / 1.2s Charge   │   Next / Inc
 ```
 
+### Hardware Revision Support (v1.4 vs v1.3)
+
+`ISD-Core` supports both the **v1.4 Production Board** and the **v1.3 Prototype Board** via modular pin mapping in [`src/pins.h`](src/pins.h). When clicking the PlatformIO **Build (✓)** button, a modal dialog window automatically pops up on screen (`scripts/select_hw.py`) prompting you to select your target revision:
+
+* **v1.4 (Production Board):** Dedicated 3.3V Display SPI (40 MHz write clock), 4-bit SDMMC MicroSD storage, physical lever orientation, and direct GPIO layout.
+* **v1.3 (Prototype Board):** Shared SPI bus, TXB0106 level shifter, 16 MHz display write clock restriction, and ZDSD NAND Flash storage.
+
+*(Note: The build tool remembers your last selection in `.pio_hw_target` and pre-focuses it, allowing instant builds by pressing `[Enter]`).*
+
 ### Complete GPIO Pinout Matrix
 
-| GPIO Pin | Pin Name | Direction | Electrical Domain | Connected Peripheral / Signal |
-| :---: | :--- | :---: | :---: | :--- |
-| **1** | `PWM_TFT` | Output | `+3V3` | Display Backlight PWM (gate of N-MOSFET `Q4`, active HIGH) |
-| **2** | `INT_DOF` | Input | `+3V3` | BNO085 Motion Interrupt (active LOW) |
-| **4** | `ALERT` | Input | `+3V3` | MAX17048 Fuel Gauge Alert (active LOW) |
-| **5** | `INT_HR` | Input | `+1V8` | MAX30102 Optical Heart Rate Interrupt (active LOW) |
-| **6** | `INT_RTC` | Input | `+3V3` | RV-3028 RTC Alarm / Periodic Timer (active LOW) |
-| **8** | `I2C_SDA` | Bi-dir | `+3V3` | I2C Data Line (10k pull-up `R18` to `+3V3`) |
-| **9** | `I2C_SCL` | Output | `+3V3` | I2C Clock Line (10k pull-up `R19` to `+3V3`) |
-| **10** | `BUZZER` | Output | `+3V3` | Electromagnetic Buzzer PWM (gate of N-MOSFET `Q3`) |
-| **11** | `BAT_STAT` | Input | `+3V3` | BQ25170 Charger Status (LOW = Charging, HIGH = Complete) |
-| **12** | `USB_DETECT`| Input | `+3V3` | Resistor divider from USB 5V VBUS (HIGH when plugged in) |
-| **13** | `BTN` | Input | `+3V3` | Main Tactile Push-Button (Active LOW, debounced) |
-| **14** | `LEVER_RIGHT`| Input | `+3V3` | Navigation Lever Right (Active LOW, hardware-mirrored) |
-| **15** | `LEVER_PUSH` | Input | `+3V3` | Navigation Lever Center Click (Active LOW) |
-| **16** | `LEVER_LEFT` | Input | `+3V3` | Navigation Lever Left (Active LOW, hardware-mirrored) |
-| **17** | `PWR_NPM` | Output | `+3V3` | NeoPixel Matrix Power Gate (HIGH = ON, LOW = 0µA cutoff) |
-| **18** | `NPM` | Output | `VBAT` | WS2812B Serial Data Stream (800 kHz NZR) |
-| **21** | `TFT_RS` | Output | `+2V8` | ST7789 Command / Data selection (via TXB0106) |
-| **38** | `TFT_RST` | Output | `+2V8` | ST7789 Hardware Reset Line (active LOW) |
-| **39** | `INT_ALS` | Input | `+3V3` | OPT3001 Light Sensor Threshold Interrupt (active LOW) |
-| **40** | `SPI_SCK` | Output | `+3V3` | SPI Bus Serial Clock (shared between Display & Storage) |
-| **41** | `SPI_MISO`| Input | `+3V3` | SPI Bus Data In (from ZDSD NAND Flash) |
-| **42** | `SPI_MOSI`| Output | `+3V3` | SPI Bus Data Out (to Display & ZDSD NAND Flash) |
-| **47** | `CS_SD` | Output | `+3V3` | ZDSD NAND Flash Chip Select (active LOW) |
-| **48** | `CS_TFT` | Output | `+2V8` | ST7789 TFT Display Chip Select (active LOW) |
+| Function | Pin Name | Direction | v1.4 (Production) | v1.3 (Prototype) | Electrical Domain | Notes |
+| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
+| **Display Clock** | `TFT_SCK` | Output | **GPIO 38** | **GPIO 40** | `+3V3` / `+2V8` | v1.4: Dedicated bus (40 MHz) \| v1.3: via TXB0106 (16 MHz) |
+| **Display MOSI** | `TFT_MOSI` | Output | **GPIO 39** | **GPIO 42** | `+3V3` / `+2V8` | Serial data out to ST7789 |
+| **Display MISO** | `SPI_MISO` | Input | *None (`-1`)* | **GPIO 41** | `+3V3` | Write-only on v1.4; MISO used by ZDSD NAND on v1.3 |
+| **Display D/C** | `TFT_RS` | Output | **GPIO 21** | **GPIO 21** | `+3V3` / `+2V8` | Command / Data select |
+| **Display Reset** | `TFT_RST` | Output | **GPIO 40** | **GPIO 38** | `+3V3` / `+2V8` | Hardware reset (active LOW) |
+| **Display CS** | `CS_TFT` | Output | **GPIO 48** | **GPIO 48** | `+3V3` / `+2V8` | ST7789 Chip Select (active LOW) |
+| **Display Backlight** | `TFT_PWM` | Output | **GPIO 47** | **GPIO 1** | `+3V3` | Backlight PWM dimming (gate of N-MOSFET `Q4`) |
+| **Storage CLK** | `SD_CLK` | Output | **GPIO 41** | **GPIO 40** | `+3V3` | v1.4: MicroSD SDMMC CLK \| v1.3: Shared SPI SCK |
+| **Storage CMD / CS** | `SD_CMD` / `CS_SD` | Bi-dir | **GPIO 43** | **GPIO 47** | `+3V3` | v1.4: SDMMC CMD \| v1.3: ZDSD NAND Flash Chip Select |
+| **Storage DAT0** | `SD_DAT0` | Bi-dir | **GPIO 44** | **GPIO 41** | `+3V3` | v1.4: SDMMC DAT0 \| v1.3: SPI MISO |
+| **Storage DAT1** | `SD_DAT1` | Bi-dir | **GPIO 42** | *N/A* | `+3V3` | MicroSD 4-bit bus (v1.4 only) |
+| **Storage DAT2** | `SD_DAT2` | Bi-dir | **GPIO 1** | *N/A* | `+3V3` | MicroSD 4-bit bus (v1.4 only) |
+| **Storage DAT3** | `SD_DAT3` | Bi-dir | **GPIO 2** | *N/A* | `+3V3` | MicroSD 4-bit bus (v1.4 only) / SPI fallback CS |
+| **Navigation Left** | `LEVER_LEFT` | Input | **GPIO 14** | **GPIO 16** | `+3V3` | v1.3 had 180° reversed lever assembly |
+| **Navigation Right**| `LEVER_RIGHT`| Input | **GPIO 16** | **GPIO 14** | `+3V3` | v1.3 had 180° reversed lever assembly |
+| **Navigation Push** | `LEVER_PUSH` | Input | **GPIO 15** | **GPIO 15** | `+3V3` | Navigation center push (active LOW) |
+| **Main Button** | `BTN` | Input | **GPIO 13** | **GPIO 13** | `+3V3` | Tactile push-button (Back / Exit / Wake) |
+| **BNO085 IMU Interrupt**| `INT_DOF` | Input | **GPIO 7** | **GPIO 2** | `+3V3` | Motion wake / tap interrupt (active LOW) |
+| **OPT3001 ALS Interrupt**| `INT_ALS` | Input | *Polled (`-1`)*| **GPIO 39** | `+3V3` | Polled over I2C on v1.4; hardware pin on v1.3 |
+| **MAX17048 Alert** | `ALERT` | Input | **GPIO 4** | **GPIO 4** | `+3V3` | Fuel gauge low battery alert (active LOW) |
+| **MAX30102 PPG FIFO**| `INT_HR` | Input | **GPIO 5** | **GPIO 5** | `+1V8` | Optical heart rate sample ready (active LOW) |
+| **RV-3028 RTC Interrupt**| `INT_RTC` | Input | **GPIO 6** | **GPIO 6** | `+3V3` | Periodic timer / alarm wake (active LOW) |
+| **I2C Bus SDA** | `I2C_SDA` | Bi-dir | **GPIO 8** | **GPIO 8** | `+3V3` | 400 kHz Fast Mode Data (10k pull-up `R18`) |
+| **I2C Bus SCL** | `I2C_SCL` | Output | **GPIO 9** | **GPIO 9** | `+3V3` | 400 kHz Fast Mode Clock (10k pull-up `R19`) |
+| **Electromagnetic Buzzer**| `BUZZER` | Output | **GPIO 10** | **GPIO 10** | `+3V3` | Acoustic PWM gate (`Q3` AO3400A) |
+| **BQ25170 Charge Status**| `BAT_STAT` | Input | **GPIO 11** | **GPIO 11** | `+3V3` | LOW = Charging, HIGH/Hi-Z = Complete |
+| **USB 5V Presence** | `USB_DETECT`| Input | **GPIO 12** | **GPIO 12** | `+3V3` | Voltage divider from USB VBUS (HIGH = plugged) |
+| **NeoPixel Power Gate** | `PWR_NPM` | Output | **GPIO 17** | **GPIO 17** | `+3V3` | High-side PMOS gate (HIGH = ON, LOW = 0µA cutoff)|
+| **NeoPixel Data Out** | `NPM` | Output | **GPIO 18** | **GPIO 18** | `VBAT` | WS2812B serial stream (800 kHz NZR) |
 
-### SPI Bus Arbitration
-The ST7789 IPS display controller and the ZDSD NAND Flash share `SPI2_HOST` (SCK 40, MISO 41, MOSI 42). To prevent display corruption during file I/O:
-1. `StorageManager` explicitly drives `CS_TFT` (`GPIO 48`) **HIGH** (deselected) before asserting `CS_SD` (`GPIO 47`) **LOW**.
-2. Display SPI transactions run at **40 MHz**; SD/NAND transactions run at **20 MHz**.
-3. Upon completing a NAND write/read transaction, `CS_SD` is released **HIGH** before handing the bus back to LovyanGFX.
+### SPI Bus Clocking & Level Shifter Limitation
+
+* **v1.4 Production Board (40 MHz Write Clock):**  
+  The ST7789 display connects directly to the ESP32-S3 over a dedicated 3.3V SPI bus (`GPIO 38` SCK, `GPIO 39` MOSI). Without level translation bottlenecks, the display runs at a full **40 MHz** SPI clock (~43.5 FPS) with zero bus contention. MicroSD storage operates independently on a high-speed 4-bit SDMMC bus.
+
+* **v1.3 Prototype Board (16 MHz Safe Clock Restriction):**  
+  On the v1.3 prototype PCB, the display is fed through a `TXB0106` auto-direction-sensing voltage level shifter (`U15`). Due to the TXB0106's weak internal edge-rate accelerators, high parasitic trace capacitance, and auto-direction turnaround delays, the level shifter cannot reliably sustain high frequencies. Running at 40 MHz causes severe clock pulse truncation, signal edge rounding, pixel jitter, and frame corruption.  
+  To ensure completely stable, flicker-free rendering, `ISD-Core` **strictly caps v1.3 to 16 MHz** (~17.4 FPS). Furthermore, the display and ZDSD NAND Flash share `SPI2_HOST`, with software arbitration deselecting `CS_TFT` (`GPIO 48`) whenever storage operations take the bus.
 
 ---
 

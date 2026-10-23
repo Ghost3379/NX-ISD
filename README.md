@@ -55,7 +55,7 @@ N X - I S D
 
 ### Peripherals & I/O
 * **Display:** [1.54" 240×240 IPS Color TFT (ST7789V2)](https://de.aliexpress.com/item/1005007654038756.html) connected via a 10-pin 0.5mm FPC connector (`J2`).
-  *(Note on AliExpress pinout docs: The seller's listing has infamous translation errors—such as claiming `RS` is a "serial clock" instead of Command/Data, and stating 2.8V in one table while specifying 3.2V operating voltage in the specs. The display runs natively on 3.3V logic).*
+  *(Note on AliExpress pinout docs: The seller's listing has infamous translation errors—such as claiming `RS` is a "serial clock" instead of Command/Data, and stating 2.8V in one table while specifying 3.2V operating voltage in the specs. The display runs natively on 3.3V logic. SPI Clock: 40 MHz on v1.4 direct 3.3V bus; restricted to 16 MHz on v1.3 due to the TXB0106 level shifter).*
 * **LEDs:** 16x WS2812B NeoPixel 4×4 Serpentine Matrix (XL-1010RGBC) with PMOS high-side power cutoff
 * **Audio:** Onboard SMD Buzzer
 * **Input:** Multi-Directional Lever-Switch and Push-Button
