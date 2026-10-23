@@ -4,8 +4,8 @@
 The **NX-ISD** is a custom, highly integrated wearable and embedded development board inspired by the Artemis Watch. It serves as the hardware foundation for the **ISD-Core** operating system.
 
 <p align="center">
-  <img src="docs/images/nx_isd_v1p3_top.png" alt="NX-ISD v1p3 Top Component View" width="49%">
-  <img src="docs/images/nx_isd_v1p3_bottom.png" alt="NX-ISD v1p3 Bottom Silkscreen View" width="49%">
+  <img src="docs/images/v1p3/nx_isd_v1p3_top.png" alt="NX-ISD v1p3 Top Component View" width="49%">
+  <img src="docs/images/v1p3/nx_isd_v1p3_bottom.png" alt="NX-ISD v1p3 Bottom Silkscreen View" width="49%">
 </p>
 <p align="center">
   <em>NX-ISD Hardware Revision v1p3 (KiCad Raytraced 3D Render) — No Battery & No Display mounted</em>
@@ -71,9 +71,11 @@ The board is programmed via **PlatformIO** (Arduino Framework) and is optimized 
 * **NX-SDS (Self-Diagnostic System):** The internal hardware integrity and health assurance engine providing continuous I2C bus recovery, on-demand in-situ proof-testing, and predictive battery/sensor aging analytics.
 
 ## Documentation & Manuals
+* **Hardware Production & Fabrication Guide:** [`ISD-PCB/PRODUCTION-GUIDE.md`](ISD-PCB/PRODUCTION-GUIDE.md) — Complete JLCPCB ordering parameters, mechanical drawings/dimensions, stencil specs, and hand assembly workflow.
+* **Fabrication Packages (Gerbers):** [`ISD-PCB/NX-ISD_v1p4/production/NX-ISD_v1p4.zip`](ISD-PCB/NX-ISD_v1p4/production/NX-ISD_v1p4.zip) — Ready-to-order RS-274X Gerbers and drill files for revision v1.4.
 * **User & Navigation Manual:** [`ISD-Core/MANUAL.md`](ISD-Core/MANUAL.md) — Comprehensive guide covering physical controls, screen layouts, the 6 core application decks, 360° radial dials, and storage persistence.
 * **Architecture & Hardware Guide:** [`ISD-Core/README.md`](ISD-Core/README.md) — Technical operating system internals, pin maps, and PlatformIO build instructions.
-* **Hardware & PCB Specifications:** [`ISD-PCB/README.md`](ISD-PCB/README.md) — Revision v1p3 schematics, power budgets, layer stackup, and BOM.
+* **Hardware & PCB Specifications:** [`ISD-PCB/README.md`](ISD-PCB/README.md) — Hardware schematics, power budgets, layer stackup, and BOM.
 * **Features & Math Modeling Roadmap:** [`FEATURE_LIST.md`](FEATURE_LIST.md) — Technical specifications, mathematical formulas, and implementation roadmap.
 * **Software Roadmap & TODOs:** [`ISD-Core/SW-TODO.md`](ISD-Core/SW-TODO.md) — Core application deck progress and feature checklist.
 

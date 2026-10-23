@@ -3,12 +3,16 @@
 This directory contains the schematic design, PCB layout, fabrication outputs, and Bill of Materials (BOM) for the **NX-ISD** (Intelligent Sensor Device) wearable carrier board.
 
 <p align="center">
-  <img src="../docs/images/nx_isd_v1p3_top.png" alt="NX-ISD v1p3 Top View" width="49%">
-  <img src="../docs/images/nx_isd_v1p3_bottom.png" alt="NX-ISD v1p3 Bottom View" width="49%">
+  <img src="../docs/images/v1p3/nx_isd_v1p3_top.png" alt="NX-ISD v1p3 Top View" width="49%">
+  <img src="../docs/images/v1p3/nx_isd_v1p3_bottom.png" alt="NX-ISD v1p3 Bottom View" width="49%">
 </p>
 <p align="center">
   <em>NX-ISD Hardware Revision v1p3 (KiCad Raytraced 3D Render)</em>
 </p>
+
+> [!TIP]
+> **Production & Ordering Guide (v1.4):** For complete mechanical drawings, JLCPCB ordering parameters, SMD stencil specs, and hand assembly tips, see the **[Production Guide](PRODUCTION-GUIDE.md)**.  
+> 📦 **Latest v1.4 Fabrication Package:** [`NX-ISD_v1p4/production/NX-ISD_v1p4.zip`](NX-ISD_v1p4/production/NX-ISD_v1p4.zip) (Ready for JLCPCB / PCBWay).
 
 ---
 
@@ -262,11 +266,16 @@ Centralized in [`ISD-Core/src/pins.h`](../ISD-Core/src/pins.h):
 
 ## 7. Manufacturing & Assembly Resources
 
-* **Production Package:** [`ISD-PCB/NX-ISD/production/NX-ISD_v1p3.zip`](NX-ISD/production/NX-ISD_v1p3.zip) (Contains RS-274X Gerbers and Excellon drill files ready for JLCPCB / PCBWay).
-* **Interactive HTML BOM:** [`ISD-PCB/NX-ISD/bom/ibom.html`](NX-ISD/bom/ibom.html) (Searchable, interactive visual assembly tool showing component locations per reference designator).
-* **Component Placement / CPL:** [`ISD-PCB/NX-ISD/production/NX-ISD_v1p3_positions.csv`](NX-ISD/production/NX-ISD_v1p3_positions.csv)
-* **Production BOM:** [`ISD-PCB/NX-ISD/production/NX-ISD_v1p3_bom.csv`](NX-ISD/production/NX-ISD_v1p3_bom.csv)
-* **Schematic PDF:** [`docs/circuit diagrams/NX-ISD_v1p3.pdf`](../docs/circuit%20diagrams/NX-ISD_v1p3.pdf)
+* **Fabrication & Assembly Guide:** [`PRODUCTION-GUIDE.md`](PRODUCTION-GUIDE.md) (Complete JLCPCB fabrication checklist, mechanical drawing, stencil specifications, and reflow workflow).
+* **v1.4 Production Package (Latest):** [`NX-ISD_v1p4/production/NX-ISD_v1p4.zip`](NX-ISD_v1p4/production/NX-ISD_v1p4.zip) (Contains RS-274X Gerbers, Excellon drill files, and stencil files ready for JLCPCB / PCBWay).
+* **v1.4 Component Placement / CPL:** [`NX-ISD_v1p4/production/positions.csv`](NX-ISD_v1p4/production/positions.csv)
+* **v1.4 Production BOM:** [`NX-ISD_v1p4/production/bom.csv`](NX-ISD_v1p4/production/bom.csv)
+* **v1.4 Schematic PDF:** [`docs/circuit diagrams/NX-ISD_v1p4.pdf`](../docs/circuit%20diagrams/NX-ISD_v1p4.pdf)
+* **v1.3 Production Package (Legacy):** [`NX-ISD_v1p3/production/NX-ISD_v1p3.zip`](NX-ISD_v1p3/production/NX-ISD_v1p3.zip)
+* **Interactive HTML BOM:** [`NX-ISD_v1p3/bom/ibom.html`](NX-ISD_v1p3/bom/ibom.html) (Searchable, interactive visual assembly tool showing component locations per reference designator).
+* **Component Placement / CPL:** [`NX-ISD_v1p3/production/NX-ISD_v1p3_positions.csv`](NX-ISD_v1p3/production/NX-ISD_v1p3_positions.csv)
+* **Production BOM:** [`NX-ISD_v1p3/production/NX-ISD_v1p3_bom.csv`](NX-ISD_v1p3/production/NX-ISD_v1p3_bom.csv)
+* **v1.3 Schematic PDF:** [`docs/circuit diagrams/NX-ISD_v1p3.pdf`](../docs/circuit%20diagrams/NX-ISD_v1p3.pdf)
 
 ### 7.1 Hardware Assembly Errata & Notes (Revision v1p3)
 
