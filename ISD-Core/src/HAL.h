@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
-#include <Adafruit_NeoPixel.h>
+#include <FastLED.h>
 #include <Adafruit_MAX1704X.h>
 #include <ClosedCube_OPT3001.h>
 #include <bme68xLibrary.h>
@@ -31,7 +31,10 @@ enum TiltMode {
 
 class HAL {
 public:
-  static Adafruit_NeoPixel* neoPixels;
+  static const uint8_t NUM_LEDS = 16;
+  static CRGB leds[NUM_LEDS];
+  static bool matrixInited;
+  static void initMatrix();
   static Adafruit_MAX17048 fuelGauge;
   static ClosedCube_OPT3001 lightSensor;
   static Bme68x envSensor;

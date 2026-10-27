@@ -621,14 +621,13 @@ private:
           commitSettingsIfDirty();
         } else if (selectedItem == 3) {
           // Test pulse: flash matrix with high-vis amber pulse
-          if (HAL::neoPixels && UplinkBridge::getMatrixPower()) {
+          if (UplinkBridge::getMatrixPower()) {
             for (int p = 0; p < 16; p++) {
-              HAL::neoPixels->setPixelColor(p, 255, 115, 0);
+              HAL::leds[p] = CRGB(255, 115, 0);
             }
-            HAL::neoPixels->show();
+            FastLED.show();
             delay(50);
-            HAL::neoPixels->clear();
-            HAL::neoPixels->show();
+            FastLED.clear(true);
           }
         }
         break;

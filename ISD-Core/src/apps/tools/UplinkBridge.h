@@ -1,6 +1,5 @@
 #pragma once
 #include <Arduino.h>
-#include <Adafruit_NeoPixel.h>
 #include "SensorState.h"
 #include "HAL.h"
 #include "pins.h"

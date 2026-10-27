@@ -102,39 +102,30 @@ void UplinkBridge::setMatrixPower(bool on) {
   if (matrixPower) {
     HAL::setMatrixPower(true);
     delay(10);
-    if (!HAL::neoPixels) {
-      HAL::neoPixels = new Adafruit_NeoPixel(16, NPM, NEO_GRB + NEO_KHZ800);
-      HAL::neoPixels->begin();
-    }
-    HAL::neoPixels->setBrightness(matrixBrightness);
-    HAL::neoPixels->clear();
-    HAL::neoPixels->show();
+    FastLED.setBrightness(matrixBrightness);
+    FastLED.clear(true);
     if (currentPattern == PATTERN_OFF) {
       currentPattern = PATTERN_CYBER_RADAR;
     }
   } else {
-    if (HAL::neoPixels) {
-      HAL::neoPixels->clear();
-      HAL::neoPixels->show();
-    }
+    FastLED.clear(true);
     HAL::setMatrixPower(false);
   }
 }
 
 void UplinkBridge::setMatrixBrightness(uint8_t b) {
   matrixBrightness = constrain(b, 0, 80);
-  if (HAL::neoPixels && matrixPower) {
-    HAL::neoPixels->setBrightness(matrixBrightness);
+  if (matrixPower) {
+    FastLED.setBrightness(matrixBrightness);
   }
 }
 
 void UplinkBridge::setMatrixPattern(MatrixPattern pat) {
   currentPattern = pat;
   matrixStep = 0;
-  if (!HAL::neoPixels || !matrixPower) return;
+  if (!matrixPower) return;
   if (currentPattern == PATTERN_OFF) {
-    HAL::neoPixels->clear();
-    HAL::neoPixels->show();
+    FastLED.clear(true);
   }
 }
 
@@ -178,16 +169,16 @@ void UplinkBridge::setCustomPixels(const uint32_t pixels[16]) {
   if (!matrixPower) {
     setMatrixPower(true);
   }
-  if (HAL::neoPixels && matrixPower) {
+  if (matrixPower) {
     for (uint8_t i = 0; i < 16; i++) {
       uint8_t x = i % 4;
       uint8_t y = i / 4;
       uint8_t r = (customPixels[i] >> 16) & 0xFF;
       uint8_t g = (customPixels[i] >> 8) & 0xFF;
       uint8_t b = customPixels[i] & 0xFF;
-      HAL::neoPixels->setPixelColor(mapPixel(x, y), r, g, b);
+      HAL::leds[mapPixel(x, y)] = CRGB(r, g, b);
     }
-    HAL::neoPixels->show();
+    FastLED.show();
   }
 }
 
@@ -337,16 +328,16 @@ void UplinkBridge::processCommand(const char* cmd) {
       if (!matrixPower) {
         setMatrixPower(true);
       }
-      if (HAL::neoPixels && matrixPower) {
+      if (matrixPower) {
         for (uint8_t i = 0; i < count; i++) {
           uint8_t x = i % 4;
           uint8_t y = i / 4;
           uint8_t r = (customPixels[i] >> 16) & 0xFF;
           uint8_t g = (customPixels[i] >> 8) & 0xFF;
           uint8_t b = customPixels[i] & 0xFF;
-          HAL::neoPixels->setPixelColor(mapPixel(x, y), r, g, b);
+          HAL::leds[mapPixel(x, y)] = CRGB(r, g, b);
         }
-        HAL::neoPixels->show();
+        FastLED.show();
       }
       Serial.printf("{\"status\":\"ACK\",\"cmd\":\"npm.matrix\",\"count\":%d}\n", count);
       return;
@@ -360,20 +351,12 @@ void UplinkBridge::processCommand(const char* cmd) {
     if (matrixPower) {
       HAL::setMatrixPower(true);
       delay(10); // allow rail capacitor to charge
-      if (!HAL::neoPixels) {
-        HAL::neoPixels = new Adafruit_NeoPixel(16, NPM, NEO_GRB + NEO_KHZ800);
-        HAL::neoPixels->begin();
-      }
-      HAL::neoPixels->setBrightness(matrixBrightness);
-      HAL::neoPixels->clear();
-      HAL::neoPixels->show();
+      FastLED.setBrightness(matrixBrightness);
+      FastLED.clear(true);
       currentPattern = PATTERN_CYBER_RADAR;
     } else {
       currentPattern = PATTERN_OFF;
-      if (HAL::neoPixels) {
-        HAL::neoPixels->clear();
-        HAL::neoPixels->show();
-      }
+      FastLED.clear(true);
       HAL::setMatrixPower(false);
     }
     Serial.printf("{\"status\":\"ACK\",\"cmd\":\"npm.power\",\"val\":%d}\n", matrixPower);
@@ -384,8 +367,8 @@ void UplinkBridge::processCommand(const char* cmd) {
   if (strncmp(cmd, "npm.brightness=", 15) == 0) {
     int val = atoi(cmd + 15);
     matrixBrightness = (uint8_t)constrain(val, 0, 80);
-    if (HAL::neoPixels && matrixPower) {
-      HAL::neoPixels->setBrightness(matrixBrightness);
+    if (matrixPower) {
+      FastLED.setBrightness(matrixBrightness);
     }
     Serial.printf("{\"status\":\"ACK\",\"cmd\":\"npm.brightness\",\"val\":%d}\n", matrixBrightness);
     return;
@@ -525,7 +508,7 @@ void UplinkBridge::processCommand(const char* cmd) {
 }
 
 void UplinkBridge::updateMatrixAnimation() {
-  if (!matrixPower || !HAL::neoPixels || currentPattern == PATTERN_OFF || currentPattern == PATTERN_CUSTOM) {
+  if (!matrixPower || currentPattern == PATTERN_OFF || currentPattern == PATTERN_CUSTOM) {
     return;
   }
 
@@ -534,7 +517,7 @@ void UplinkBridge::updateMatrixAnimation() {
   lastMatrixFrame = now;
   matrixStep++;
 
-  HAL::neoPixels->clear();
+  FastLED.clear();
 
   switch (currentPattern) {
     case PATTERN_CYBER_RADAR: {
@@ -548,15 +531,15 @@ void UplinkBridge::updateMatrixAnimation() {
         {0,2},{0,1}
       };
       // Lead pixel (bright amber)
-      HAL::neoPixels->setPixelColor(mapPixel(perim[angle][0], perim[angle][1]), 255, 115, 0);
+      HAL::leds[mapPixel(perim[angle][0], perim[angle][1])] = CRGB(255, 115, 0);
       // Center hub
-      HAL::neoPixels->setPixelColor(mapPixel(1, 1), 60, 25, 0);
-      HAL::neoPixels->setPixelColor(mapPixel(2, 2), 60, 25, 0);
+      HAL::leds[mapPixel(1, 1)] = CRGB(60, 25, 0);
+      HAL::leds[mapPixel(2, 2)] = CRGB(60, 25, 0);
       // Trail
       uint8_t trail1 = (angle + 11) % 12;
       uint8_t trail2 = (angle + 10) % 12;
-      HAL::neoPixels->setPixelColor(mapPixel(perim[trail1][0], perim[trail1][1]), 100, 45, 0);
-      HAL::neoPixels->setPixelColor(mapPixel(perim[trail2][0], perim[trail2][1]), 30, 12, 0);
+      HAL::leds[mapPixel(perim[trail1][0], perim[trail1][1])] = CRGB(100, 45, 0);
+      HAL::leds[mapPixel(perim[trail2][0], perim[trail2][1])] = CRGB(30, 12, 0);
       break;
     }
 
@@ -565,23 +548,21 @@ void UplinkBridge::updateMatrixAnimation() {
       for (int x = 0; x < 4; x++) {
         int y = (matrixStep / 3 + x * 2) % 6;
         if (y >= 0 && y < 4) {
-          HAL::neoPixels->setPixelColor(mapPixel(x, y), 0, 220, 40); // Bright head
+          HAL::leds[mapPixel(x, y)] = CRGB(0, 220, 40); // Bright head
         }
         if (y - 1 >= 0 && y - 1 < 4) {
-          HAL::neoPixels->setPixelColor(mapPixel(x, y - 1), 0, 70, 15); // Tail
+          HAL::leds[mapPixel(x, y - 1)] = CRGB(0, 70, 15); // Tail
         }
       }
       break;
     }
 
     case PATTERN_GLYPH_BREATH: {
-      // Relaxing 4-second breathing cycle
-      float s = (sinf((float)now / 636.0f) + 1.0f) * 0.5f; // 0..1
-      uint8_t r = (uint8_t)(s * 255.0f);
-      uint8_t g = (uint8_t)(s * 100.0f);
-      uint32_t col = HAL::neoPixels->Color(r, g, 0);
+      // Relaxing breathing cycle with FastLED 8-bit sine
+      uint8_t breath = beatsin8(15, 20, 255); // 15 BPM, range 20..255
+      CRGB col = CRGB(breath, (breath * 100) / 255, 0);
       for (int i = 0; i < 16; i++) {
-        HAL::neoPixels->setPixelColor(i, col);
+        HAL::leds[i] = col;
       }
       break;
     }
@@ -589,9 +570,9 @@ void UplinkBridge::updateMatrixAnimation() {
     case PATTERN_SPECTRUM_PLASMA: {
       for (int y = 0; y < 4; y++) {
         for (int x = 0; x < 4; x++) {
-          float v = sinf(x * 1.5f + (float)matrixStep * 0.15f) + cosf(y * 1.5f + (float)matrixStep * 0.12f);
-          uint8_t val = (uint8_t)((v + 2.0f) * 60.0f);
-          HAL::neoPixels->setPixelColor(mapPixel(x, y), val, val / 2, 255 - val);
+          // FastLED 8-bit sine math - super smooth and fast
+          uint8_t v = sin8(x * 64 + matrixStep * 8) / 2 + cos8(y * 64 + matrixStep * 6) / 2;
+          HAL::leds[mapPixel(x, y)] = CHSV(v, 240, 200);
         }
       }
       break;
@@ -599,8 +580,8 @@ void UplinkBridge::updateMatrixAnimation() {
 
     case PATTERN_NEON_TRACER: {
       uint8_t idx = matrixStep % 16;
-      HAL::neoPixels->setPixelColor(idx, 255, 120, 0);
-      HAL::neoPixels->setPixelColor((idx + 15) % 16, 60, 20, 0);
+      HAL::leds[idx] = CRGB(255, 120, 0);
+      HAL::leds[(idx + 15) % 16] = CRGB(60, 20, 0);
       break;
     }
 
@@ -610,7 +591,7 @@ void UplinkBridge::updateMatrixAnimation() {
         for (int x = 0; x < 4; x++) {
           int d = max(abs(x * 2 - 3), abs(y * 2 - 3)); // 1 or 3
           if ((d == 1 && ring == 0) || (d == 3 && ring == 1)) {
-            HAL::neoPixels->setPixelColor(mapPixel(x, y), 255, 115, 0);
+            HAL::leds[mapPixel(x, y)] = CRGB(255, 115, 0);
           }
         }
       }
@@ -621,7 +602,7 @@ void UplinkBridge::updateMatrixAnimation() {
       break;
   }
 
-  HAL::neoPixels->show();
+  FastLED.show();
 }
 
 void UplinkBridge::update(const SensorState& state) {

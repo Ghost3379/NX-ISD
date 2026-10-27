@@ -1,7 +1,16 @@
 #include "HAL.h"
 #include "DisplayConfig.h"
 
-Adafruit_NeoPixel* HAL::neoPixels = nullptr;
+CRGB HAL::leds[HAL::NUM_LEDS];
+bool HAL::matrixInited = false;
+
+void HAL::initMatrix() {
+  if (!matrixInited) {
+    FastLED.addLeds<WS2812B, NPM, GRB>(HAL::leds, HAL::NUM_LEDS);
+    FastLED.setCorrection(TypicalLEDStrip);
+    matrixInited = true;
+  }
+}
 Adafruit_MAX17048 HAL::fuelGauge;
 ClosedCube_OPT3001 HAL::lightSensor;
 Bme68x HAL::envSensor;
@@ -240,7 +249,16 @@ void HAL::begin(void (*onProgress)(float progress)) {
 }
 
 void HAL::setMatrixPower(bool on) {
-  digitalWrite(PWR_NPM, on ? HIGH : LOW);
+  if (on) {
+    pinMode(NPM, OUTPUT);
+    digitalWrite(PWR_NPM, HIGH);
+    initMatrix();
+  } else {
+    FastLED.clear(true);
+    digitalWrite(PWR_NPM, LOW);
+    pinMode(NPM, OUTPUT);
+    digitalWrite(NPM, LOW);
+  }
 }
 
 void HAL::buzzPip(uint16_t freqHz, uint16_t durationMs) {
