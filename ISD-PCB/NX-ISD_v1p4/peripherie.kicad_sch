@@ -10334,23 +10334,25 @@
 		(fields_autoplaced yes)
 		(uuid "9ad641e3-c575-4a6e-8255-e2dccd413830")
 		(property "Reference" "J3"
-			(at 207.772 34.544 0)
+			(at 229.87 53.3399 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify left)
 			)
 		)
 		(property "Value" "1051620001"
-			(at 208.534 36.576 0)
+			(at 229.87 55.8799 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
+				(justify left)
 			)
 		)
 		(property "Footprint" "NX-AW-footprints:105162-0001_MOL"

@@ -38,22 +38,26 @@ Upcoming hardware revision tasks for the NX-ISD PCB.
 * [x] Add Decouple caps for NPM
 * [x] Add plating for GND and VUSB at USB-C Connector
 * [x] Perform the overall layout changes (overall plating and better routing)
-* [x] Fix Neopixel silkscreeen (Point is pin one, but pin 1 is Data Out -> Use pin 3 GND, since it has a marking on top of the LED, to make production by hand easier)
-
+* [x] Fix Neopixel silkscreeen (Point is pin one, but pin 1 is Data Out -> Use pin 3 GND, since it has a mark on top of the LED, to make production by hand easier)
+* [x] Reposition RST and BOOT for better access, and change solder jumper to small buttons 
+* [x] Edit USBLC6 footrpint for easier soldering
+* [x] Include Supercap as backup for RTC
+* [partially] Add addtional cyberpunk silkscreen design
 
 ## Future Ideas for a vXpY
 
 > NOTE: The higher up a point is the more likely I m planning to integrate it in a future verison.
 
 
-* [ ] PCB varient for SD-CARD isntead of Nand flash?
+* [x] PCB varient for SD-CARD isntead of Nand flash?
 * [ ] Change OPT3001 for a multispectral light sensor
-* [ ] Full speed flash storage, SD mode instead of pure SPI?
+* [x] Full speed flash storage, SD mode instead of pure SPI?
 * [ ] Add infrared transceiver and receiver?
 * [ ] MEMS Microphone?
 * [ ] Add I2C Secure Element (e.g., ATECC608B)?
 * [ ] Change to dual MCU architecture (ESP32 & NRF52)?
 * [ ] Add bright LED at the Sensor head: Flashlight usage?
-* [ ] Add Lidar?
+* [ ] Add Lidar? TOF?
 * [ ] Add NFC?
 * [ ] Wireless charging coil at second plate under battery?
+* [ ] EM proximity sensing coil?
