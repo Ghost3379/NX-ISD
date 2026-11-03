@@ -1,4 +1,8 @@
 (fp_lib_table
 	(version 7)
-	(lib (name "NX-ISD_silkscreen designs") (type "KiCad") (uri "C:/Users/i40011169/LOCAL Docs/GIT/NX-ISD/ISD-PCB/KiCad Library v6 & newer/NX-ISD_silkscreen designs.pretty") (options "") (descr ""))
+	(lib (name "NX-AW-footprints")(type "KiCad")(uri "${KIPRJMOD}/../KiCad Library v6 & newer/NX-ISD_footprints.pretty")(options "")(descr ""))
+	(lib (name "NX-ISD_footprints")(type "KiCad")(uri "${KIPRJMOD}/../KiCad Library v6 & newer/NX-ISD_footprints.pretty")(options "")(descr ""))
+	(lib (name "Global Footprints")(type "KiCad")(uri "${KIPRJMOD}/../KiCad Library v6 & newer/NX-ISD_footprints.pretty")(options "")(descr ""))
+	(lib (name "NX-ISD_silkscreen designs")(type "KiCad")(uri "${KIPRJMOD}/../KiCad Library v6 & newer/NX-ISD_silkscreen designs.pretty")(options "")(descr ""))
+	(lib (name "graphics")(type "KiCad")(uri "${KIPRJMOD}/../KiCad Library v6 & newer/NX-ISD_silkscreen designs.pretty")(options "")(descr ""))
 )

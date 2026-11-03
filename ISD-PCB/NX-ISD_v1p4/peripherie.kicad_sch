@@ -42,7 +42,7 @@
 					(justify left bottom)
 				)
 			)
-			(property "Footprint" "1-2328702-0:TE_1-2328702-0"
+			(property "Footprint" "NX-ISD_footprints:TE_1-2328702-0"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -482,7 +482,7 @@
 					)
 				)
 			)
-			(property "Footprint" "NX-AW-footprints:105162-0001_MOL"
+			(property "Footprint" "NX-ISD_footprints:105162-0001_MOL"
 				(at -32.766 15.24 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1405,7 +1405,7 @@
 					)
 				)
 			)
-			(property "Footprint" "footprint:BUZ-SMD_4P-L8.5-W8.5-BR-1"
+			(property "Footprint" "NX-ISD_footprints:BUZ-SMD_4P-L8.5-W8.5-BR-1"
 				(at 0 -10.16 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1604,7 +1604,7 @@
 					)
 				)
 			)
-			(property "Footprint" "Global Footprints:SW-SMD_TM-2025A"
+			(property "Footprint" "NX-ISD_footprints:SW-SMD_TM-2025A"
 				(at 0 -10.16 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2001,7 +2001,7 @@
 					(justify right)
 				)
 			)
-			(property "Footprint" "Global Footprints:KEY-SMD_TS-1101VS-C-A-A"
+			(property "Footprint" "NX-ISD_footprints:KEY-SMD_TS-1101VS-C-A-A"
 				(at 0.508 9.652 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2539,7 +2539,7 @@
 					)
 				)
 			)
-			(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+			(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 				(at 0 -10.16 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -6149,7 +6149,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 62.23 107.95 0)
 			(hide yes)
 			(show_name no)
@@ -6583,7 +6583,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 115.57 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -8163,7 +8163,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 88.9 107.95 0)
 			(hide yes)
 			(show_name no)
@@ -8344,7 +8344,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Global Footprints:BUZ-SMD_4P-L8.5-W8.5-BR-1"
+		(property "Footprint" "NX-ISD_footprints:BUZ-SMD_4P-L8.5-W8.5-BR-1"
 			(at 154.94 166.37 0)
 			(hide yes)
 			(show_name no)
@@ -8520,7 +8520,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 115.57 107.95 0)
 			(hide yes)
 			(show_name no)
@@ -8618,7 +8618,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 88.9 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -9348,7 +9348,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 35.56 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -9446,7 +9446,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 35.56 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -10242,7 +10242,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:SW-SMD_TM-2025A"
+		(property "Footprint" "NX-ISD_footprints:SW-SMD_TM-2025A"
 			(at 72.39 180.34 0)
 			(hide yes)
 			(show_name no)
@@ -10355,7 +10355,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "NX-AW-footprints:105162-0001_MOL"
+		(property "Footprint" "NX-ISD_footprints:105162-0001_MOL"
 			(at 174.244 38.1 0)
 			(hide yes)
 			(show_name no)
@@ -10958,7 +10958,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 35.56 107.95 0)
 			(hide yes)
 			(show_name no)
@@ -11215,7 +11215,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 88.9 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -11313,7 +11313,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 115.57 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -11954,7 +11954,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 62.23 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -12285,7 +12285,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Global Footprints:KEY-SMD_TS-1101VS-C-A-A"
+		(property "Footprint" "NX-ISD_footprints:KEY-SMD_TS-1101VS-C-A-A"
 			(at 34.798 152.908 0)
 			(hide yes)
 			(show_name no)
@@ -12497,7 +12497,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 35.56 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -12673,7 +12673,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 115.57 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -12852,7 +12852,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 62.23 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -12952,7 +12952,7 @@
 				)
 			)
 		)
-		(property "Footprint" "NX-AW-footprints:TE_1-2328702-0"
+		(property "Footprint" "NX-ISD_footprints:TE_1-2328702-0"
 			(at 184.15 120.65 0)
 			(hide yes)
 			(show_name no)
@@ -13207,7 +13207,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 62.23 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -13305,7 +13305,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
+		(property "Footprint" "NX-ISD_footprints:LED-SMD_4P-L1.0-W1.0-TL_XL-1010RGBC-WS2812B"
 			(at 88.9 64.77 0)
 			(hide yes)
 			(show_name no)

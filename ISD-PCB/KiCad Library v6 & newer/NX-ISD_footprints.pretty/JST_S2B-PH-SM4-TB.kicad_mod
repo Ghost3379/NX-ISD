@@ -1,0 +1,336 @@
+(footprint "JST_S2B-PH-SM4-TB"
+		(layer "F.Cu")
+		(uuid "dce05c1f-8cc1-4da2-9b94-c3faf4377ba5")
+		(property "Reference" "REF**"
+			(layer "F.SilkS")
+			(hide yes)
+			(uuid "5207106e-9b35-4118-91d3-1a985acd6a56")
+			(effects
+				(font
+					(size 1.001386 1.001386)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "S2B-PH-SM4-TB"
+			(layer "F.Fab")
+			(uuid "5729c4fd-c5ba-4bdf-a26f-a2f70c227d4f")
+			(effects
+				(font
+					(size 1.000268 1.000268)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "093914a4-6e95-4514-8020-9c39a48432d0")
+			(effects
+				(font
+					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description" ""
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "1640a8d5-b14e-4cd2-836b-2575df50a98f")
+			(effects
+				(font
+					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "MF" "JST Sales"
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "11809f12-2e0d-4a79-a591-6d84638657b7")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Description_1" "Connector Header Surface Mount, Right Angle 2 position 0.079 (2.00mm)"
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "0c46e7c6-43f8-4949-ae94-2df26ced66da")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Package" "None"
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "f47b38bd-c5e2-407c-92c1-f9cfbf56104c")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Price" "None"
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "633a4a1f-6565-4d51-ad3f-d7191052b46d")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Check_prices" "https://www.snapeda.com/parts/S2B-PH-SM4-TB/JST/view-part/?ref=eda"
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "e3ec44c3-12f4-43a7-9a96-7260b5f07f97")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "SnapEDA_Link" "https://www.snapeda.com/parts/S2B-PH-SM4-TB/JST/view-part/?ref=snap"
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "45e727aa-a8d8-45f8-acfe-6d721e3b9aef")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "MP" "S2B-PH-SM4-TB"
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "456d5b7d-25a3-481d-968b-87cd7556e273")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Availability" "In Stock"
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "18379537-b803-4487-a018-573d62064991")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "MANUFACTURER" "JST"
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "93d37274-1b47-47ef-a0c5-7a60599942b2")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(units
+			(unit
+				(name "A")
+				(pins "1" "2")
+			)
+		)
+		(attr smd)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_circle
+			(center 1.9 1.6)
+			(end 2.027 1.6)
+			(stroke
+				(width 0)
+				(type solid)
+			)
+			(fill yes)
+			(layer "F.SilkS")
+			(uuid "73307e18-5c5e-4670-aa7b-4160fa7213f4")
+		)
+		(fp_line
+			(start -4.5 -8)
+			(end 4.5 -8)
+			(stroke
+				(width 0.127)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "2b20e379-2986-45c3-a32c-329e28b3cd29")
+		)
+		(fp_line
+			(start -4.5 0.750001)
+			(end -4.5 -8)
+			(stroke
+				(width 0.127)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "272d1236-b73a-46de-8c5a-96aed22f974d")
+		)
+		(fp_line
+			(start 4.5 -8)
+			(end 4.5 0.750001)
+			(stroke
+				(width 0.127)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "9376e065-87a3-4c7e-b722-cbe533a606db")
+		)
+		(fp_line
+			(start -2.25 0.75)
+			(end -4.5 0.750001)
+			(stroke
+				(width 0.127)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "968825ae-47e6-4013-b8a7-32149d3846ab")
+		)
+		(fp_line
+			(start -2.25 2.25)
+			(end -2.25 0.75)
+			(stroke
+				(width 0.127)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "2aae1a85-c9b5-4f5b-ab51-d46b8747cd16")
+		)
+		(fp_line
+			(start 2.25 0.75)
+			(end 2.25 2.25)
+			(stroke
+				(width 0.127)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "00f12f64-a6c6-4149-98ac-b6c4e974feab")
+		)
+		(fp_line
+			(start 2.25 2.25)
+			(end -2.25 2.25)
+			(stroke
+				(width 0.127)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "883fb08b-040c-42d2-9116-afe89fc2121d")
+		)
+		(fp_line
+			(start 4.5 0.750001)
+			(end 2.25 0.75)
+			(stroke
+				(width 0.127)
+				(type solid)
+			)
+			(layer "F.CrtYd")
+			(uuid "fb355461-bc04-40fd-ad14-bb6ac6cb1d10")
+		)
+		(fp_line
+			(start -3.95 -7.25)
+			(end -3.95 0.35)
+			(stroke
+				(width 0.127)
+				(type solid)
+			)
+			(layer "F.Fab")
+			(uuid "e7aec36e-fa97-4588-885d-25075f335494")
+		)
+		(fp_line
+			(start -3.95 0.35)
+			(end 3.95 0.35)
+			(stroke
+				(width 0.127)
+				(type solid)
+			)
+			(layer "F.Fab")
+			(uuid "d38ec299-2cab-4dc1-b5be-d43b58cb3e62")
+		)
+		(fp_line
+			(start 3.95 -7.25)
+			(end -3.95 -7.25)
+			(stroke
+				(width 0.127)
+				(type solid)
+			)
+			(layer "F.Fab")
+			(uuid "64952c24-2e8e-451a-9ce8-b3c211c9b707")
+		)
+		(fp_line
+			(start 3.95 0.35)
+			(end 3.95 -7.25)
+			(stroke
+				(width 0.127)
+				(type solid)
+			)
+			(layer "F.Fab")
+			(uuid "2762faf8-0baf-4cc6-bcc2-9c0605539702")
+		)
+		(pad "1" smd rect
+			(size 1 3.5)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net "VBAT")
+			(pinfunction "1_1")
+			(pintype "passive")
+			(solder_mask_margin 0.102)
+			(uuid "25a10c60-2e39-483d-984f-15707b22aa6c")
+		)
+		(pad "2" smd rect
+			(size 1 3.5)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net "GND")
+			(pinfunction "2_2")
+			(pintype "passive")
+			(solder_mask_margin 0.102)
+			(uuid "9eb8c2b9-329b-4eca-84ac-54f191b96377")
+		)
+		(pad "P1" smd rect
+			(size 1.5 3.4)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(solder_mask_margin 0.102)
+			(uuid "4030fcac-d88a-4cf8-b5b3-5f6f58eb5ff7")
+		)
+		(pad "P2" smd rect
+			(size 1.5 3.4)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(solder_mask_margin 0.102)
+			(uuid "5b58199b-0919-492c-ab2c-7556e8e7238c")
+		)
+		(embedded_fonts no)
+		(model "${KIPRJMOD}/../KiCad Library v6 & newer/NX-ISD_3dModels/S2B-PH-SM4-TB.step"
+			(offset
+				(xyz 0 7 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz -90 -0 -180)
+			)
+		)
+	)

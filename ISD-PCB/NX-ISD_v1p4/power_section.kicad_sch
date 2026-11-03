@@ -42,7 +42,7 @@
 					(justify left bottom)
 				)
 			)
-			(property "Footprint" "BQ25170DSGR:SON50P200X200X80-9N"
+			(property "Footprint" "NX-ISD_footprints:SON50P200X200X80-9N"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2646,7 +2646,7 @@
 					)
 				)
 			)
-			(property "Footprint" "footprint:SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR"
+			(property "Footprint" "NX-ISD_footprints:SOT-23-5_L3.0-W1.7-P0.95-LS2.8-BR"
 				(at 0 -10.16 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -3029,7 +3029,7 @@
 					(justify left bottom)
 				)
 			)
-			(property "Footprint" "S2B-PH-SM4-TB:JST_S2B-PH-SM4-TB"
+			(property "Footprint" "NX-ISD_footprints:JST_S2B-PH-SM4-TB"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -3832,7 +3832,7 @@
 					)
 				)
 			)
-			(property "Footprint" "Global Footprints:SAMESKY_UJ20-C-H-G-SMT-1-P16-TR"
+			(property "Footprint" "NX-ISD_footprints:SAMESKY_UJ20-C-H-G-SMT-1-P16-TR"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -8460,7 +8460,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:SAMESKY_UJ20-C-H-G-SMT-1-P16-TR"
+		(property "Footprint" "NX-ISD_footprints:SAMESKY_UJ20-C-H-G-SMT-1-P16-TR"
 			(at 30.48 55.88 0)
 			(hide yes)
 			(show_name no)
@@ -9748,7 +9748,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Global Footprints:JST_S2B-PH-SM4-TB"
+		(property "Footprint" "NX-ISD_footprints:JST_S2B-PH-SM4-TB"
 			(at 86.36 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -11007,7 +11007,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:SON50P200X200X80-9N"
+		(property "Footprint" "NX-ISD_footprints:SON50P200X200X80-9N"
 			(at 218.44 59.69 0)
 			(hide yes)
 			(show_name no)
@@ -12341,7 +12341,7 @@
 				)
 			)
 		)
-		(property "Footprint" "NX-AW-footprints:SOT23-5"
+		(property "Footprint" "NX-ISD_footprints:SOT23-5"
 			(at 128.27 187.96 0)
 			(hide yes)
 			(show_name no)

@@ -42,7 +42,7 @@
 					(justify left bottom)
 				)
 			)
-			(property "Footprint" "YC248-JR-074K7L:RESCAXS50P400X160X55-16N"
+			(property "Footprint" "NX-ISD_footprints:RESCAXS50P400X160X55-16N"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2721,7 +2721,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "NX-AW-footprints:RESCAXS50P400X160X55-16N"
+		(property "Footprint" "NX-ISD_footprints:RESCAXS50P400X160X55-16N"
 			(at 152.4 35.56 0)
 			(hide yes)
 			(show_name no)
@@ -3015,7 +3015,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "NX-AW-footprints:RESCAXS50P400X160X55-16N"
+		(property "Footprint" "NX-ISD_footprints:RESCAXS50P400X160X55-16N"
 			(at 59.69 35.56 0)
 			(hide yes)
 			(show_name no)

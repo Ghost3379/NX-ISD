@@ -40,7 +40,7 @@
 					)
 				)
 			)
-			(property "Footprint" "BNO085:IC_BNO085"
+			(property "Footprint" "NX-ISD_footprints:IC_BNO085"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -899,26 +899,26 @@
 			(on_board yes)
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "C"
-				(at 0 3.81 0)
+			(property "Reference" "C5"
+				(at 2.54 3.556 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
-					(justify left bottom)
+					(justify right)
 				)
 			)
 			(property "Value" "CPH3225A"
-				(at 0 -5.08 0)
+				(at 6.096 -3.048 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
-					(justify left bottom)
+					(justify right)
 				)
 			)
 			(property "Footprint" "CPH3225A:CAPCP3225X100N"
@@ -1096,6 +1096,18 @@
 							(font
 								(size 1.016 1.016)
 							)
+						)
+					)
+				)
+			)
+			(symbol "CPH3225A_1_1"
+				(text "+"
+					(at 4.318 -1.27 0)
+					(effects
+						(font
+							(size 1.27 1.27)
+							(thickness 0.254)
+							(bold yes)
 						)
 					)
 				)
@@ -1862,7 +1874,7 @@
 					)
 				)
 			)
-			(property "Footprint" "Global Footprints:SON50P200X200X80-9N"
+			(property "Footprint" "NX-ISD_footprints:SON50P200X200X80-9N"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2198,7 +2210,7 @@
 					)
 				)
 			)
-			(property "Footprint" "OPT3001DNPR:SON65P200X200X65-7N"
+			(property "Footprint" "NX-ISD_footprints:SON65P200X200X65-7N"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -7519,6 +7531,173 @@
 		)
 	)
 	(symbol
+		(lib_id "CPH3225A:CPH3225A")
+		(at 219.71 139.7 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "460172ad-eb53-4bbc-adc9-ab922488b7f2")
+		(property "Reference" "C5"
+			(at 216.154 137.16 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "CPH3225A"
+			(at 222.758 133.604 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "NX-ISD_footprints:CAPCP3225X100N"
+			(at 219.71 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify bottom)
+			)
+		)
+		(property "Datasheet" ""
+			(at 219.71 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "11 mF (EDLC) Supercapacitor 3.3 V 1210 (3225 Metric) - -"
+			(at 219.71 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify bottom)
+			)
+		)
+		(property "MF" "Seiko Instruments"
+			(at 219.71 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify bottom)
+			)
+		)
+		(property "Package" "1210 Seiko"
+			(at 219.71 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify bottom)
+			)
+		)
+		(property "Price" "None"
+			(at 219.71 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify bottom)
+			)
+		)
+		(property "SnapEDA_Link" "https://www.snapeda.com/parts/CPH3225A/Seiko/view-part/?ref=snap"
+			(at 219.71 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify bottom)
+			)
+		)
+		(property "MP" "CPH3225A"
+			(at 219.71 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify bottom)
+			)
+		)
+		(property "Availability" "In Stock"
+			(at 219.71 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify bottom)
+			)
+		)
+		(property "Check_prices" "https://www.snapeda.com/parts/CPH3225A/Seiko/view-part/?ref=eda"
+			(at 219.71 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify bottom)
+			)
+		)
+		(pin "2"
+			(uuid "8da9d5ba-9267-4c3b-8150-89cd21cfb3d9")
+		)
+		(pin "1"
+			(uuid "4ad74237-5423-4a86-bdeb-16a61d26529d")
+		)
+		(instances
+			(project "NX-ISD_v1p4"
+				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
+					(reference "C5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Timer_RTC:RV-3028-C7")
 		(at 248.92 133.35 0)
 		(unit 1)
@@ -8067,7 +8246,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:SON65P200X200X65-7N"
+		(property "Footprint" "NX-ISD_footprints:SON65P200X200X65-7N"
 			(at 146.05 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -9308,173 +9487,6 @@
 		)
 	)
 	(symbol
-		(lib_id "CPH3225A:CPH3225A")
-		(at 219.71 139.7 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "6a59328e-32b1-4b7c-9ec4-97605fe042c0")
-		(property "Reference" "C5"
-			(at 215.9 137.1599 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "CPH3225A"
-			(at 215.9 139.6999 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "NX-AW-footprints:CAPCP3225X100N"
-			(at 219.71 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-			)
-		)
-		(property "Datasheet" ""
-			(at 219.71 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "11 mF (EDLC) Supercapacitor 3.3 V 1210 (3225 Metric) - -"
-			(at 219.71 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-			)
-		)
-		(property "MF" "Seiko Instruments"
-			(at 219.71 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-			)
-		)
-		(property "Package" "1210 Seiko"
-			(at 219.71 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-			)
-		)
-		(property "Price" "None"
-			(at 219.71 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-			)
-		)
-		(property "SnapEDA_Link" "https://www.snapeda.com/parts/CPH3225A/Seiko/view-part/?ref=snap"
-			(at 219.71 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-			)
-		)
-		(property "MP" "CPH3225A"
-			(at 219.71 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-			)
-		)
-		(property "Availability" "In Stock"
-			(at 219.71 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-			)
-		)
-		(property "Check_prices" "https://www.snapeda.com/parts/CPH3225A/Seiko/view-part/?ref=eda"
-			(at 219.71 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify bottom)
-			)
-		)
-		(pin "1"
-			(uuid "290b8abf-be11-47d2-8551-4a0173bfaad3")
-		)
-		(pin "2"
-			(uuid "aa753954-5415-47d2-a1ed-768b0d788647")
-		)
-		(instances
-			(project "NX-ISD_v1p4"
-				(path "/3830a648-69ee-45ab-8814-deeba52753c2/ee3cc36f-3407-4ced-ab39-9e80004a94ee"
-					(reference "C5")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:R")
 		(at 149.86 161.29 270)
 		(mirror x)
@@ -9588,7 +9600,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:IC_BNO085"
+		(property "Footprint" "NX-ISD_footprints:IC_BNO085"
 			(at 193.04 62.23 0)
 			(hide yes)
 			(show_name no)
@@ -12531,7 +12543,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Global Footprints:SON50P200X200X80-9N"
+		(property "Footprint" "NX-ISD_footprints:SON50P200X200X80-9N"
 			(at 53.34 58.42 0)
 			(hide yes)
 			(show_name no)

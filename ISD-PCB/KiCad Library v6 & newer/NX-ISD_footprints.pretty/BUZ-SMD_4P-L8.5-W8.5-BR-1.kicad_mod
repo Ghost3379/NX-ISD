@@ -1,0 +1,229 @@
+(footprint "BUZ-SMD_4P-L8.5-W8.5-BR-1"
+		(layer "F.Cu")
+		(uuid "d918f5b5-1675-4957-86dc-a356100e9f2c")
+		(descr "BUZ-SMD_4P-L8.5-W8.5-BR-1 footprint")
+		(tags "BUZ-SMD_4P-L8.5-W8.5-BR-1 footprint C2685545")
+		(property "Reference" "REF**"
+			(layer "F.SilkS")
+			(hide yes)
+			(uuid "bf27e97f-a75c-4475-ba25-6f609ee267b4")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Value" "SMD-8503-3627-16Ω"
+			(layer "F.Fab")
+			(uuid "884bbdb1-b0e1-4c09-a41f-87e2f9501438")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(property "Datasheet" "http://www.smdbuzzer.net/Detail_pro_49.html"
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "c966cae3-d37f-4300-9c44-8ed3b2533bc8")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "cb8cb9d5-16d0-4975-a8b3-3a06bceab648")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C2685545"
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "53466405-4d62-4503-8ff2-5a6819e4b729")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(units
+			(unit
+				(name "A")
+				(pins "1" "4" "3" "2")
+			)
+		)
+		(attr smd)
+		(duplicate_pad_numbers_are_jumpers no)
+		(fp_line
+			(start -4.318085 2.16891)
+			(end -4.318085 -2.168656)
+			(stroke
+				(width 0.254001)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "c0e50c7c-6138-4cf6-bad4-caef02f31277")
+		)
+		(fp_line
+			(start 2.16853 4.318263)
+			(end -2.168783 4.318263)
+			(stroke
+				(width 0.254001)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "7f0c9c28-f539-40cd-83ba-e9c9a94c7431")
+		)
+		(fp_line
+			(start -2.168783 -4.444755)
+			(end 2.168275 -4.444754)
+			(stroke
+				(width 0.254001)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "92534d12-1db3-442a-8af5-b2d7fed41dac")
+		)
+		(fp_line
+			(start 4.317932 -2.168402)
+			(end 4.317932 2.16891)
+			(stroke
+				(width 0.254001)
+				(type solid)
+			)
+			(layer "F.SilkS")
+			(uuid "c0cfac4f-0743-4f9d-9a45-3360367052f9")
+		)
+		(fp_circle
+			(center 0 0)
+			(end 1.529287 0)
+			(stroke
+				(width 0.254001)
+				(type solid)
+			)
+			(fill no)
+			(layer "F.SilkS")
+			(uuid "a1e9e0c7-ae28-42c7-9543-d87abb311061")
+		)
+		(fp_circle
+			(center 4.349936 4.350318)
+			(end 4.379934 4.350317)
+			(stroke
+				(width 0.059995)
+				(type solid)
+			)
+			(fill no)
+			(layer "Cmts.User")
+			(uuid "695076df-5dd2-48af-86d8-d2a7a29d6a82")
+		)
+		(fp_poly
+			(pts
+				(xy -4.68 -4.69) (xy 4.66 -4.69) (xy 4.66 4.65) (xy -4.68 4.65)
+			)
+			(stroke
+				(width 0.05)
+				(type default)
+			)
+			(fill no)
+			(layer "F.CrtYd")
+			(uuid "afbcbf3a-34aa-47e0-93dc-58e436f19799")
+		)
+		(fp_poly
+			(pts
+				(xy 1.299924 2.655245) (xy 1.299924 2.21524) (xy 3.699924 2.21524) (xy 3.699924 2.675235)
+			)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill yes)
+			(layer "F.Fab")
+			(uuid "60cab93f-2e0a-4a90-824d-67529c8ed74d")
+		)
+		(fp_poly
+			(pts
+				(xy 2.679934 3.730251) (xy 2.239929 3.730251) (xy 2.239928 1.330251) (xy 2.699924 1.330251)
+			)
+			(stroke
+				(width 0.1)
+				(type solid)
+			)
+			(fill yes)
+			(layer "F.Fab")
+			(uuid "948f70e4-5505-4351-bfb3-efe37fcf65c5")
+		)
+		(fp_text user "+"
+			(layer "F.SilkS")
+			(uuid "23ab787c-8d6b-42e1-a6f2-de7999cd3f85")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(fp_text user "${REFERENCE}"
+			(layer "F.Fab")
+			(uuid "c6e661ba-e6d8-4ac8-af1d-ae6e6afa39bb")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
+		(pad "1" smd rect
+			(size 2 2)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net "+3V3")
+			(pinfunction "1_1")
+			(pintype "unspecified")
+			(uuid "2cee3ced-0e29-471c-b5c9-a8bc9f0b44d4")
+		)
+		(pad "2" smd rect
+			(size 2 2)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net "unconnected-(B1-Pad2)")
+			(pinfunction "2_2")
+			(pintype "unspecified+no_connect")
+			(uuid "063681e4-33cd-4b6c-98e0-0d4809de453a")
+		)
+		(pad "3" smd rect
+			(size 2 2)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net "unconnected-(B1-Pad3)")
+			(pinfunction "3_3")
+			(pintype "unspecified+no_connect")
+			(uuid "64320878-e531-4574-8496-103f10949917")
+		)
+		(pad "4" smd rect
+			(size 2 2)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(net "Net-(D3-A)")
+			(pinfunction "4_4")
+			(pintype "unspecified")
+			(uuid "e24d6a89-4ddf-4df9-b054-cba2c5a14fcb")
+		)
+		(embedded_fonts no)
+		(model "${KIPRJMOD}/../KiCad Library v6 & newer/NX-ISD_3dModels/BUZ-SMD_4P-L8.5-W8.5-BR-1.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz -0 -0 -90)
+			)
+		)
+	)
