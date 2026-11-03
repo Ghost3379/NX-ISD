@@ -35,6 +35,7 @@ This document tracks implementation status across the 6 core application decks, 
 * [ ] **World Clock:** Dual UTC / time-zone offset tracking
 * [ ] **Alarms:** Battery-backed hardware alarms via `RV-3028` interrupt line
 * [x] **Date, Time & Timezone Sync:** High-accuracy RTC timekeeping on Watchface HUD (`RV-3028` via I2C `0x52`)
+* [ ] **RV-3028 Supercapacitor Backup & Trickle Charge Configuration:** Configure EEPROM register `0x37` in `HAL.cpp` for Direct Switching Mode (`BSM = 01` via `rtcClock.setBackupSwitchoverMode(1)`) and enable the internal trickle charger (`TCE = 1`, `TCR = 00` via `rtcClock.enableTrickleCharge(TCR_3K)`) to support rapid, safe charging of the onboard $11\text{ mF}$ Seiko `CPH3225A` supercapacitor ($C5$) and ensure automatic switchover on power loss.
 * [x] **NAND State Persistence:** Storage subsystem ready to persist clock/alarm states
 
 ### 4. Device (Silicon & Hardware Integrity)

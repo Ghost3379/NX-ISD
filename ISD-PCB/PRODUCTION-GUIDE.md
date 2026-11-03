@@ -3,7 +3,7 @@
 This guide contains the complete manufacturing parameters, mechanical specifications, SMD stencil settings, and recommended assembly workflow for fabricating the **NX-ISD v1.4** PCB.
 
 <p align="center">
-  <img src="../docs/images/v1p4/nx_isd_v1p4_3d_render.png" alt="NX-ISD v1.4 3D Render" width="85%">
+  <img src="../docs/images/v1p4/nx-isd_v1p4_topleft_side.png" alt="NX-ISD v1.4 3D Raytraced Render (Perspective View)" width="85%">
 </p>
 
 ---
@@ -138,6 +138,12 @@ All components can be sourced from major distributors:
 ## 6. Board Layer Views (v1.4)
 
 <p align="center">
-  <img src="../docs/images/v1p4/nx_isd_v1p4_top.png" alt="NX-ISD v1.4 Top Copper & Plating" width="49%">
-  <img src="../docs/images/v1p4/nx_isd_v1p4_bottom.png" alt="NX-ISD v1.4 Bottom Copper & Heatsinks" width="49%">
+  <img src="../docs/images/v1p4/nx-isd_v1p4_top.png" alt="NX-ISD v1.4 Top Populated View" width="49%">
+  <img src="../docs/images/v1p4/nx-isd_v1p4_bottom.png" alt="NX-ISD v1.4 Bottom Silkscreen View" width="49%">
+</p>
+<p align="center">
+  <img src="../docs/images/v1p4/nx-isd_v1p4_top_no-parts-no-paste.png" alt="NX-ISD v1.4 Bare Board / ENIG Finish & Cyberpunk Silkscreen" width="85%">
+</p>
+<p align="center">
+  <em>NX-ISD v1.4 Raytraced 3D Renders: Fully Populated Assembly, Bottom Silkscreen, and Bare ENIG PCB ("PUT THAT BACK!" easter egg beneath ESP32-S3 module)</em>
 </p>

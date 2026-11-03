@@ -1,18 +1,23 @@
-# NX-ISD Hardware Specification (Revision v1p3)
+# NX-ISD Hardware Specification (Revision v1p4 - Current & Recommended)
 
 This directory contains the schematic design, PCB layout, fabrication outputs, and Bill of Materials (BOM) for the **NX-ISD** (Intelligent Sensor Device) wearable carrier board.
 
 <p align="center">
-  <img src="../docs/images/v1p3/nx_isd_v1p3_top.png" alt="NX-ISD v1p3 Top View" width="49%">
-  <img src="../docs/images/v1p3/nx_isd_v1p3_bottom.png" alt="NX-ISD v1p3 Bottom View" width="49%">
+  <img src="../docs/images/v1p4/nx-isd_v1p4_top.png" alt="NX-ISD v1p4 Top Component View" width="49%">
+  <img src="../docs/images/v1p4/nx-isd_v1p4_bottom.png" alt="NX-ISD v1p4 Bottom Silkscreen View" width="49%">
 </p>
 <p align="center">
-  <em>NX-ISD Hardware Revision v1p3 (KiCad Raytraced 3D Render)</em>
+  <img src="../docs/images/v1p4/nx-isd_v1p4_topleft_side.png" alt="NX-ISD v1p4 Isometric View" width="49%">
+  <img src="../docs/images/v1p4/nx-isd_v1p4_top_no-parts-no-paste.png" alt="NX-ISD v1p4 Bare ENIG PCB View" width="49%">
+</p>
+<p align="center">
+  <em>NX-ISD Hardware Revision v1p4 (KiCad Raytraced 3D Renders) — Populated Top View, Bottom Silkscreen, Perspective Isometric Angle, and Bare ENIG Finish with "PUT THAT BACK!" Silkscreen Easter Egg</em>
 </p>
 
 > [!TIP]
 > **Production & Ordering Guide (v1.4):** For complete mechanical drawings, JLCPCB ordering parameters, SMD stencil specs, and hand assembly tips, see the **[Production Guide](PRODUCTION-GUIDE.md)**.  
-> 📦 **Latest v1.4 Fabrication Package:** [`NX-ISD_v1p4/production/NX-ISD_v1p4.zip`](NX-ISD_v1p4/production/NX-ISD_v1p4.zip) (Ready for JLCPCB / PCBWay).
+> 📦 **Latest v1.4 Fabrication Package:** [`NX-ISD_v1p4/production/NX-ISD_v1p4.zip`](NX-ISD_v1p4/production/NX-ISD_v1p4.zip) (Ready for JLCPCB / PCBWay).  
+> 📜 **Latest v1.4 Circuit Diagram (5 Sheets):** [`../docs/circuit diagrams/NX-ISD_v1p4.pdf`](../docs/circuit%20diagrams/NX-ISD_v1p4.pdf).
 
 ---
 
@@ -21,14 +26,15 @@ This directory contains the schematic design, PCB layout, fabrication outputs, a
 | Parameter | Specification | Notes |
 | :--- | :--- | :--- |
 | **Dimensions** | **77.00 mm × 48.60 mm** | Measured outer bounding box on `Edge.Cuts` |
-| **Board Thickness** | **1.2 mm** | Standard FR-4 rigid substrate |
-| **Layer Count** | **4 Layers** | Optimized signal integrity and solid reference planes |
-| **Copper Weight** | 1 oz Outer (35 µm), 1 oz Inner | Standard manufacturing yield |
-| **Surface Finish** | ENIG (Electroless Nickel Immersion Gold) | Recommended for fine-pitch BGA/QFN sensors |
-| **Strap Mounts** | Dual integrated strap slots | Accommodates standard 20 mm – 22 mm watch straps |
-| **Antenna Clearance** | Dedicated bottom keep-out zone | `RF-AREA KEEP FREE` silkscreen below ESP32-S3 trace |
+| **Board Thickness** | **1.2 mm** | Standard FR-4 rigid substrate (optimal wrist comfort & rigidity) |
+| **Layer Count** | **4 Layers** | Optimized signal integrity, unbroken GND plane, and dedicated power pours |
+| **Copper Weight** | 1 oz Outer (35 µm), 1 oz Inner | Standard manufacturing yield with thermal relief |
+| **Surface Finish** | ENIG (Electroless Nickel Immersion Gold) | Mandatory for fine-pitch QFN/WSON sensors and 0402 passives |
+| **Strap Mounts** | Dual integrated strap slots | Accommodates standard 20 mm – 28 mm watch straps |
+| **Antenna Clearance** | Dedicated bottom keep-out zone | `RF-AREA KEEP FREE` silkscreen below ESP32-S3 PCB antenna |
 | **Primary Connector** | 16-Pin Mid-Mount USB Type-C | USB 2.0 Full Speed + 5V 600mA charging |
-| **Battery Header** | JST PH 2.0mm 2-Pin (`P1`) | Standard 1S LiPo (1200 mAh form factor) |
+| **Battery Header** | JST PH 2.0mm 2-Pin (`J2`) | Polarized 1S LiPo (1200 mAh form factor) |
+| **Mass Storage** | Push-Pull MicroSD Socket (`J4`) | High-speed 4-bit SDMMC bus interface |
 
 ### 4-Layer PCB Stackup
 
@@ -38,57 +44,58 @@ This directory contains the schematic design, PCB layout, fabrication outputs, a
 ├────────────────────────────────────────────────────────────────────────┤
 │ Layer 2: Inner 1 (In1.Cu) Solid uninterrupted Ground Plane (GND)       │
 ├────────────────────────────────────────────────────────────────────────┤
-│ Layer 3: Inner 2 (In2.Cu) Power Planes (+3V3, VBAT, +1V8, +2V8, VN)    │
+│ Layer 3: Inner 2 (In2.Cu) Power Planes (+3V3, VBAT, +1V8, VN)          │
 ├────────────────────────────────────────────────────────────────────────┤
-│ Layer 4: Bottom (B.Cu)    Secondary routing, test pads, silkscreen art │
+│ Layer 4: Bottom (B.Cu)    Secondary routing, thermal pads, silkscreen  │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Power Architecture & Voltage Domains
+## 2. Power Architecture & Voltage Domains (v1.4)
 
 ```text
                ┌───────────────────────┐
-  USB-C (5V) ─►│ BQ25170 Charger (U5)  ├──► VBAT (3.7V - 4.2V, 1S LiPo)
+  USB-C (5V) ─►│ BQ25170 Charger (U3)  ├──► VBAT (3.7V - 4.2V, 1S LiPo via J2)
                │ (600mA, 10k NTC TH1)  │         │
                └───────────────────────┘         ├─► MAX17048 Fuel Gauge (U6)
                                                  │
   ┌──────────────────────────────────────────────┘
   │
-  ├──► TLV62568 Buck Converter (U3) ──► +3V3 (System Rail, ~95% Efficiency)
+  ├──► TLV62568 Buck Converter (U4) ──► +3V3 (System Rail, ~95% Efficiency)
   │    (2.2µH L1, 10µF filtering)         │
-  │                                       ├─► ESP32-S3 Microcontroller (U13)
+  │                                       ├─► ESP32-S3 Microcontroller (U2)
   │                                       ├─► BNO085 9-DOF IMU (U11)
   │                                       ├─► BME690 Environmental (U7)
   │                                       ├─► OPT3001 Ambient Light (U10)
   │                                       ├─► RV-3028-C7 RTC (U12)
-  │                                       ├─► ZDSD02GLGEAG NAND Flash (U14)
-  │                                       ├─► ST7789 Backlight PWM (via Q4)
-  │                                       └─► Buzzer B1 (via Q3)
+  │                                       ├─► MicroSD Card Slot (J4)
+  │                                       ├─► ST7789 IPS Display Logic & Backlight (J3 / Q4)
+  │                                       └─► Buzzer LS1 (via Q3)
   │
-  ├──► RT9193-18GB LDO (U1) ──────────► +1V8 (Ultra-Low-Noise Sensor Rail)
-  │    (Ultra-Low Noise, 300mA)           └─► MAX30102 PPG / Biometrics (U8)
+  ├──► RT9193-18GB LDO (U5) ──────────► +1V8 (Ultra-Low-Noise Sensor Rail)
+  │    (Ultra-Low Noise, 300mA)           ├─► MAX30102 PPG / Biometrics (U8)
+  │                                       └─► PCA9306 I2C Level Shifter (U9, Port 1)
   │
-  ├──► RT9193-28GB LDO (U4) ──────────► +2V8 (Display & Shifter Rail)
-  │    (Low Noise, 300mA)                 ├─► ST7789 IPS Display Logic (J2)
-  │                                       └─► TXB0106 Level Shifter (U15)
+  ├──► DMP3130L-7 PMOS Gate (Q1) ──────► VN   (Switched VBAT Rail, 3.0V - 4.2V)
+  │    (Driven by IO17 via BC847W)        └─► 16x NeoPixel Matrix (G1..G16)
+  │                                           [Guarantees 0µA sleep draw]
   │
-  └──► AO3401A PMOS Gate (Q2) ────────► VN   (Switched VBAT Rail, 3.0V - 4.2V)
-       (Driven by IO17 via BC847W Q1)     └─► 16x NeoPixel Matrix (G1..G16)
-                                              [Guarantees 0µA standby draw]
+  └──► RV-3028-C7 Internal Charger ───► VBACKUP (Autonomous Supercapacitor Rail)
+       (Switch + Schottky + 3k Ladder)    └─► 11mF 3.3V Seiko CPH3225A (C5)
+                                              [~6.2 Days RTC timekeeping backup]
 ```
 
 ### Voltage Rail Details
 
 | Rail | Nominal Voltage | Regulator / Source | Max Current | Consumers |
 | :--- | :--- | :--- | :--- | :--- |
-| **`VBUS`** | 5.0 V (4.75–5.25V) | USB Type-C Receptacle (`J1`) | 1.5 A | BQ25170 Charger, USB detect divider |
-| **`VBAT`** | 3.7 V (3.0–4.2V) | 1S LiPo via JST PH (`P1`) | 2.0 A peak | Buck converter, LDOs, Fuel Gauge, VN PMOS switch |
-| **`+3V3`** | 3.3 V (±1.5%) | TLV62568DBV Synchronous Buck (`U3`)| 1.0 A | ESP32-S3, BNO085, BME690, OPT3001, RTC, NAND-SD, Backlight, Buzzer |
-| **`+1V8`** | 1.8 V (±2.0%) | RT9193-18GB Low-Noise LDO (`U1`) | 300 mA | MAX30102 logic core, PCA9306 low-side |
-| **`+2V8`** | 2.8 V (±2.0%) | RT9193-28GB Low-Noise LDO (`U4`) | 300 mA | ST7789 display VDD, TXB0106 B-port |
-| **`VN`** | Switched `VBAT` | AO3401A High-Side PMOS (`Q2`) | 1.0 A | 16x XL-1010RGBC NeoPixels (0µA cutoff) |
+| **`VBUS`** | 5.0 V (4.75–5.25V) | USB Type-C Receptacle (`J1`) | 1.5 A | BQ25170 Charger, USB detect divider, USBLC6 ESD |
+| **`VBAT`** | 3.7 V (3.0–4.2V) | 1S LiPo via JST PH (`J2`) | 2.0 A peak | Buck converter, LDO, Fuel Gauge, VN PMOS switch, Power-Path PMOS (`Q2`) |
+| **`+3V3`** | 3.3 V (±1.5%) | TLV62568DBVR Synchronous Buck (`U4`)| 1.0 A | ESP32-S3, BNO085, BME690, OPT3001, RV-3028, MicroSD, ST7789 Display, Buzzer |
+| **`+1V8`** | 1.8 V (±2.0%) | RT9193-18GB Low-Noise LDO (`U5`) | 300 mA | MAX30102 logic core, PCA9306 level shifter low-side |
+| **`VN`** | Switched `VBAT` | DMP3130L-7 High-Side PMOS (`Q1`) | 1.0 A | 16x XL-1010RGBC NeoPixels (0µA cutoff when unpowered) |
+| **`VBACKUP`**| 3.3 V max (1.1–3.05V)| RV-3028-C7 Internal Trickle Charger| 1.0 mA chg | Pin 6 of RV-3028-C7 backed by $11\text{ mF}$ CPH3225A Supercap (`C5`) |
 
 ---
 
@@ -175,92 +182,111 @@ $$P_{\text{in}} = \frac{V_{\text{out}} \times I_{\text{out}}}{\eta} \implies I_{
 
 ---
 
-## 4. Primary Component & IC Roster
+## 4. Primary Component & IC Roster (v1.4)
 
-| Designator | Component | Package | Function | LCSC Part # |
+| Designator | Component | Package | Function | Sourcing / LCSC # |
 | :--- | :--- | :--- | :--- | :--- |
-| **U13** | **ESP32-S3-WROOM-1-N16R8** | Module (18×25.5 mm) | Dual-Core 240MHz MCU, 16MB Flash, 8MB PSRAM | Direct / Espressif |
-| **U3** | **TLV62568DBV** | SOT-23-5 | Synchronous Step-Down DC-DC Buck Converter (+3V3) | C967888 |
-| **U5** | **BQ25170DSGR** | WSON-8 (2×2 mm) | 800mA Linear LiPo Charger with 10k NTC sensing | C2837330 |
+| **U2** | **ESP32-S3-WROOM-1-N16R8** | Module (18×25.5 mm) | Dual-Core 240MHz MCU, 16MB Flash, 8MB PSRAM | Direct / Espressif |
+| **U4** | **TLV62568DBVR** | SOT-23-5 | Synchronous Step-Down DC-DC Buck Converter (+3V3) | C967888 |
+| **U3** | **BQ25170DSGR** | WSON-8 (2×2 mm) | 800mA Linear LiPo Charger with 10k NTC & thermal pour | C2837330 |
 | **U6** | **MAX17048G_T10** | TDFN-8 (2×2 mm) | ModelGauge™ LiPo Fuel Gauge with ALERT output | C2682619 |
-| **U1** | **RT9193-18GB** | SOT-23-5 | 300mA Ultra-Low-Noise LDO (+1.8V Sensor Rail) | C27416 |
-| **U4** | **RT9193-28GB** | SOT-23-5 | 300mA Low-Noise LDO (+2.8V Display Rail) | C56731 |
-| **U11** | **BNO085** | LGA-28 (5.2×3.8 mm) | 9-DOF Motion Co-Processor (AR/VR IMU fusion) | Direct / CEVA |
-| **U7** | **BME690** | LGA-8 (3×3 mm) | Temperature, Relative Humidity, Pressure, Gas MOX | Direct / Bosch |
+| **U5** | **RT9193-18GB** | SOT-23-5 | 300mA Ultra-Low-Noise LDO (+1.8V Sensor Rail) | C27416 |
+| **U11** | **BNO085** | LGA-28 (5.2×3.8 mm) | 9-DOF Motion Co-Processor (dedicated 32.768kHz crystal Y1)| Direct / CEVA |
+| **U7** | **BME690 / BME680** | LGA-8 (3×3 mm) | Temperature, Relative Humidity, Pressure, Gas MOX | Direct / Bosch |
 | **U8** | **MAX30102** | OLGA-14 (3.3×5.6 mm) | Pulse Oximetry ($SpO_2$) & Heart Rate Optical Sensor | C83038 |
+| **U9** | **PCA9306DCKR** | VSSOP-8 | Dual Bidirectional I2C Voltage-Level Translator (1.8V ↔ 3.3V) | C7570 |
 | **U10** | **OPT3001DNPR** | USON-6 (2×2 mm) | Precision Ambient Light Sensor (Photopic curve) | C113886 |
-| **U12** | **RV-3028-C7** | SON-8 (1.5×3.2 mm) | Real-Time Clock, Ultra-Low Power, Factory Calibrated | C2838382 |
-| **U14** | **ZDSD02GLGEAG** | LGA-8 (8×6 mm) | 2 Gbit (250 MByte) High-Speed SPI NAND Flash | C2875853 |
-| **U9** | **PCA9306DCKR** | VSSOP-8 | Dual Bidirectional I2C Voltage-Level Translator | C7570 |
-| **U15** | **TXB0106RGYR** | VQFN-16 (2.5×2.0 mm)| 6-Bit Bidirectional Voltage-Level Shifter for Display| C7213 |
-| **U2** | **USBLC6-2P6** | SOT-666 | Ultra-Low Capacitance Rail-to-Rail ESD Protection | C7519 |
+| **U12** | **RV-3028-C7** | SON-8 (1.5×3.2 mm) | Ultra-Low Power RTC (45nA) with internal trickle charger | C2838382 |
+| **C5** | **CPH3225A** | 1210 SMD (3.2×2.5 mm)| 11mF 3.3V Rechargeable Supercapacitor (VBACKUP) | Seiko Instruments |
+| **U1** | **USBLC6-2SC6** | SOT-23-6 | Ultra-Low Capacitance Rail-to-Rail ESD Protection | C7519 |
 | **G1..G16**| **XL-1010RGBC-WS2812B** | 1010 SMD (1×1 mm) | 16x NeoPixel Serpentine 4×4 RGB Matrix | C5349953 |
-| **U16** | **TM-2025A** | SMD Multi-Way | Multi-Directional Navigation Lever-Switch | C318949 |
-| **S1** | **TS-1101VS-C-A-A** | SMD Button | Tactile Push Button (Main user interaction) | C318884 |
-| **B1** | **SMD-8503-3627-16Ω** | SMD (8.5×8.5 mm) | Electromagnetic Buzzer for acoustic notifications | C2685545 |
+| **SW3** | **TM-2025A** | SMD Multi-Way | Multi-Directional Navigation Lever-Switch | C318949 |
+| **SW4** | **TS-1101VS-C-A-A** | SMD Button | Tactile Push Button (Main user interaction) | C318884 |
+| **SW1, SW2**| **TS18-5-15-SL-260-SMT-TR**| SMD Button | Dedicated Tactile Hardware Reset (RST) & Bootloader (BOOT) | TS18 |
+| **LS1** | **SMD-8503-3627-16Ω** | SMD (8.5×8.5 mm) | Electromagnetic Buzzer with flyback protection | C2685545 |
 | **J1** | **UJ20-C-H-G-SMT-1-P16**| 16-Pin Mid-Mount | USB Type-C Receptacle with CC1/CC2 5.1k resistors | C2765186 |
-| **J2** | **TE 1-2328702-0** | 10-Pin 0.5mm FPC | Dual-contact back-flip FPC connector for ST7789 | C2837335 |
-| **P1** | **JST S2B-PH-SM4-TB** | 2-Pin SMT PH 2.0mm | Polarized LiPo battery connection header | C2875850 |
+| **J2** | **JST S2B-PH-SM4-TB** | 2-Pin SMT PH 2.0mm | Polarized LiPo battery connection header | C2875850 |
+| **J3** | **TE 1-2328702-0** | 10-Pin 0.5mm FPC | Dual-contact back-flip FPC connector for ST7789 | C2837335 |
+| **J4** | **105162-0001** | Push-Pull MicroSD | MicroSD Card Socket (4-bit SDMMC bus) | Molex / C382346 |
+| **Q1, Q2** | **DMP3130L-7** | SOT-23 | -30V P-Channel MOSFETs (NeoPixel power switch & power path) | Diodes Inc. |
+| **Q3, Q4** | **ZXMN3B14FTA** | SOT-23 | 30V N-Channel MOSFETs (Buzzer tone & Backlight PWM) | Diodes Inc. |
 
 ---
 
-## 5. Hardware Interfaces & Address Map
+## 5. Hardware Interfaces & Address Map (v1.4)
 
 ### I2C Bus (`Wire`, 400 kHz Fast Mode)
-* **SDA:** `GPIO 8` (10k pull-up to `+3V3`)
-* **SCL:** `GPIO 9` (10k pull-up to `+3V3`)
+* **SDA:** `GPIO 8` (10k pull-up `R18` to `+3V3`)
+* **SCL:** `GPIO 9` (10k pull-up `R19` to `+3V3`)
 
 | Device | Designator | 7-Bit Address | Voltage Domain | Hardware Interrupt Line |
 | :--- | :--- | :--- | :--- | :--- |
-| **BNO085** | `U11` | `0x4A` | `+3V3` | `GPIO 2` (`!INT_DOF`, active LOW) |
-| **MAX30102** | `U8` | `0x57` | `+1V8` (via PCA9306 `U9`) | `GPIO 5` (`!INT_HR`, active LOW) |
-| **BME690** | `U7` | `0x76` | `+3V3` | Polled |
-| **OPT3001** | `U10` | `0x45` | `+3V3` | `GPIO 39` (`!INT_ALS`, active LOW) |
 | **MAX17048** | `U6` | `0x36` | `+3V3` | `GPIO 4` (`!ALERT`, active LOW) |
-| **RV-3028-C7**| `U12` | `0x52` | `+3V3` | `GPIO 6` (`!INT_RTC`, active LOW) |
+| **OPT3001** | `U10` | `0x44` / `0x45` | `+3V3` | Polled over I2C |
+| **BNO085** | `U11` | `0x4A` | `+3V3` | `GPIO 7` (`!INT_DOF`, active LOW) |
+| **RV-3028-C7**| `U12` | `0x52` | `+3V3` / `VBACKUP` | `GPIO 6` (`!INT_RTC`, active LOW) |
+| **MAX30102** | `U8` | `0x57` | `+1V8` (via PCA9306 `U9`) | `GPIO 5` (`!INT_HR`, active LOW) |
+| **BME690** | `U7` | `0x76` | `+3V3` | Polled over I2C |
 
-### High-Speed SPI Bus (HSPI, up to 40 MHz)
-* **SCK:** `GPIO 40`
-* **MOSI:** `GPIO 42`
-* **MISO:** `GPIO 41`
+### Dedicated Display High-Speed SPI Bus (Native 3.3V, up to 40 MHz)
+* Direct connection eliminates TXB0106 auto-sensing one-shot oscillation and unlocks full 40 MHz SPI clock rate.
 
-| Peripheral | Designator | Chip Select (CS) | Additional Control Lines | Notes |
-| :--- | :--- | :--- | :--- | :--- |
-| **ST7789 TFT** | `J2` | `GPIO 48` (`CS_TFT`) | `GPIO 21` (`DC`/`RS`)<br>`GPIO 38` (`RST`)<br>`GPIO 1` (`PWM_TFT`) | 1.54" 240×240 IPS Panel ([ST7789V2 on AliExpress](https://de.aliexpress.com/item/1005007654038756.html)), PWM backlight via Q4 |
-| **NAND-SD Flash** | `U14` | `GPIO 47` (`CS_SD`) | Shared SCK/MOSI/MISO | 2 Gbit (250 MB) storage for logs/certs |
+| Signal | GPIO Pin | Function | Notes |
+| :--- | :--- | :--- | :--- |
+| **TFT_SCK** | `GPIO 38` | SPI Serial Clock | Up to 40 MHz write clock |
+| **TFT_MOSI**| `GPIO 39` | SPI Master-Out Data | Command and pixel data |
+| **TFT_RS** | `GPIO 21` | Command / Data (DC) | LOW = Command, HIGH = Data |
+| **TFT_RST** | `GPIO 40` | Hardware Reset | Active LOW reset pulse |
+| **CS_TFT** | `GPIO 48` | TFT Chip Select | Active LOW panel selection |
+| **TFT_PWM** | `GPIO 47` | Backlight Brightness | PWM drive to gate of N-MOSFET `Q4` |
+
+### High-Speed Mass Storage (4-Bit SDMMC Bus)
+* Directly mapped to the ESP32-S3 internal SDMMC peripheral via GPIO Matrix:
+
+| Signal | GPIO Pin | Function | Notes |
+| :--- | :--- | :--- | :--- |
+| **SD_CLK** | `GPIO 41` | SDMMC Clock | High-speed clock line |
+| **SD_CMD** | `GPIO 43` | SDMMC Command/Response | Bidirectional command line |
+| **SD_DAT0**| `GPIO 44` | SDMMC Data Bit 0 | Primary read/write data line |
+| **SD_DAT1**| `GPIO 42` | SDMMC Data Bit 1 | 4-bit bus extension |
+| **SD_DAT2**| `GPIO 1` | SDMMC Data Bit 2 | 4-bit bus extension |
+| **SD_DAT3**| `GPIO 2` | SDMMC Data Bit 3 | 4-bit bus extension (CS in 1-bit SPI fallback) |
 
 ---
 
-## 6. Complete GPIO Pinout Matrix
+## 6. Complete GPIO Pinout Matrix (v1.4)
 
 Centralized in [`ISD-Core/src/pins.h`](../ISD-Core/src/pins.h):
 
 | GPIO Pin | Pin Name | Peripheral / Signal | Direction | Electrical Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **GPIO 1** | `PWM_TFT` | Display Backlight PWM | Output | Drives gate of N-MOSFET `Q4` (active HIGH) |
-| **GPIO 2** | `INT_DOF` | BNO085 Motion Interrupt | Input | Active LOW interrupt from IMU |
-| **GPIO 4** | `ALERT` | Fuel Gauge Alert | Input | Active LOW interrupt (internal pull-up enabled) |
-| **GPIO 5** | `INT_HR` | MAX30102 PPG Interrupt | Input | Active LOW biometric sample-ready interrupt |
+| **GPIO 1** | `SD_DAT2` | MicroSD Data Bit 2 | Bi-directional | 4-bit SDMMC bus line |
+| **GPIO 2** | `SD_DAT3` | MicroSD Data Bit 3 | Bi-directional | 4-bit SDMMC bus line (CS_SD in 1-bit SPI fallback) |
+| **GPIO 4** | `ALERT` | Fuel Gauge Alert | Input | Active LOW interrupt from MAX17048 |
+| **GPIO 5** | `INT_HR` | MAX30102 PPG FIFO Ready | Input | Active LOW biometric sample-ready interrupt |
 | **GPIO 6** | `INT_RTC` | RV-3028 RTC Alarm/Timer | Input | Active LOW periodic/alarm interrupt |
-| **GPIO 8** | `I2C_SDA` | I2C Data Line | Bi-directional | 10k hardware pull-up to `+3V3` (`R18`) |
-| **GPIO 9** | `I2C_SCL` | I2C Clock Line | Output | 10k hardware pull-up to `+3V3` (`R19`) |
-| **GPIO 10** | `BUZZER` | Electromagnetic Buzzer | Output | Drives gate of N-MOSFET `Q3` (PWM tone output) |
+| **GPIO 7** | `INT_DOF` | BNO085 IMU Motion Wake | Input | Active LOW motion interrupt from IMU |
+| **GPIO 8** | `I2C_SDA` | I2C Data Line | Bi-directional | 10k hardware pull-up `R18` to `+3V3` |
+| **GPIO 9** | `I2C_SCL` | I2C Clock Line | Output | 10k hardware pull-up `R19` to `+3V3` |
+| **GPIO 10** | `BUZZER` | Electromagnetic Buzzer | Output | PWM drive to gate of N-MOSFET `Q3` |
 | **GPIO 11** | `BAT_STAT` | BQ25170 Charger Status | Input | LOW = Charging, HIGH/Hi-Z = Charge Complete |
 | **GPIO 12** | `USB_DETECT`| USB 5V VBUS Presence | Input | Resistor divider from VBUS (HIGH when plugged in) |
-| **GPIO 13** | `BTN` | Main Tactile Push-Button | Input | Active LOW (external pull-up, debounced) |
-| **GPIO 14** | `LEVER_RIGHT`| Navigation Lever Right | Input | Active LOW (Mirrored to GPIO 14 due to 180° U16 footprint assembly orientation on v1p3) |
-| **GPIO 15** | `LEVER_PUSH` | Navigation Lever Center | Input | Active LOW (internal pull-up enabled) |
-| **GPIO 16** | `LEVER_LEFT` | Navigation Lever Left | Input | Active LOW (Mirrored to GPIO 16 due to 180° U16 footprint assembly orientation on v1p3) |
-| **GPIO 17** | `PWR_NPM` | NeoPixel Matrix Power Gate | Output | HIGH = Turns ON PMOS `Q2`; LOW = 0µA cutoff |
+| **GPIO 13** | `BTN` | Main Tactile Push-Button | Input | Active LOW (external pull-up, deep-sleep wake capable) |
+| **GPIO 14** | `LEVER_LEFT` | Navigation Lever Left | Input | Active LOW (TM-2025A lever tilted left) |
+| **GPIO 15** | `LEVER_PUSH` | Navigation Lever Center | Input | Active LOW (TM-2025A center push button) |
+| **GPIO 16** | `LEVER_RIGHT`| Navigation Lever Right | Input | Active LOW (TM-2025A lever tilted right) |
+| **GPIO 17** | `PWR_NPM` | NeoPixel Matrix Power Gate | Output | HIGH = Powers ON PMOS `Q1`; LOW = 0µA sleep cutoff |
 | **GPIO 18** | `NPM` | NeoPixel Serial Data | Output | 800 kHz single-wire NZR stream to `G1` |
-| **GPIO 21** | `TFT_RS` | Display Command / Data | Output | LOW = Command, HIGH = Data (via TXB0106) |
-| **GPIO 38** | `TFT_RST` | Display Hardware Reset | Output | Active LOW hardware reset line |
-| **GPIO 39** | `INT_ALS` | OPT3001 Light Interrupt | Input | Active LOW optical threshold interrupt |
-| **GPIO 40** | `SPI_SCK` | SPI Bus Serial Clock | Output | Up to 40 MHz clock |
-| **GPIO 41** | `SPI_MISO`| SPI Bus Data In (MISO) | Input | High-speed data input from NAND flash |
-| **GPIO 42** | `SPI_MOSI`| SPI Bus Data Out (MOSI) | Output | High-speed data output to Display & NAND |
-| **GPIO 47** | `CS_SD` | NAND Flash Chip Select | Output | Active LOW chip select |
-| **GPIO 48** | `CS_TFT` | TFT Display Chip Select | Output | Active LOW chip select |
+| **GPIO 21** | `TFT_RS` | Display Command / Data | Output | LOW = Command, HIGH = Data |
+| **GPIO 38** | `TFT_SCK` | Display SPI Clock | Output | Dedicated 40 MHz SPI clock to ST7789 |
+| **GPIO 39** | `TFT_MOSI`| Display SPI Master-Out | Output | Dedicated SPI data to ST7789 |
+| **GPIO 40** | `TFT_RST` | Display Hardware Reset | Output | Active LOW hardware reset pulse |
+| **GPIO 41** | `SD_CLK` | MicroSD Clock | Output | SDMMC high-speed clock |
+| **GPIO 42** | `SD_DAT1` | MicroSD Data Bit 1 | Bi-directional | 4-bit SDMMC bus line |
+| **GPIO 43** | `SD_CMD` | MicroSD Command/Response| Bi-directional | SDMMC command line |
+| **GPIO 44** | `SD_DAT0` | MicroSD Data Bit 0 | Bi-directional | SDMMC primary data line |
+| **GPIO 47** | `TFT_PWM` | Display Backlight PWM | Output | Drives gate of N-MOSFET `Q4` (active HIGH) |
+| **GPIO 48** | `CS_TFT` | Display Chip Select | Output | Active LOW display selection |
 
 ---
 
@@ -270,24 +296,70 @@ Centralized in [`ISD-Core/src/pins.h`](../ISD-Core/src/pins.h):
 * **v1.4 Production Package (Latest):** [`NX-ISD_v1p4/production/NX-ISD_v1p4.zip`](NX-ISD_v1p4/production/NX-ISD_v1p4.zip) (Contains RS-274X Gerbers, Excellon drill files, and stencil files ready for JLCPCB / PCBWay).
 * **v1.4 Component Placement / CPL:** [`NX-ISD_v1p4/production/positions.csv`](NX-ISD_v1p4/production/positions.csv)
 * **v1.4 Production BOM:** [`NX-ISD_v1p4/production/bom.csv`](NX-ISD_v1p4/production/bom.csv)
-* **v1.4 Schematic PDF:** [`docs/circuit diagrams/NX-ISD_v1p4.pdf`](../docs/circuit%20diagrams/NX-ISD_v1p4.pdf)
+* **v1.4 Interactive HTML BOM:** [`NX-ISD_v1p4/bom/NX-ISD_v1p4_IBOM.html`](NX-ISD_v1p4/bom/NX-ISD_v1p4_IBOM.html) (Searchable visual assembly tool with real-time component highlighting).
+* **v1.4 Schematic PDF:** [`../docs/circuit diagrams/NX-ISD_v1p4.pdf`](../docs/circuit%20diagrams/NX-ISD_v1p4.pdf)
 * **v1.3 Production Package (Legacy):** [`NX-ISD_v1p3/production/NX-ISD_v1p3.zip`](NX-ISD_v1p3/production/NX-ISD_v1p3.zip)
 * **Interactive HTML BOM:** [`NX-ISD_v1p3/bom/ibom.html`](NX-ISD_v1p3/bom/ibom.html) (Searchable, interactive visual assembly tool showing component locations per reference designator).
 * **Component Placement / CPL:** [`NX-ISD_v1p3/production/NX-ISD_v1p3_positions.csv`](NX-ISD_v1p3/production/NX-ISD_v1p3_positions.csv)
 * **Production BOM:** [`NX-ISD_v1p3/production/NX-ISD_v1p3_bom.csv`](NX-ISD_v1p3/production/NX-ISD_v1p3_bom.csv)
-* **v1.3 Schematic PDF:** [`docs/circuit diagrams/NX-ISD_v1p3.pdf`](../docs/circuit%20diagrams/NX-ISD_v1p3.pdf)
+* **v1.3 Schematic PDF (Legacy):** [`docs/circuit diagrams/NX-ISD_v1p3.pdf`](../docs/circuit%20diagrams/NX-ISD_v1p3.pdf)
+* **v1.0 Starting Milestone Archive (Historical):** [`NX-ISD_v1p0/`](NX-ISD_v1p0/) (Original starting schematics, early layout, and BOM preserved for historical nostalgia and open-source transparency).
 
-### 7.1 Hardware Assembly Errata & Notes (Revision v1p3)
+### 7.1 Hardware Assembly Errata & Notes (Revision History)
 
 > [!NOTE]
-> **Switch U16 Physical Orientation (`TM-2025A`):**
-> On the physical v1p3 carrier board assembly, switch `U16` is mounted rotated 180° relative to the original schematic layout:
-> - **Left / Right Mirroring:** Moving the lever physically to the Left triggers `GPIO 16`, while moving to the Right triggers `GPIO 14`. Firmware in [`ISD-Core/src/pins.h`](../ISD-Core/src/pins.h) maps `#define LEVER_LEFT 16` and `#define LEVER_RIGHT 14` to ensure natural 1:1 user interaction.
-> - **Common & Push Contacts:** Common and Push contacts were inverted on early board rework.
-> - **Action Item for Revision v1p4:** Rotate `U16` footprint 180° or re-route traces on `Logic Section` to align schematic nets 1:1 with physical placement.
+> **Switch Orientation (`TM-2025A`):**
+> * **Resolved in v1p4:** On the v1.4 PCB layout, the `TM-2025A` footprint routing and pinout have been cleanly aligned with the physical chassis orientation (`GPIO 14` = Left, `GPIO 16` = Right).
+> * **Legacy v1p3 Board:** On physical v1p3 assemblies, the switch was mounted rotated 180°, requiring firmware inversion in `pins.h`.
 
 ---
 
-## 8. Hardware Licensing
+## 8. Component Sourcing, Provenance & Tooling
+
+To ensure transparency, open-source traceability, and reproducible builds, all symbols, footprints, 3D models, and design assets across the NX-ISD project were gathered and verified using the following toolchain and platforms:
+
+* **[SnapEDA / SnapMagic](https://www.snapeda.com/):** Primary source for precision IC schematic symbols and IPC-compliant footprint land patterns (MCU, IMU, Fuel Gauge, LDOs, and battery charger).
+* **[`jlc-fetch` (Nici's Toolbox)](https://github.com/Ghost3379/nicis-toolbox):** Automated retrieval of exclusive LCSC/JLCPCB C-number parts, symbols, land patterns, and 3D STEP models via `JLC2KiCadLib` (e.g., `TM-2025A` [C318949], `SMD-8503-3627-16Ω` Buzzer [C2685545], `XL-1010RGBC-WS2812B` [C5349953], and `ZDSD02GLGEAG` NAND [C2875853]).
+* **[DigiKey Electronics](https://www.digikey.com/):** Parametric search, component stock verification, and manufacturer CAD reference exploration.
+* **Hardware Lineage Foundation:** [CircuitMess](https://circuitmess.com/) (Original open-source inspiration from the Artemis Watch / Artemis Watch 2.0 projects).
+
+### 8.1 Primary Component & Datasheet Reference Index
+
+Offline datasheets and application manuals are archived locally in [`docs/datasheets/`](../docs/datasheets/).
+
+| Component | Function | Manufacturer | Local Archive / Datasheet | CAD / Land Pattern Source |
+| :--- | :--- | :--- | :--- | :--- |
+| **ESP32-S3-WROOM-1** | Dual-Core 240MHz MCU | Espressif Systems | [Espressif Datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s3-wroom-1_wroom-1u_datasheet_en.pdf) | Espressif / SnapEDA |
+| **RV-3028-C7** | Ultra-Low Power RTC (45nA) | Micro Crystal Switzerland | [`rv-3028-c7_app-manual.pdf`](../docs/datasheets/rv-3028-c7_app-manual.pdf) | Micro Crystal / LCSC C2838382 (`jlc-fetch`) |
+| **CPH3225A** | 11mF 3.3V Backup Supercap | Seiko Instruments Inc. | [Seiko Datasheet](https://www.sii.co.jp/en/me/datasheets/super-capacitor/cph3225a/) | Seiko / Ultra Librarian |
+| **BQ25170DSGR** | 800mA Linear LiPo Charger | Texas Instruments | [`bq25170_datasheet.pdf`](../docs/datasheets/bq25170_datasheet.pdf) | TI / SnapEDA / LCSC C2837330 |
+| **MAX17048G_T10** | ModelGauge™ LiPo Fuel Gauge | Analog Devices / Maxim | [`max17048_datasheet.pdf`](../docs/datasheets/max17048_datasheet.pdf) | Maxim / SnapEDA / LCSC C2682619 |
+| **BNO085** | 9-DOF IMU Motion Co-Processor | CEVA / Hillcrest Labs | [CEVA Datasheet](https://www.ceva-ip.com/wp-content/uploads/2019/10/BNO080_085-Datasheet.pdf) | CEVA / SnapEDA |
+| **OPT3001DNPR** | Ambient Light Sensor (Photopic) | Texas Instruments | [`opt3001_datasheet.pdf`](../docs/datasheets/opt3001_datasheet.pdf) | TI / SnapEDA / LCSC C113886 |
+| **MAX30102** | Pulse Oximetry & Heart Rate | Analog Devices / Maxim | [`max30102_datasheet.pdf`](../docs/datasheets/max30102_datasheet.pdf) | Maxim / LCSC C83038 |
+| **PCA9306DCKR** | Dual Bidirectional I2C Translator | Texas Instruments | [`pca9306_datasheet.pdf`](../docs/datasheets/pca9306_datasheet.pdf) | TI / SnapEDA / LCSC C7570 |
+| **BME690** | Gas, Pressure, Temp, Humidity | Bosch Sensortec | [`bme690_datasheet.pdf`](../docs/datasheets/bme690_datasheet.pdf) | Bosch / SnapEDA |
+| **TLV62568DBV** | Synchronous Buck Converter | Texas Instruments | [`tlv62568_datasheet.pdf`](../docs/datasheets/tlv62568_datasheet.pdf) | TI / SnapEDA / LCSC C967888 |
+| **RT9193-18GB** | Low-Noise 300mA LDO (+1.8V) | Richtek | [`rt9193-18gb_datasheet.pdf`](../docs/datasheets/rt9193-18gb_datasheet.pdf) | Richtek / LCSC C27416 (`jlc-fetch`) |
+| **USBLC6-2P6** | Rail-to-Rail USB ESD Protection | STMicroelectronics | [`usblc6_datasheet.pdf`](../docs/datasheets/usblc6_datasheet.pdf) | ST / LCSC C7519 (`jlc-fetch`) |
+| **ZDSD02GLGEAG** | 2 Gbit SPI NAND Flash | Zetta Semiconductor | [Zetta Datasheet](https://www.lcsc.com/datasheet/lcsc_datasheet_2108131730_Zetta-ZDSD02GLGEAG_C2875853.pdf) | LCSC C2875853 (`jlc-fetch`) |
+| **XL-1010RGBC-WS2812B** | 1010 RGB NeoPixel LEDs | Worldsemi / Xinglight | [`xl-1010rgbc-ws2812b.pdf`](../docs/datasheets/xl-1010rgbc-ws2812b.pdf) | LCSC C5349953 (`jlc-fetch`) |
+| **XL-1608UOC-06FJ** | 0603 SMD Orange LED | Xinglight | [`xl-1608uoc-06fj_datasheet.pdf`](../docs/datasheets/xl-1608uoc-06fj_datasheet.pdf) | LCSC / SnapEDA |
+| **TM-2025A** | 5-Way Navigation Lever Switch | Korean HRO / HRO Elec. | [`tm-2025a_technical-drawing.pdf`](../docs/datasheets/tm-2025a_technical-drawing.pdf) | LCSC C318949 (`jlc-fetch`) |
+| **TS-1101VS-C-A-A** | Tactile Push-Button | Korean HRO / HRO Elec. | [HRO Datasheet](https://www.lcsc.com/datasheet/lcsc_datasheet_1811071415_Korean-Hro-parts-Elec-TS-1101VS-C-A-A_C318884.pdf) | LCSC C318884 (`jlc-fetch`) |
+| **SMD-8503-3627-16Ω** | Electromagnetic Buzzer | Jiangshu Huaneng Elec. | [`smd-8503-3627-16ohm_datasheet.pdf`](../docs/datasheets/smd-8503-3627-16ohm_datasheet.pdf) | LCSC C2685545 (`jlc-fetch`) |
+| **DMP3130L-7** | -30V P-Channel MOSFET | Diodes Inc. | [`dmp3130l-7_datasheet.pdf`](../docs/datasheets/dmp3130l-7_datasheet.pdf) | Diodes Inc. / SnapEDA |
+| **ZXMN3B14F** | 30V N-Channel MOSFET | Diodes Inc. | [`zxmn3b14f_datasheet.pdf`](../docs/datasheets/zxmn3b14f_datasheet.pdf) | Diodes Inc. / SnapEDA |
+| **BC847XW** | 45V 100mA NPN Transistor | Nexperia | [`bc847xw_datasheet.pdf`](../docs/datasheets/bc847xw_datasheet.pdf) | Nexperia / SnapEDA |
+| **NRVB230LSFT1G** | Trench Schottky Rectifier | onsemi | [`nrvb230lsft1g_datasheet.PDF`](../docs/datasheets/nrvb230lsft1g_datasheet.PDF) | onsemi / SnapEDA |
+| **1N4148WT** | 75V 150mA Fast Switching Diode | Diodes Inc. | [`1n4148wt_datasheet.pdf`](../docs/datasheets/1n4148wt_datasheet.pdf) | Diodes Inc. / SnapEDA |
+| **UJ20-C-H-G-SMT-1-P16** | 16-Pin Mid-Mount USB-C | Same Sky (CUI Devices) | [Same Sky Datasheet](https://www.sameskydevices.com/product/resource/uj20-c-h-g-smt-1-p16-tr.pdf) | Same Sky / LCSC C2765186 |
+| **TE 1-2328702-0** | 10-Pin 0.5mm FPC Connector | TE Connectivity | [TE Datasheet](https://www.te.com/usa-en/product-1-2328702-0.html) | TE / SamacSys / LCSC C2837335 |
+| **JST S2B-PH-SM4-TB** | 2-Pin SMT PH 2.0mm Header | J.S.T. Mfg. Co. | [JST Datasheet](https://www.jst-mfg.com/product/pdf/eng/ePH.pdf) | JST / SamacSys / LCSC C2875850 |
+| **ST7789V2** | 1.54" 240×240 IPS Panel | Sitronix | [Sitronix Datasheet](https://www.crystalfontz.com/controllers/Sitronix/ST7789V/) | AliExpress / CircuitMess |
+
+---
+
+## 9. Hardware Licensing
 
 The hardware design files in this directory are licensed under the **CERN Open Hardware Licence Version 2 - Strongly Reciprocal (CERN-OHL-S)**. See the root `LICENSE` file for full terms and conditions.

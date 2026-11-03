@@ -42,7 +42,7 @@ Upcoming hardware revision tasks for the NX-ISD PCB.
 * [x] Reposition RST and BOOT for better access, and change solder jumper to small buttons 
 * [x] Edit USBLC6 footrpint for easier soldering
 * [x] Include Supercap as backup for RTC
-* [partially] Add addtional cyberpunk silkscreen design
+* [x] Add addtional cyberpunk silkscreen design
 * [x] Edit library paths (migrated to portable ${KIPRJMOD} tables, sanitized work/personal paths)
 
 

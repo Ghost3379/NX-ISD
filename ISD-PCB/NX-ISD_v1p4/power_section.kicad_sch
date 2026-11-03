@@ -9928,7 +9928,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "AO3401A"
+		(property "Value" "DMP3130L-7"
 			(at 217.17 142.2401 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9952,7 +9952,7 @@
 				(justify left)
 			)
 		)
-		(property "Datasheet" "http://www.aosmd.com/pdfs/datasheet/AO3401A.pdf"
+		(property "Datasheet" "https://4donline.ihs.com/images/VipMasterIC/IC/DIOD/DIOD-S-A0003424612/DIOD-S-A0003424612-1.pdf?hkey=CECEF36DEECDED6468708AAF2E19C0C6"
 			(at 215.9 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -9964,7 +9964,7 @@
 				(justify left)
 			)
 		)
-		(property "Description" "-4.0A Id, -30V Vds, P-Channel MOSFET, SOT-23"
+		(property "Description" "MOSFETs 30V 3.5A P-CHANNEL"
 			(at 210.82 143.51 0)
 			(hide yes)
 			(show_name no)
@@ -10296,6 +10296,17 @@
 		)
 		(property "Sim.Pin" "1=K 2=A"
 			(at 236.22 45.72 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Name" "XL-1608UOC-06FJ"
+			(at 236.22 45.72 90)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

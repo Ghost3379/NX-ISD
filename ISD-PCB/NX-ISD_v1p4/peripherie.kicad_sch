@@ -5584,7 +5584,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "AO3400A"
+		(property "Value" "ZXMN3B14FTA"
 			(at 226.06 146.0499 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -8708,7 +8708,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "AO3400A"
+		(property "Value" "ZXMN3B14FTA"
 			(at 148.59 168.9099 0)
 			(show_name no)
 			(do_not_autoplace no)

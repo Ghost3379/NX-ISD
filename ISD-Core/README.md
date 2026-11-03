@@ -21,7 +21,8 @@ The user interface draws inspiration from retro-futuristic amber vector displays
 6. [Persistent Storage Subsystem (`StorageManager`)](#6-persistent-storage-subsystem-storagemanager)
 7. [Mathematical Models & Graphics Curves](#7-mathematical-models--graphics-curves)
 8. [Building, Flashing & Development Workflow](#8-building-flashing--development-workflow)
-9. [License](#9-license)
+9. [AI Collaboration & Transparency Disclaimer](#9-ai-collaboration--transparency-disclaimer)
+10. [License](#10-license)
 
 ---
 
@@ -352,7 +353,15 @@ pio device monitor
 
 ---
 
-## 9. License
+## 9. AI Collaboration & Transparency Disclaimer
+
+In the spirit of complete open-source transparency:
+* **AI Assistance:** Generative AI pair-programming tools were used to assist with documentation drafting, firmware architecture review, code refinement, and mathematical algorithm translation.
+* **Architecture & Engineering:** All core operating system designs, FreeRTOS task models, timing architectures, hardware abstraction drivers, and physical validations remain 100% human-engineered, tested, and maintained by the author ([@Ghost3379](https://github.com/Ghost3379)).
+
+---
+
+## 10. License
 
 The software in this directory is licensed under the **GNU General Public License v3.0 (GPLv3)**.  
 The hardware design files in [`ISD-PCB`](../ISD-PCB) are licensed under the **CERN-OHL-S v2**.
