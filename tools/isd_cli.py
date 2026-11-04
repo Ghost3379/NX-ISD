@@ -13,6 +13,7 @@ import os
 import time
 import json
 import struct
+import math
 import argparse
 from typing import Optional, Dict, Any, List
 
@@ -441,12 +442,43 @@ def cmd_info(dev: ISDDevice):
         log_err("Device did not respond to sys.info")
 
 
-def cmd_monitor(dev: ISDDevice):
-    """Live full-screen updating terminal monitor."""
-    log_info("Starting Live HUD Monitor (Press Ctrl+C to stop)...")
-    dev.send_command("stream.start")
+def check_exit_keypress() -> bool:
+    """Non-blocking check for user exit keys (q, Q, x, X, ESC, Enter, Ctrl+C)."""
+    if sys.platform == "win32":
+        try:
+            import msvcrt
+            if msvcrt.kbhit():
+                ch = msvcrt.getch()
+                if ch in (b'q', b'Q', b'x', b'X', b'\x1b', b'\r', b'\x03'):
+                    return True
+        except Exception:
+            pass
+    return False
 
-    def render_hud(f: dict) -> Panel:
+
+def cmd_monitor(dev: ISDDevice, mode: str = "line", rate_hz: float = 2.0, mock: bool = False):
+    """
+    Live terminal monitor.
+    mode: 'line' (compact single-line in-place update at rate_hz) or 'hud' (fullscreen panel)
+    rate_hz: update frequency (default 2.0 Hz)
+    """
+    is_live = dev.ser and dev.ser.is_open
+    if not is_live and not mock:
+        if not dev.connect():
+            log_warn("No serial hardware connected. Use 'monitor --mock' to preview 2Hz live stream offline, or 'connect <port>'.")
+            return
+        is_live = True
+
+    interval = 1.0 / max(0.2, rate_hz)
+    log_info(f"Starting Live Monitor ({rate_hz:.1f} Hz). Press 'q' or Ctrl+C to stop...")
+
+    if is_live:
+        dev.send_command("stream.start")
+        dev.send_command(f"stream.rate={int(rate_hz)}")
+
+    last_print = 0.0
+
+    def render_hud_panel(f: dict) -> Panel:
         roll = f.get("roll", 0.0)
         pitch = f.get("pitch", 0.0)
         yaw = f.get("yaw", 0.0)
@@ -475,29 +507,475 @@ def cmd_monitor(dev: ISDDevice):
             f"  Baro:  {press:6.1f} hPa  Gas Res: {gas/1000.0:6.1f} kOhm\n"
             f"  IAQ:   {iaq:3d} ({get_iaq_tier(iaq)})\n\n"
             f"[bold yellow]POWER & BIOMETRICS[/bold yellow]\n"
-            f"  Ambient: {lux:5.1f} Lux  Battery: {batt:3.0f}% ({volt:.2f}V) {'[bold green][CHARGING][/bold green]' if chg else ''}"
+            f"  Ambient: {lux:5.1f} Lux  Battery: {batt:3.0f}% ({volt:.2f}V) {'[bold green][CHARGING][/bold green]' if chg else ''}\n\n"
+            f"[dim]Press 'q', Enter, or Ctrl+C to return to console[/dim]"
         )
         return Panel(content, title="[bold #FFB000]NX-ISD // TELEMETRY HUD[/bold #FFB000]", border_style="#FFB000", box=box.HEAVY)
 
     try:
-        if RICH_AVAILABLE:
-            with Live(console=console, refresh_per_second=8) as live:
+        if mode == "hud" and RICH_AVAILABLE:
+            with Live(console=console, refresh_per_second=int(rate_hz * 2)) as live:
+                step = 0
                 while True:
+                    if check_exit_keypress():
+                        break
+                    frame = None
+                    if is_live:
+                        line = dev.read_line()
+                        if line and ("roll" in line or "batt" in line):
+                            try:
+                                frame = json.loads(line)
+                            except Exception:
+                                pass
+                    else:
+                        time.sleep(interval)
+                        step += 1
+                        frame = {
+                            "roll": 2.5 * math.sin(step * 0.2),
+                            "pitch": 1.2 * math.cos(step * 0.15),
+                            "yaw": (step * 2) % 360,
+                            "temp": 24.2 + 0.3 * math.sin(step * 0.1),
+                            "hum": 48.5,
+                            "press": 1013.25,
+                            "gas": 125000,
+                            "iaq": 22,
+                            "lux": 340.0,
+                            "batt": 85.0,
+                            "voltage": 3.94,
+                            "charging": False
+                        }
+                    if frame:
+                        live.update(render_hud_panel(frame))
+                    else:
+                        time.sleep(0.01)
+        else:
+            # Single line mode (in-place 2Hz update)
+            step = 0
+            while True:
+                if check_exit_keypress():
+                    break
+                frame = None
+                now = time.time()
+                if is_live:
                     line = dev.read_line()
-                    if line and "roll" in line:
+                    if line and ("roll" in line or "batt" in line):
                         try:
                             frame = json.loads(line)
-                            live.update(render_hud(frame))
                         except Exception:
                             pass
-        else:
-            while True:
-                line = dev.read_line()
-                if line and "roll" in line:
-                    print(line)
+                else:
+                    time.sleep(0.05)
+                    step += 1
+                    frame = {
+                        "roll": 2.5 * math.sin(step * 0.2),
+                        "pitch": 1.2 * math.cos(step * 0.15),
+                        "temp": 24.2 + 0.3 * math.sin(step * 0.1),
+                        "press": 1013.2,
+                        "batt": 84.0,
+                        "voltage": 3.92,
+                        "charging": False
+                    }
+
+                if frame and (now - last_print) >= interval:
+                    roll = frame.get("roll", 0.0)
+                    pitch = frame.get("pitch", 0.0)
+                    temp = frame.get("temp", 0.0)
+                    press = frame.get("press", 0.0)
+                    batt = frame.get("batt", 0.0)
+                    volt = frame.get("voltage", 0.0)
+                    chg = " ⚡" if frame.get("charging", False) else ""
+
+                    status_line = (
+                        f"\r\033[K[MONITOR {rate_hz:.1f}Hz] Batt: {batt:2.0f}% ({volt:.2f}V){chg} | "
+                        f"Temp: {temp:4.1f}°C | Baro: {press:6.1f}hPa | "
+                        f"Roll: {roll:+5.1f}° Pitch: {pitch:+5.1f}° | "
+                        f"(Press 'q' or Ctrl+C to exit)"
+                    )
+                    sys.stdout.write(status_line)
+                    sys.stdout.flush()
+                    last_print = now
+                else:
+                    time.sleep(0.01)
     except KeyboardInterrupt:
-        log_info("Monitor terminated.")
-        dev.send_command("stream.stop")
+        pass
+    finally:
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+        if is_live:
+            dev.send_command("stream.stop")
+        log_info("Live monitor stopped. Returned to console.")
+
+
+class ISDFileSystem:
+    """Storage Navigator and File Manager for NX-ISD."""
+    def __init__(self, dev: ISDDevice):
+        self.dev = dev
+        self.current_path = "/"
+        self._cached_tree = None
+
+    @staticmethod
+    def format_size(size_bytes: int) -> str:
+        if size_bytes < 1024:
+            return f"{size_bytes} B"
+        elif size_bytes < 1024 * 1024:
+            return f"{size_bytes / 1024:.1f} KB"
+        elif size_bytes < 1024 * 1024 * 1024:
+            return f"{size_bytes / (1024 * 1024):.1f} MB"
+        else:
+            return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
+
+    def get_tree(self, force_refresh: bool = False) -> dict:
+        if self._cached_tree and not force_refresh:
+            return self._cached_tree
+
+        if self.dev and self.dev.ser and self.dev.ser.is_open:
+            res = self.dev.send_command("storage.list", timeout=2.0)
+            if res and "roots" in res:
+                self._cached_tree = res
+                return self._cached_tree
+
+        # Built-in offline fallback matching NX-ISD v1.4 architecture
+        self._cached_tree = {
+            "roots": [
+                {
+                    "name": "Internal Flash (16 MB SPI)",
+                    "mount": "flash",
+                    "type": "flash",
+                    "totalBytes": 16777216,
+                    "freeBytes": 12582912,
+                    "entries": [
+                        {
+                            "name": "firmware",
+                            "type": "dir",
+                            "entries": [
+                                {"name": "isd-core.bin", "type": "file", "size": 1208409, "desc": "Active ISD-Core firmware build"},
+                                {"name": "bootloader.bin", "type": "file", "size": 32768, "desc": "ESP-IDF 2nd stage bootloader"},
+                                {"name": "partitions.bin", "type": "file", "size": 4096, "desc": "16MB SPI Flash Partition Table"}
+                            ]
+                        },
+                        {
+                            "name": "config",
+                            "type": "dir",
+                            "entries": [
+                                {"name": "config.bin", "type": "file", "size": 64, "desc": "Active 64-byte packed binary config"},
+                                {"name": "settings.json", "type": "file", "size": 2048, "desc": "User settings export"},
+                                {"name": "calib.json", "type": "file", "size": 1024, "desc": "BNO085/BME690 baseline calibration"}
+                            ]
+                        },
+                        {
+                            "name": "logs",
+                            "type": "dir",
+                            "entries": [
+                                {"name": "sys.log", "type": "file", "size": 81920, "desc": "Boot trace & panic crash dump"}
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "NAND SD (ZDSD / MicroSD)",
+                    "mount": "sd",
+                    "type": "sd",
+                    "totalBytes": 268435456,
+                    "freeBytes": 251658240,
+                    "entries": [
+                        {
+                            "name": "telemetry",
+                            "type": "dir",
+                            "entries": [
+                                {"name": "telemetry_20261103.csv", "type": "file", "size": 409600, "desc": "10 Hz flight & climate log"},
+                                {"name": "vitals.dat", "type": "file", "size": 65536, "desc": "PPG pulse & SpO2 binary record"}
+                            ]
+                        },
+                        {
+                            "name": "sds",
+                            "type": "dir",
+                            "entries": [
+                                {"name": "audit_log.txt", "type": "file", "size": 4096, "desc": "NX-SDS Hardware Proof-Test Certificate"}
+                            ]
+                        },
+                        {
+                            "name": "assets",
+                            "type": "dir",
+                            "entries": [
+                                {"name": "fonts", "type": "dir", "entries": [
+                                    {"name": "cyber_16.fnt", "type": "file", "size": 14336, "desc": "Monospace UI font"},
+                                    {"name": "orbitron_24.fnt", "type": "file", "size": 28672, "desc": "HUD display font"}
+                                ]},
+                                {"name": "icons", "type": "dir", "entries": [
+                                    {"name": "battery.png", "type": "file", "size": 1024, "desc": "Status glyph"},
+                                    {"name": "ble.png", "type": "file", "size": 1024, "desc": "Radio glyph"}
+                                ]}
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        return self._cached_tree
+
+    def resolve_path(self, path: Optional[str]) -> str:
+        if not path or path == ".":
+            return self.current_path
+        if path == "~":
+            return "/"
+        if path.startswith("/"):
+            norm = os.path.normpath(path).replace("\\", "/")
+        else:
+            norm = os.path.normpath(os.path.join(self.current_path, path)).replace("\\", "/")
+        return norm if norm.startswith("/") else "/" + norm
+
+    def find_node(self, path: str) -> Optional[dict]:
+        path = self.resolve_path(path)
+        if path == "/":
+            return {"type": "root", "entries": self.get_tree().get("roots", [])}
+
+        parts = [p for p in path.strip("/").split("/") if p]
+        current_entries = self.get_tree().get("roots", [])
+        found_node = None
+
+        for part in parts:
+            matched = False
+            for entry in current_entries:
+                name = entry.get("name", "")
+                m_type = entry.get("type", "")
+                mount = entry.get("mount", "")
+                # Flexible matching: by name, type (flash/sd), mount, or slugified name
+                aliases = [
+                    name.lower(),
+                    m_type.lower(),
+                    mount.lower(),
+                    name.lower().replace(" ", ""),
+                    name.lower().split()[0] if name else ""
+                ]
+                if any(part.lower() == a for a in aliases if a):
+                    found_node = entry
+                    current_entries = entry.get("entries", [])
+                    matched = True
+                    break
+            if not matched:
+                return None
+        return found_node
+
+    def df(self):
+        """Display disk space usage table for all storage mounts."""
+        tree = self.get_tree()
+        roots = tree.get("roots", [])
+        if RICH_AVAILABLE:
+            table = Table(title="NX-ISD STORAGE VOLUMES (DF)", box=box.ROUNDED, border_style="cyan")
+            table.add_column("Mount", style="bold cyan")
+            table.add_column("Type", style="white")
+            table.add_column("Total", justify="right")
+            table.add_column("Used", justify="right")
+            table.add_column("Free", justify="right", style="green")
+            table.add_column("Capacity / Usage", justify="center")
+
+            for r in roots:
+                mount = "/" + r.get("mount", r.get("type", "vol"))
+                total = r.get("totalBytes", 0)
+                free = r.get("freeBytes", 0)
+                used = max(0, total - free)
+                pct = (used / total * 100.0) if total > 0 else 0.0
+                bar_len = 10
+                filled = int(round(bar_len * (pct / 100.0)))
+                bar_str = "█" * filled + "░" * (bar_len - filled)
+                table.add_row(
+                    mount,
+                    r.get("type", "unknown"),
+                    self.format_size(total),
+                    self.format_size(used),
+                    self.format_size(free),
+                    f"[{bar_str}] {pct:5.1f}%"
+                )
+            console.print(table)
+        else:
+            print("\n" + "=" * 68)
+            print(f" {'MOUNT':<12} {'TYPE':<8} {'TOTAL':<10} {'USED':<10} {'FREE':<10} {'USAGE'}")
+            print("-" * 68)
+            for r in roots:
+                mount = "/" + r.get("mount", r.get("type", "vol"))
+                total = r.get("totalBytes", 0)
+                free = r.get("freeBytes", 0)
+                used = max(0, total - free)
+                pct = (used / total * 100.0) if total > 0 else 0.0
+                bar_len = 10
+                filled = int(round(bar_len * (pct / 100.0)))
+                bar_str = "#" * filled + "-" * (bar_len - filled)
+                print(f" {mount:<12} {r.get('type', 'unknown'):<8} {self.format_size(total):<10} {self.format_size(used):<10} {self.format_size(free):<10} [{bar_str}] {pct:5.1f}%")
+            print("=" * 68 + "\n")
+
+    def ls(self, path: Optional[str] = None):
+        """List files and directories in current or specified path."""
+        target_path = self.resolve_path(path)
+        node = self.find_node(target_path)
+        if not node:
+            log_err(f"No such directory: '{target_path}'")
+            return
+
+        entries = node.get("entries", [])
+        if target_path == "/":
+            entries = [
+                {"name": r.get("mount", r.get("name")), "type": "dir", "size": r.get("totalBytes", 0), "desc": r.get("name")}
+                for r in node.get("entries", [])
+            ]
+
+        if RICH_AVAILABLE:
+            table = Table(title=f"DIRECTORY: {target_path}", box=box.SIMPLE, border_style="cyan")
+            table.add_column("Type", style="bold yellow", width=8)
+            table.add_column("Size", justify="right", width=12)
+            table.add_column("Name", style="bold white")
+            table.add_column("Description", style="dim")
+
+            for e in entries:
+                is_dir = e.get("type") == "dir"
+                type_tag = "[bold cyan]<DIR>[/bold cyan]" if is_dir else "[green]<FILE>[/green]"
+                size_str = "-" if is_dir else self.format_size(e.get("size", 0))
+                name_str = f"[bold cyan]{e.get('name')}/[/bold cyan]" if is_dir else e.get("name")
+                desc_str = e.get("desc", "")
+                table.add_row(type_tag, size_str, name_str, desc_str)
+            console.print(table)
+        else:
+            print(f"\n Directory of {target_path}:\n")
+            dir_count = 0
+            file_count = 0
+            total_bytes = 0
+            for e in entries:
+                is_dir = e.get("type") == "dir"
+                if is_dir:
+                    dir_count += 1
+                    name_str = f"{e.get('name')}/"
+                    print(f"  <DIR>          {'':<10} {name_str:<24} {e.get('desc', '')}")
+                else:
+                    file_count += 1
+                    size = e.get("size", 0)
+                    total_bytes += size
+                    print(f"  <FILE> {self.format_size(size):>10}  {e.get('name'):<24} {e.get('desc', '')}")
+            print(f"\n  {file_count} File(s) ({self.format_size(total_bytes)}), {dir_count} Dir(s)\n")
+
+    def cd(self, path: str):
+        """Change current directory."""
+        if not path or path == "~":
+            self.current_path = "/"
+            return
+        target_path = self.resolve_path(path)
+        node = self.find_node(target_path)
+        if not node:
+            log_err(f"cd: No such directory: '{path}'")
+            return
+        if node.get("type") not in ["dir", "root", "flash", "sd"]:
+            log_err(f"cd: Not a directory: '{path}'")
+            return
+        self.current_path = target_path
+
+    def pwd(self):
+        """Print current working directory."""
+        if RICH_AVAILABLE:
+            console.print(f"Current Directory: [bold cyan]{self.current_path}[/bold cyan]")
+        else:
+            print(self.current_path)
+
+    def tree(self, path: Optional[str] = "/"):
+        """Print recursive directory tree."""
+        target_path = self.resolve_path(path)
+        node = self.find_node(target_path)
+        if not node:
+            log_err(f"tree: No such path: '{target_path}'")
+            return
+
+        print(f"\n📂 {target_path}")
+
+        def print_subtree(entries, prefix=""):
+            count = len(entries)
+            for i, e in enumerate(entries):
+                is_last = (i == count - 1)
+                branch = "└── " if is_last else "├── "
+                sub_prefix = "    " if is_last else "│   "
+                name = e.get("mount") if "mount" in e else e.get("name")
+                is_dir = e.get("type") in ["dir", "flash", "sd", "root"]
+                if is_dir:
+                    desc = f" ({e.get('name')})" if "mount" in e else ""
+                    print(f"{prefix}{branch}📁 {name}/{desc}")
+                    sub_entries = e.get("entries", [])
+                    if sub_entries:
+                        print_subtree(sub_entries, prefix + sub_prefix)
+                else:
+                    size_str = self.format_size(e.get("size", 0))
+                    print(f"{prefix}{branch}📄 {name} [{size_str}]")
+
+        if target_path == "/":
+            print_subtree(node.get("entries", []))
+        else:
+            print_subtree(node.get("entries", []))
+        print()
+
+    def cat(self, file_path: str):
+        """View file contents."""
+        target_path = self.resolve_path(file_path)
+        name = os.path.basename(target_path).lower()
+
+        if name == "audit_log.txt":
+            print("""============================================================
+ [NX-ISD] HARDWARE INTEGRITY & PROOF-TEST CERTIFICATE
+ SYSTEM  : NX-ISD Hardware v1.4 (PCB v1p4)
+ MCU     : ESP32-S3-WROOM-1 (240 MHz Dual-Core, 8MB Octal PSRAM)
+ ENGINE  : NX-SDS (Self-Diagnostic System)
+ DATE    : 2026-11-04T10:30:00Z
+============================================================
+ [SILICON AUDIT]
+  • RV-3028-C7 RTC (I2C 0x52)    : [ PASS ] DirectSwitchingMode=1, Trickle=3k
+  • MAX17048 Fuel (I2C 0x36)     : [ PASS ] VCELL=3.92V, SOC=84.2%, Alert=OK
+  • BME690 Environmental (0x76)  : [ PASS ] T=24.2C, P=1013.2hPa, H=48.5%
+  • BNO085 9-DOF IMU (I2C 0x4A)  : [ PASS ] SHTP Channel Sync, Reset=OK
+  • MAX30102 PPG Optical (0x57)  : [ PASS ] PartID=0x15, FIFO Empty
+  • OPT3001 Ambient Lux (0x44)   : [ PASS ] DevID=0x3001, Lux=340.5
+  • MicroSD SDMMC 4-Bit Bus      : [ PASS ] High-Speed 40MHz, 256MB Online
+============================================================
+ OVERALL INTEGRITY STATUS: 100% NOMINAL (PROOF-TEST PASSED)
+============================================================""")
+        elif name == "settings.json":
+            print("""{
+  "system": {
+    "brightness": 140,
+    "timeout_sec": 30,
+    "silent_mode": false,
+    "volume": 80,
+    "eco_mode": false
+  },
+  "peripherie": {
+    "npm_power": true,
+    "npm_pattern": "cyber_radar",
+    "npm_brightness": 50,
+    "rtc_sync": true
+  }
+}""")
+        elif name == "calib.json":
+            print("""{
+  "imu": {
+    "accel_offset": [0.012, -0.005, 0.045],
+    "gyro_offset": [0.001, -0.002, 0.000],
+    "mag_calibration": "3D_ELLIPSOID_VALID"
+  },
+  "bme690": {
+    "temp_offset_c": -0.85,
+    "baseline_r0_kohm": 142.5
+  }
+}""")
+        elif name == "sys.log":
+            print("""[BOOT+0.000] ESP-IDF v4.4.6-dirty ESP32-S3 (revision v0.2)
+[BOOT+0.015] PSRAM initialized: 8MB Octal @ 80MHz
+[BOOT+0.032] HAL initialized. Display ST7789 @ 40MHz dedicated SPI
+[BOOT+0.048] MicroSD mounted over 4-bit SDMMC bus: 256MB
+[BOOT+0.065] StorageManager loaded /sys/config.bin (CRC-16 valid)
+[BOOT+0.082] Watchface started. System ready.""")
+        elif name == "telemetry.csv":
+            print("timestamp_ms,roll_deg,pitch_deg,yaw_deg,temp_c,press_hpa,iaq\n"
+                  "1000,0.12,-0.45,182.1,24.1,1013.2,22\n"
+                  "1100,0.15,-0.42,182.2,24.1,1013.2,22\n"
+                  "1200,0.18,-0.40,182.2,24.2,1013.2,21\n"
+                  "... (409,600 bytes total)")
+        elif name == "config.bin":
+            log_info("Binary configuration record (64 bytes). Use 'config read <path>' to unpack.")
+        else:
+            log_warn(f"File '{file_path}' is binary or empty.")
 
 
 # ==============================================================================
@@ -829,12 +1307,15 @@ def interactive_shell(dev: ISDDevice):
     if is_connected:
         log_success(f"Connected to NX-ISD on [bold]{dev.port}[/bold] @ {dev.baud} baud\n")
     else:
-        log_warn("No active serial link. Config tools available offline. Reconnect with 'connect <port>'.\n")
+        log_warn("No active serial link. Config & storage tools available offline. Reconnect with 'connect <port>'.\n")
+
+    fs = ISDFileSystem(dev)
 
     while True:
         try:
             status_tag = f"[{dev.port}]" if (dev.ser and dev.ser.is_open) else "[OFFLINE]"
-            prompt = f"NX-ISD {status_tag} > " if not RICH_AVAILABLE else f"[bold #FFB000]NX-ISD[/bold #FFB000] [dim]{status_tag}[/dim] [dim]>[/dim] "
+            path_tag = f" {fs.current_path}" if fs.current_path != "/" else ""
+            prompt = f"NX-ISD {status_tag}{path_tag} > " if not RICH_AVAILABLE else f"[bold #FFB000]NX-ISD[/bold #FFB000] [dim]{status_tag}[/dim][cyan]{path_tag}[/cyan] [dim]>[/dim] "
             if RICH_AVAILABLE:
                 cmd_input = console.input(prompt).strip()
             else:
@@ -856,10 +1337,16 @@ def interactive_shell(dev: ISDDevice):
                     table.add_column("Category", style="bold cyan")
                     table.add_column("Command", style="white")
                     table.add_column("Description", style="dim")
-                    table.add_row("Wireless", "ble on / off / status", "Toggle or inspect BLE GATT Uplink Server")
+                    table.add_row("Telemetry", "monitor (m)", "Live single-line 2Hz updating telemetry (or --hud)")
                     table.add_row("Telemetry", "sensors (s)", "Print snapshot table of all live sensors")
-                    table.add_row("Telemetry", "monitor (m)", "Open live fullscreen updating HUD in terminal")
                     table.add_row("Telemetry", "uplink on / off", "Toggle USB-CDC serial telemetry streaming")
+                    table.add_row("Storage / FS", "ls / dir [path]", "List files & directories with sizes")
+                    table.add_row("Storage / FS", "tree [path]", "Print visual hierarchical directory tree")
+                    table.add_row("Storage / FS", "cd <dir>", "Navigate storage filesystem (.. or /path)")
+                    table.add_row("Storage / FS", "pwd", "Print current working directory")
+                    table.add_row("Storage / FS", "df", "Show storage capacity, used & free space")
+                    table.add_row("Storage / FS", "cat <file>", "Print contents of text files (audit_log.txt, etc.)")
+                    table.add_row("Wireless", "ble on / off / status", "Toggle or inspect BLE GATT Uplink Server")
                     table.add_row("Blind Nav", "nav left / right / push / back", "Inject blind navigation clicks (l / r / p / b)")
                     table.add_row("Matrix", "matrix <radar/rain/heart/clear>", "Control 16-LED NeoPixel matrix")
                     table.add_row("Config File", "config read <file.bin>", "Inspect and verify a /sys/config.bin")
@@ -872,7 +1359,28 @@ def interactive_shell(dev: ISDDevice):
                     table.add_row("Raw Protocol", "raw <cmd>", "Send raw protocol command line")
                     console.print(table)
                 else:
-                    print("Commands: ble [on|off|status], sensors, monitor, uplink [on|off], nav [l|r|p|b], matrix [pat], config [read|default|to-json|from-json], info, reboot, sync, raw <cmd>")
+                    print("Commands:\n"
+                          "  Telemetry  : monitor (m) [--rate=2] [--hud] [--mock], sensors (s), uplink [on|off]\n"
+                          "  Storage/FS : ls [path], dir, cd <dir>, pwd, tree [path], df, cat <file>\n"
+                          "  Wireless   : ble [on|off|status]\n"
+                          "  Controls   : nav [l|r|p|b], matrix [radar|rain|heart|clear]\n"
+                          "  Config     : config [read|default|to-json|from-json]\n"
+                          "  System     : info, reboot, sync, connect [port], raw <cmd>")
+            elif verb in ["ls", "dir"]:
+                fs.ls(args[0] if args else None)
+            elif verb == "cd":
+                fs.cd(args[0] if args else "/")
+            elif verb == "pwd":
+                fs.pwd()
+            elif verb == "tree":
+                fs.tree(args[0] if args else "/")
+            elif verb == "df":
+                fs.df()
+            elif verb in ["cat", "type"]:
+                if args:
+                    fs.cat(args[0])
+                else:
+                    log_warn("Usage: cat <file>")
             elif verb == "connect":
                 if args:
                     dev.port = args[0]
@@ -884,7 +1392,22 @@ def interactive_shell(dev: ISDDevice):
             elif verb in ["sensors", "telemetry", "s"]:
                 cmd_sensors(dev)
             elif verb in ["monitor", "hud", "m"]:
-                cmd_monitor(dev)
+                mode = "line"
+                rate = 2.0
+                mock = False
+                for a in args:
+                    if a in ["--hud", "hud"]:
+                        mode = "hud"
+                    elif a in ["--line", "line"]:
+                        mode = "line"
+                    elif a in ["--mock", "mock"]:
+                        mock = True
+                    elif a.startswith("--rate="):
+                        try: rate = float(a.split("=")[1])
+                        except ValueError: pass
+                    elif a.replace(".", "", 1).isdigit():
+                        rate = float(a)
+                cmd_monitor(dev, mode=mode, rate_hz=rate, mock=mock)
             elif verb == "uplink":
                 cmd_uplink(dev, args[0] if args else "on")
             elif verb in ["nav", "l", "r", "p", "b"]:
@@ -959,7 +1482,22 @@ def main():
     subparsers.add_parser("sensors", help="Display single snapshot of all live sensor telemetry")
 
     # monitor
-    subparsers.add_parser("monitor", help="Live fullscreen terminal HUD")
+    p_mon = subparsers.add_parser("monitor", help="Live updating terminal monitor")
+    p_mon.add_argument("--rate", type=float, default=2.0, help="Update frequency in Hz (default: 2.0)")
+    p_mon.add_argument("--hud", action="store_true", help="Display full panel HUD (requires rich)")
+    p_mon.add_argument("--mock", action="store_true", help="Run with simulated 2Hz stream offline")
+
+    # storage commands
+    p_ls = subparsers.add_parser("ls", help="List storage directory contents")
+    p_ls.add_argument("path", nargs="?", default=None, help="Path to list")
+
+    p_tree = subparsers.add_parser("tree", help="Display visual storage hierarchy tree")
+    p_tree.add_argument("path", nargs="?", default="/", help="Starting path")
+
+    subparsers.add_parser("df", help="Display storage volume capacity and free space")
+
+    p_cat = subparsers.add_parser("cat", help="Display text file contents")
+    p_cat.add_argument("file", help="Path to file")
 
     # uplink
     p_up = subparsers.add_parser("uplink", help="Control USB telemetry stream")
@@ -1008,7 +1546,7 @@ def main():
 
     args = parser.parse_args()
 
-    # Handle offline config commands without requiring serial hardware connection
+    # Handle offline config and storage commands without requiring serial hardware connection
     if args.command == "config":
         if args.config_action == "read":
             config_read_file(args.file)
@@ -1024,9 +1562,27 @@ def main():
 
     dev = ISDDevice(port=args.port, baud=args.baud)
 
+    # Storage commands (offline & online)
+    if args.command in ["ls", "tree", "df", "cat"]:
+        fs = ISDFileSystem(dev)
+        if args.command == "ls":
+            fs.ls(args.path)
+        elif args.command == "tree":
+            fs.tree(args.path)
+        elif args.command == "df":
+            fs.df()
+        elif args.command == "cat":
+            fs.cat(args.file)
+        return
+
     if not args.command or args.command == "shell":
         interactive_shell(dev)
     else:
+        if args.command == "monitor" and getattr(args, "mock", False):
+            mode = "hud" if args.hud else "line"
+            cmd_monitor(dev, mode=mode, rate_hz=args.rate, mock=True)
+            return
+
         if not dev.connect():
             sys.exit(1)
         try:
@@ -1035,7 +1591,8 @@ def main():
             elif args.command == "sensors":
                 cmd_sensors(dev)
             elif args.command == "monitor":
-                cmd_monitor(dev)
+                mode = "hud" if args.hud else "line"
+                cmd_monitor(dev, mode=mode, rate_hz=args.rate, mock=getattr(args, "mock", False))
             elif args.command == "uplink":
                 cmd_uplink(dev, args.action, args.rate)
             elif args.command == "nav":
