@@ -896,7 +896,7 @@ class DisplayMirrorReceiver:
         if not self.mock:
             try:
                 if self.dev.ser and self.dev.ser.is_open:
-                    for _ in range(2):
+                    for _ in range(3):
                         self.dev.ser.write(b"mirror.stop\n")
                         self.dev.ser.flush()
                         time.sleep(0.02)
@@ -908,7 +908,9 @@ class DisplayMirrorReceiver:
 
         if not self.mock and self.dev.ser and self.dev.ser.is_open:
             try:
+                time.sleep(0.05)
                 self.dev.ser.reset_input_buffer()
+                self.dev.ser.reset_output_buffer()
             except Exception:
                 pass
 
@@ -1216,28 +1218,46 @@ def cmd_mirror(dev: ISDDevice, scale: int = 2, web: bool = False, web_only: bool
     label.pack(fill="both", expand=True)
 
     is_closing = False
+    after_id = None
 
     def close_window(event=None):
-        nonlocal is_closing
+        nonlocal is_closing, after_id
         if is_closing:
             return
         is_closing = True
+        if after_id is not None:
+            try:
+                root.after_cancel(after_id)
+            except Exception:
+                pass
+            after_id = None
+        try:
+            root.quit()
+        except Exception:
+            pass
         try:
             root.destroy()
         except Exception:
             pass
 
-    root.bind("<Escape>", close_window)
-    root.bind("q", close_window)
-    root.bind("Q", close_window)
+    def on_key(event):
+        if event.keysym.lower() in ("escape", "q", "x"):
+            close_window()
+
+    # Bind globally so pressing ESC, q, Q, x, X closes instantly regardless of widget focus
+    root.bind_all("<Key>", on_key)
     root.protocol("WM_DELETE_WINDOW", close_window)
+    try:
+        root.focus_force()
+    except Exception:
+        pass
 
     last_drawn_count = -1
     last_title_update = 0.0
 
     def update_frame():
-        nonlocal last_drawn_count, last_title_update
-        if is_closing:
+        nonlocal last_drawn_count, last_title_update, after_id
+        if is_closing or not receiver.running:
             return
 
         now = time.time()
@@ -1256,25 +1276,41 @@ def cmd_mirror(dev: ISDDevice, scale: int = 2, web: bool = False, web_only: bool
             last_title_update = now
             fps = receiver.fps
             mock_str = " (MOCK)" if mock else ""
-            root.title(f"NX-ISD // Live Display Mirror [{sw}x{sh} @ {scale}x]{mock_str} - {fps:.1f} FPS (ESC to exit)")
+            try:
+                root.title(f"NX-ISD // Live Display Mirror [{sw}x{sh} @ {scale}x]{mock_str} - {fps:.1f} FPS (ESC to exit)")
+            except Exception:
+                pass
 
         if not is_closing and receiver.running:
-            root.after(25, update_frame)
+            try:
+                after_id = root.after(25, update_frame)
+            except Exception:
+                pass
 
-    root.after(25, update_frame)
+    after_id = root.after(25, update_frame)
 
     try:
         root.mainloop()
     except KeyboardInterrupt:
         pass
     finally:
-        is_closing = True
+        close_window()
         if httpd:
             try:
                 httpd.shutdown()
             except Exception:
                 pass
         receiver.stop()
+
+        # Flush any buffered console keystrokes (e.g. Ctrl+C) on Windows
+        if sys.platform == "win32":
+            try:
+                import msvcrt
+                while msvcrt.kbhit():
+                    msvcrt.getch()
+            except Exception:
+                pass
+
         log_info("Display mirror closed. Returned to shell.")
 
 
