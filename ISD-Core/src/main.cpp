@@ -922,4 +922,9 @@ void loop() {
     // Non-blocking yield
     delay(1);
   }
+
+  // 3. Stream Display Mirror Frame to Host over USB-CDC (ONLY active on explicit request)
+  if (UplinkBridge::isMirrorActive()) {
+    UplinkBridge::sendMirrorFrame(watchface.getCanvas());
+  }
 }

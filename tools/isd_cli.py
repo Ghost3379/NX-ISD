@@ -15,6 +15,9 @@ import json
 import struct
 import math
 import argparse
+import threading
+import webbrowser
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import Optional, Dict, Any, List
 
 # Ensure Windows terminal standard streams handle UTF-8 without charmap crashes
@@ -604,6 +607,674 @@ def cmd_monitor(dev: ISDDevice, mode: str = "line", rate_hz: float = 2.0, mock: 
         if is_live:
             dev.send_command("stream.stop")
         log_info("Live monitor stopped. Returned to console.")
+
+
+# ==============================================================================
+# SECTION 2B: REAL-TIME DISPLAY MIRROR & STREAMING ENGINE
+# ==============================================================================
+
+# Precomputed RGB565 to RGB888 Lookup Table (65536 * 3 bytes)
+RGB565_LUT = bytearray(65536 * 3)
+for _c in range(65536):
+    _r = ((_c >> 11) & 0x1F) * 255 // 31
+    _g = ((_c >> 5) & 0x3F) * 255 // 63
+    _b = (_c & 0x1F) * 255 // 31
+    _idx = _c * 3
+    RGB565_LUT[_idx] = _r
+    RGB565_LUT[_idx + 1] = _g
+    RGB565_LUT[_idx + 2] = _b
+
+
+def decode_rle_rgb565(payload: bytes, width: int = 240, height: int = 240) -> Optional[bytes]:
+    """Decode RLE-compressed 16-bit RGB565 payload into raw RGB888 bytes (width*height*3)."""
+    total_pixels = width * height
+    out_rgb = bytearray(total_pixels * 3)
+    p_len = len(payload)
+    in_idx = 0
+    out_idx = 0
+    lut = RGB565_LUT
+    max_out = total_pixels * 3
+
+    while in_idx + 2 < p_len and out_idx < max_out:
+        run = payload[in_idx]
+        c = payload[in_idx + 1] | (payload[in_idx + 2] << 8)
+        in_idx += 3
+        c3 = c * 3
+        pixel_rgb = lut[c3:c3 + 3]
+        end_idx = out_idx + run * 3
+        if end_idx > max_out:
+            end_idx = max_out
+            run = (end_idx - out_idx) // 3
+        out_rgb[out_idx:end_idx] = pixel_rgb * run
+        out_idx = end_idx
+
+    return bytes(out_rgb)
+
+
+def make_ppm_header(width: int = 240, height: int = 240) -> bytes:
+    """Standard binary PPM (P6) header for C-speed Tkinter PhotoImage display."""
+    return f"P6\n{width} {height}\n255\n".encode("ascii")
+
+
+def make_bmp(width: int, height: int, rgb_bytes: bytes) -> bytes:
+    """Generate uncompressed 24-bit top-down BMP for instant zero-dependency browser display."""
+    bgr = bytearray(len(rgb_bytes))
+    bgr[0::3] = rgb_bytes[2::3]
+    bgr[1::3] = rgb_bytes[1::3]
+    bgr[2::3] = rgb_bytes[0::3]
+    file_size = 54 + len(bgr)
+    header = struct.pack("<2sIHHI", b"BM", file_size, 0, 0, 54)
+    dib = struct.pack("<IIIHHIIIIII", 40, width, -height & 0xFFFFFFFF, 1, 24, 0, len(bgr), 2835, 2835, 0, 0)
+    return header + dib + bytes(bgr)
+
+
+def generate_mock_display_frame(step: int) -> bytes:
+    """Generate dynamic simulated 240x240 watchface frame for offline testing."""
+    w, h = 240, 240
+    buf = bytearray(w * h * 3)
+    buf[:] = b"\x0b\x0d\x14" * (w * h)
+
+    cx, cy = 120, 120
+    # Outer ring
+    for y in range(h):
+        dy2 = (y - cy) ** 2
+        row_offset = y * w * 3
+        for x in range(w):
+            d2 = dy2 + (x - cx) ** 2
+            if 84 * 84 <= d2 <= 86 * 86:
+                idx = row_offset + x * 3
+                buf[idx] = 255
+                buf[idx + 1] = 176
+                buf[idx + 2] = 0
+
+    # Crosshairs
+    for x in range(25, 215):
+        idx = (cy * w + x) * 3
+        buf[idx] = 40; buf[idx+1] = 50; buf[idx+2] = 70
+    for y in range(25, 215):
+        idx = (y * w + cx) * 3
+        buf[idx] = 40; buf[idx+1] = 50; buf[idx+2] = 70
+
+    # Rotating telemetry indicator
+    angle = step * 0.12
+    dot_x = int(cx + 65 * math.cos(angle))
+    dot_y = int(cy + 65 * math.sin(angle))
+    for dy in range(-4, 5):
+        for dx in range(-4, 5):
+            px, py = dot_x + dx, dot_y + dy
+            if 0 <= px < w and 0 <= py < h and (dx * dx + dy * dy <= 16):
+                idx = (py * w + px) * 3
+                buf[idx] = 0; buf[idx + 1] = 240; buf[idx + 2] = 255
+
+    # Center target
+    for dy in range(-2, 3):
+        for dx in range(-2, 3):
+            px, py = cx + dx, cy + dy
+            if 0 <= px < w and 0 <= py < h:
+                idx = (py * w + px) * 3
+                buf[idx] = 255; buf[idx + 1] = 80; buf[idx + 2] = 80
+
+    return bytes(buf)
+
+
+MIRROR_HTML_PAGE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NX-ISD // Live Display Mirror</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #08090c;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Courier New", monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .header { margin-bottom: 16px; text-align: center; }
+  .title { font-size: 1.15rem; font-weight: 700; letter-spacing: 2px; color: #ffb000; text-transform: uppercase; }
+  .subtitle { font-size: 0.75rem; color: #718096; letter-spacing: 1px; margin-top: 4px; }
+  .screen-bezel {
+    background: #11141c;
+    padding: 14px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 176, 0, 0.15);
+    display: inline-block;
+  }
+  .display-img {
+    width: 480px;
+    height: 480px;
+    max-width: 90vw;
+    max-height: 90vw;
+    display: block;
+    image-rendering: pixelated;
+    border-radius: 6px;
+    background: #000;
+  }
+  .telemetry-bar {
+    margin-top: 16px;
+    display: flex;
+    gap: 16px;
+    font-size: 0.8rem;
+    color: #a0aec0;
+  }
+  .badge {
+    background: rgba(255, 176, 0, 0.1);
+    color: #ffb000;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 176, 0, 0.25);
+  }
+  .badge-live {
+    background: rgba(72, 187, 120, 0.15);
+    color: #48bb78;
+    border-color: rgba(72, 187, 120, 0.3);
+  }
+  .notice { margin-top: 14px; font-size: 0.72rem; color: #4a5568; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">NX-ISD // Live Display Mirror</div>
+    <div class="subtitle">ST7789 240x240 RGB565 Stream (20 FPS)</div>
+  </div>
+  <div class="screen-bezel">
+    <img id="mirror" class="display-img" src="/frame.bmp" alt="Display Stream">
+  </div>
+  <div class="telemetry-bar">
+    <span class="badge badge-live" id="stream-status">STREAMING</span>
+    <span class="badge" id="fps-counter">-- FPS</span>
+    <span class="badge" id="frame-counter">FRAME: 0</span>
+  </div>
+  <div class="notice">Pure Display Mirror &mdash; Hardware navigation switch active on device</div>
+  <script>
+    const img = document.getElementById('mirror');
+    const fpsBadge = document.getElementById('fps-counter');
+    const frameBadge = document.getElementById('frame-counter');
+    const statusBadge = document.getElementById('stream-status');
+    let frameNum = 0;
+    let lastTime = performance.now();
+    let fpsFrames = 0;
+    let active = true;
+
+    async function streamLoop() {
+      while (active) {
+        try {
+          const res = await fetch('/frame.bmp?t=' + Date.now());
+          if (res.ok) {
+            const blob = await res.blob();
+            const oldSrc = img.src;
+            img.src = URL.createObjectURL(blob);
+            if (oldSrc.startsWith('blob:')) URL.revokeObjectURL(oldSrc);
+            frameNum++;
+            fpsFrames++;
+            frameBadge.textContent = 'FRAME: ' + frameNum;
+          }
+        } catch (e) {
+          statusBadge.textContent = 'CONNECTING...';
+          statusBadge.className = 'badge';
+          await new Promise(r => setTimeout(r, 500));
+        }
+
+        const now = performance.now();
+        if (now - lastTime >= 1000) {
+          const fps = (fpsFrames / ((now - lastTime) / 1000)).toFixed(1);
+          fpsBadge.textContent = fps + ' FPS';
+          fpsFrames = 0;
+          lastTime = now;
+          statusBadge.textContent = 'STREAMING';
+          statusBadge.className = 'badge badge-live';
+        }
+        await new Promise(r => setTimeout(r, 20));
+      }
+    }
+    streamLoop();
+  </script>
+</body>
+</html>
+"""
+
+
+class DisplayMirrorReceiver:
+    """
+    Background Serial Frame Receiver for NX-ISD Virtual Display.
+    - Zero background overhead when inactive
+    - Auto-heartbeat (1.5s interval) to prevent ESP32-S3 timeout
+    - High-throughput binary frame assembly with sync validation
+    """
+    def __init__(self, dev: ISDDevice, mock: bool = False):
+        self.dev = dev
+        self.mock = mock
+        self.running = False
+        self.thread: Optional[threading.Thread] = None
+        self._lock = threading.Lock()
+        self.latest_rgb: Optional[bytes] = None
+        self.frame_count = 0
+        self.fps = 0.0
+        self.width = 240
+        self.height = 240
+
+    def start(self) -> bool:
+        if self.mock:
+            self.running = True
+            self.latest_rgb = generate_mock_display_frame(0)
+            self.thread = threading.Thread(target=self._mock_loop, daemon=True)
+            self.thread.start()
+            return True
+
+        if not self.dev.ser or not self.dev.ser.is_open:
+            if not self.dev.connect():
+                return False
+
+        self.running = True
+
+        # Send mirror.start command to device
+        try:
+            self.dev.ser.reset_input_buffer()
+            self.dev.ser.write(b"mirror.start\n")
+            self.dev.ser.flush()
+        except Exception as e:
+            log_err(f"Failed to transmit mirror.start: {e}")
+            self.running = False
+            return False
+
+        self.thread = threading.Thread(target=self._read_loop, daemon=True)
+        self.thread.start()
+        return True
+
+    def stop(self):
+        if not self.running:
+            return
+        self.running = False
+
+        if not self.mock:
+            try:
+                if self.dev.ser and self.dev.ser.is_open:
+                    for _ in range(2):
+                        self.dev.ser.write(b"mirror.stop\n")
+                        self.dev.ser.flush()
+                        time.sleep(0.02)
+            except Exception:
+                pass
+
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=0.6)
+
+        if not self.mock and self.dev.ser and self.dev.ser.is_open:
+            try:
+                self.dev.ser.reset_input_buffer()
+            except Exception:
+                pass
+
+    def get_latest_frame(self) -> Optional[bytes]:
+        with self._lock:
+            return self.latest_rgb
+
+    def _mock_loop(self):
+        step = 0
+        last_fps_time = time.time()
+        fps_frames = 0
+        while self.running:
+            time.sleep(0.05)  # 20 FPS
+            step += 1
+            frame = generate_mock_display_frame(step)
+            with self._lock:
+                self.latest_rgb = frame
+                self.frame_count += 1
+            fps_frames += 1
+
+            now = time.time()
+            if (now - last_fps_time) >= 0.5:
+                self.fps = fps_frames / (now - last_fps_time)
+                fps_frames = 0
+                last_fps_time = now
+
+    def _read_loop(self):
+        ser = self.dev.ser
+        if not ser:
+            return
+
+        header_magic = b"NXDS"
+        buf = bytearray()
+        last_ping = time.time()
+        last_fps_update = time.time()
+        frames_since_fps = 0
+
+        prev_timeout = ser.timeout
+        ser.timeout = 0.1
+
+        try:
+            while self.running and ser.is_open:
+                now = time.time()
+
+                # 1. Heartbeat to keep ESP32-S3 streaming
+                if (now - last_ping) >= 1.5:
+                    try:
+                        ser.write(b"mirror.ping\n")
+                        ser.flush()
+                    except Exception:
+                        pass
+                    last_ping = now
+
+                # 2. Read incoming chunk
+                try:
+                    chunk = ser.read(ser.in_waiting or 1024)
+                except Exception:
+                    break
+
+                if chunk:
+                    buf.extend(chunk)
+
+                # 3. Parse frames from buffer
+                while True:
+                    idx = buf.find(header_magic)
+                    if idx == -1:
+                        if len(buf) > 3:
+                            buf = buf[-3:]
+                        break
+
+                    if idx > 0:
+                        del buf[:idx]
+
+                    if len(buf) < 16:
+                        break
+
+                    # Check tail sync word at bytes 14..15 (0x55, 0xAA)
+                    if buf[14] != 0x55 or buf[15] != 0xAA:
+                        del buf[:4]
+                        continue
+
+                    w, h = struct.unpack_from("<HH", buf, 4)
+                    fmt = buf[8]
+                    payload_len = struct.unpack_from("<I", buf, 10)[0]
+                    total_len = 16 + payload_len
+
+                    # Sanity check dimensions & length
+                    if w != 240 or h != 240 or payload_len > (240 * 240 * 3):
+                        del buf[:4]
+                        continue
+
+                    if len(buf) < total_len:
+                        break  # Wait for remaining frame bytes
+
+                    payload = bytes(buf[16:total_len])
+                    del buf[:total_len]
+
+                    # Decode RLE payload
+                    rgb = decode_rle_rgb565(payload, w, h)
+                    if rgb:
+                        with self._lock:
+                            self.latest_rgb = rgb
+                            self.frame_count += 1
+                        frames_since_fps += 1
+
+                # 4. Update FPS metric
+                if (now - last_fps_update) >= 0.5:
+                    dt = now - last_fps_update
+                    self.fps = frames_since_fps / dt
+                    frames_since_fps = 0
+                    last_fps_update = now
+
+        finally:
+            try:
+                ser.timeout = prev_timeout
+            except Exception:
+                pass
+
+
+class MirrorWebHandler(BaseHTTPRequestHandler):
+    def __init__(self, receiver: DisplayMirrorReceiver, *args, **kwargs):
+        self.receiver = receiver
+        super().__init__(*args, **kwargs)
+
+    def do_GET(self):
+        if self.path in ["/", "/index.html"]:
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-cache")
+            self.end_headers()
+            self.wfile.write(MIRROR_HTML_PAGE.encode("utf-8"))
+        elif self.path.startswith("/frame.bmp"):
+            rgb = self.receiver.get_latest_frame()
+            if not rgb:
+                rgb = b"\x00\x00\x00" * (240 * 240)
+            bmp = make_bmp(240, 240, rgb)
+            self.send_response(200)
+            self.send_header("Content-Type", "image/bmp")
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.send_header("Content-Length", str(len(bmp)))
+            self.end_headers()
+            self.wfile.write(bmp)
+        elif self.path == "/status":
+            status = {
+                "active": self.receiver.running,
+                "fps": round(self.receiver.fps, 1),
+                "frames": self.receiver.frame_count,
+                "width": 240,
+                "height": 240
+            }
+            body = json.dumps(status).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def log_message(self, format, *args):
+        # Mute standard HTTP request logging to keep console clean
+        pass
+
+
+def start_web_mirror(receiver: DisplayMirrorReceiver, port: int = 8765) -> HTTPServer:
+    """Launch embedded HTTP server serving the live display mirror."""
+    handler_factory = lambda *args, **kwargs: MirrorWebHandler(receiver, *args, **kwargs)
+    server = HTTPServer(("0.0.0.0", port), handler_factory)
+    server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+    server_thread.start()
+    return server
+
+
+def cmd_mirror(dev: ISDDevice, scale: int = 2, web: bool = False, web_only: bool = False, web_port: int = 8765, mock: bool = False):
+    """
+    Open dedicated 1:1 ST7789 Virtual Display Mirror.
+    Pure screen recreation (no virtual buttons) controlled via physical hardware.
+    """
+    scale = max(1, min(4, int(scale or 2)))
+    is_live = dev.ser and dev.ser.is_open
+
+    if not is_live and not mock:
+        if not dev.connect():
+            log_warn("No serial hardware connected. Use 'mirror --mock' to preview virtual display offline, or 'connect <port>'.")
+            return
+        is_live = True
+
+    receiver = DisplayMirrorReceiver(dev, mock=mock)
+    if not receiver.start():
+        log_err("Could not start display mirror streaming on device.")
+        return
+
+    mode_desc = "Offline Simulation" if mock else f"{dev.port} @ 20 FPS"
+    log_success(f"Display stream active ({mode_desc}). Press ESC, 'q', or close window to exit.")
+
+    httpd = None
+    if web or web_only:
+        try:
+            httpd = start_web_mirror(receiver, port=web_port)
+            log_info(f"Web Display Mirror available at: [bold cyan]http://localhost:{web_port}[/bold cyan]")
+            try:
+                webbrowser.open(f"http://localhost:{web_port}")
+            except Exception:
+                pass
+        except Exception as e:
+            log_warn(f"Failed to start web server on port {web_port}: {e}")
+
+    if web_only:
+        log_info("Running in headless web-only mode. Press Ctrl+C or 'q' to stop.")
+        try:
+            while receiver.running:
+                if check_exit_keypress():
+                    break
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            if httpd:
+                try: httpd.shutdown()
+                except Exception: pass
+            receiver.stop()
+            log_info("Display mirror stopped.")
+        return
+
+    # Attempt to open native Tkinter Desktop Mirror window
+    try:
+        import tkinter as tk
+    except ImportError:
+        log_warn("Tkinter is not available. Falling back to web mirror...")
+        if not httpd:
+            try:
+                httpd = start_web_mirror(receiver, port=web_port)
+                log_info(f"Web Display Mirror active at: [bold cyan]http://localhost:{web_port}[/bold cyan]")
+                webbrowser.open(f"http://localhost:{web_port}")
+            except Exception as e:
+                log_err(f"Failed to start web fallback: {e}")
+                receiver.stop()
+                return
+        try:
+            while receiver.running:
+                if check_exit_keypress():
+                    break
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            if httpd:
+                try: httpd.shutdown()
+                except Exception: pass
+            receiver.stop()
+            log_info("Display mirror stopped.")
+        return
+
+    try:
+        root = tk.Tk()
+    except Exception as e:
+        log_warn(f"Could not open graphical window ({e}). Running in web mode...")
+        if not httpd:
+            try:
+                httpd = start_web_mirror(receiver, port=web_port)
+                log_info(f"Web Display Mirror active at: [bold cyan]http://localhost:{web_port}[/bold cyan]")
+                webbrowser.open(f"http://localhost:{web_port}")
+            except Exception as ex:
+                log_err(f"Failed to start web fallback: {ex}")
+                receiver.stop()
+                return
+        try:
+            while receiver.running:
+                if check_exit_keypress():
+                    break
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            if httpd:
+                try: httpd.shutdown()
+                except Exception: pass
+            receiver.stop()
+            log_info("Display mirror stopped.")
+        return
+
+    w, h = 240, 240
+    sw, sh = w * scale, h * scale
+
+    root.title(f"NX-ISD // Live Display Mirror [{sw}x{sh} @ {scale}x]")
+    root.geometry(f"{sw}x{sh}")
+    root.resizable(False, False)
+    root.configure(bg="#090a0f")
+
+    ppm_hdr = make_ppm_header(w, h)
+    black_frame = ppm_hdr + (b"\x00\x00\x00" * (w * h))
+    raw_photo = tk.PhotoImage(width=w, height=h)
+    raw_photo.put(black_frame)
+
+    if scale > 1:
+        scaled_photo = tk.PhotoImage(width=sw, height=sh)
+        scaled_photo.tk.call(scaled_photo.name, "copy", raw_photo.name, "-zoom", scale, scale)
+        display_photo = scaled_photo
+    else:
+        scaled_photo = None
+        display_photo = raw_photo
+
+    label = tk.Label(root, image=display_photo, bg="#090a0f", bd=0, highlightthickness=0)
+    label.pack(fill="both", expand=True)
+
+    is_closing = False
+
+    def close_window(event=None):
+        nonlocal is_closing
+        if is_closing:
+            return
+        is_closing = True
+        try:
+            root.destroy()
+        except Exception:
+            pass
+
+    root.bind("<Escape>", close_window)
+    root.bind("q", close_window)
+    root.bind("Q", close_window)
+    root.protocol("WM_DELETE_WINDOW", close_window)
+
+    last_drawn_count = -1
+    last_title_update = 0.0
+
+    def update_frame():
+        nonlocal last_drawn_count, last_title_update
+        if is_closing:
+            return
+
+        now = time.time()
+        rgb_data = receiver.get_latest_frame()
+        if rgb_data and receiver.frame_count != last_drawn_count:
+            last_drawn_count = receiver.frame_count
+            ppm_data = ppm_hdr + rgb_data
+            try:
+                raw_photo.put(ppm_data)
+                if scale > 1 and scaled_photo:
+                    scaled_photo.tk.call(scaled_photo.name, "copy", raw_photo.name, "-zoom", scale, scale)
+            except Exception:
+                pass
+
+        if (now - last_title_update) >= 0.5:
+            last_title_update = now
+            fps = receiver.fps
+            mock_str = " (MOCK)" if mock else ""
+            root.title(f"NX-ISD // Live Display Mirror [{sw}x{sh} @ {scale}x]{mock_str} - {fps:.1f} FPS (ESC to exit)")
+
+        if not is_closing and receiver.running:
+            root.after(25, update_frame)
+
+    root.after(25, update_frame)
+
+    try:
+        root.mainloop()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        is_closing = True
+        if httpd:
+            try:
+                httpd.shutdown()
+            except Exception:
+                pass
+        receiver.stop()
+        log_info("Display mirror closed. Returned to shell.")
 
 
 class ISDFileSystem:
@@ -1340,6 +2011,7 @@ def interactive_shell(dev: ISDDevice):
                     table.add_row("Telemetry", "monitor (m)", "Live single-line 2Hz updating telemetry (or --hud)")
                     table.add_row("Telemetry", "sensors (s)", "Print snapshot table of all live sensors")
                     table.add_row("Telemetry", "uplink on / off", "Toggle USB-CDC serial telemetry streaming")
+                    table.add_row("Display Mirror", "mirror (d)", "1:1 real-time ST7789 virtual display window (or --web)")
                     table.add_row("Storage / FS", "ls / dir [path]", "List files & directories with sizes")
                     table.add_row("Storage / FS", "tree [path]", "Print visual hierarchical directory tree")
                     table.add_row("Storage / FS", "cd <dir>", "Navigate storage filesystem (.. or /path)")
@@ -1361,6 +2033,7 @@ def interactive_shell(dev: ISDDevice):
                 else:
                     print("Commands:\n"
                           "  Telemetry  : monitor (m) [--rate=2] [--hud] [--mock], sensors (s), uplink [on|off]\n"
+                          "  Display    : mirror (d) [-s 1|2|3] [--web] [--web-only] [--mock]\n"
                           "  Storage/FS : ls [path], dir, cd <dir>, pwd, tree [path], df, cat <file>\n"
                           "  Wireless   : ble [on|off|status]\n"
                           "  Controls   : nav [l|r|p|b], matrix [radar|rain|heart|clear]\n"
@@ -1391,6 +2064,24 @@ def interactive_shell(dev: ISDDevice):
                 cmd_ble(dev, args[0] if args else "status")
             elif verb in ["sensors", "telemetry", "s"]:
                 cmd_sensors(dev)
+            elif verb in ["mirror", "display", "d"]:
+                scale = 2
+                web = False
+                web_only = False
+                mock = False
+                for a in args:
+                    if a in ["--web", "web"]:
+                        web = True
+                    elif a in ["--web-only", "web-only"]:
+                        web_only = True
+                    elif a in ["--mock", "mock"]:
+                        mock = True
+                    elif a.isdigit():
+                        scale = int(a)
+                    elif a.startswith("--scale="):
+                        try: scale = int(a.split("=")[1])
+                        except ValueError: pass
+                cmd_mirror(dev, scale=scale, web=web, web_only=web_only, mock=mock)
             elif verb in ["monitor", "hud", "m"]:
                 mode = "line"
                 rate = 2.0
@@ -1487,6 +2178,14 @@ def main():
     p_mon.add_argument("--hud", action="store_true", help="Display full panel HUD (requires rich)")
     p_mon.add_argument("--mock", action="store_true", help="Run with simulated 2Hz stream offline")
 
+    # mirror / virtual display
+    p_mirror = subparsers.add_parser("mirror", aliases=["display", "d"], help="Launch real-time 1:1 ST7789 display mirror")
+    p_mirror.add_argument("-s", "--scale", type=int, default=2, choices=[1, 2, 3, 4], help="Window scaling factor (default: 2 -> 480x480)")
+    p_mirror.add_argument("--web", action="store_true", help="Also start local web mirror server (http://localhost:8765)")
+    p_mirror.add_argument("--web-only", action="store_true", help="Run web server only (headless, no desktop window)")
+    p_mirror.add_argument("--web-port", type=int, default=8765, help="Web server port (default: 8765)")
+    p_mirror.add_argument("--mock", action="store_true", help="Run with simulated 20 FPS watchface stream offline")
+
     # storage commands
     p_ls = subparsers.add_parser("ls", help="List storage directory contents")
     p_ls.add_argument("path", nargs="?", default=None, help="Path to list")
@@ -1578,6 +2277,10 @@ def main():
     if not args.command or args.command == "shell":
         interactive_shell(dev)
     else:
+        if args.command in ["mirror", "display", "d"]:
+            cmd_mirror(dev, scale=args.scale, web=args.web, web_only=args.web_only, web_port=args.web_port, mock=getattr(args, "mock", False))
+            return
+
         if args.command == "monitor" and getattr(args, "mock", False):
             mode = "hud" if args.hud else "line"
             cmd_monitor(dev, mode=mode, rate_hz=args.rate, mock=True)

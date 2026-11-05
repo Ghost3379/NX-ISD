@@ -1,5 +1,6 @@
 #pragma once
 #include <Arduino.h>
+#include <LovyanGFX.hpp>
 #include "SensorState.h"
 #include "HAL.h"
 #include "pins.h"
@@ -61,6 +62,14 @@ public:
   static bool consumeNavRight();
   static bool consumeNavPush();
   static bool consumeNavBtn();
+
+  // Display Live Mirror Streaming (Virtual Display)
+  static bool mirrorActive;
+  static uint32_t lastMirrorFrameTime;
+  static uint32_t lastMirrorHeartbeat;
+  static void sendMirrorFrame(LGFX_Sprite* canvas);
+  static bool isMirrorActive() { return mirrorActive; }
+  static void setMirrorActive(bool active);
 
   // Status accessors for UI
   static bool isStreamActive() { return streamActive; }

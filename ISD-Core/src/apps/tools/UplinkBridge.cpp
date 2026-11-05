@@ -23,6 +23,10 @@ uint32_t UplinkBridge::lastCommandTime = 0;
 bool UplinkBridge::buzzerEnabled = false;
 uint8_t UplinkBridge::displayBrightness = 200;
 
+bool UplinkBridge::mirrorActive = false;
+uint32_t UplinkBridge::lastMirrorFrameTime = 0;
+uint32_t UplinkBridge::lastMirrorHeartbeat = 0;
+
 bool UplinkBridge::bleActive = false;
 bool UplinkBridge::bleConnected = false;
 static BLEServer* pBleServer = nullptr;
@@ -296,6 +300,23 @@ void UplinkBridge::processCommand(const char* cmd) {
     int hz = atoi(cmd + 12);
     setStreamRateHz((uint8_t)constrain(hz, 1, 100));
     Serial.printf("{\"status\":\"ACK\",\"cmd\":\"stream.rate\",\"val\":%d}\n", hz);
+    return;
+  }
+
+  // 2b. Display Live Mirror Control (mirror.start, mirror.stop, mirror.ping)
+  if (strcmp(cmd, "mirror.start") == 0 || strcmp(cmd, "display.mirror=1") == 0) {
+    setMirrorActive(true);
+    Serial.println("{\"status\":\"ACK\",\"cmd\":\"mirror.start\",\"active\":true}");
+    return;
+  }
+  if (strcmp(cmd, "mirror.stop") == 0 || strcmp(cmd, "display.mirror=0") == 0) {
+    setMirrorActive(false);
+    Serial.println("{\"status\":\"ACK\",\"cmd\":\"mirror.stop\",\"active\":false}");
+    return;
+  }
+  if (strcmp(cmd, "mirror.ping") == 0) {
+    lastMirrorHeartbeat = millis();
+    Serial.println("{\"status\":\"ACK\",\"cmd\":\"mirror.ping\"}");
     return;
   }
 
@@ -664,4 +685,75 @@ void UplinkBridge::update(const SensorState& state) {
   if (matrixPower && currentPattern != PATTERN_OFF && currentPattern != PATTERN_CUSTOM) {
     updateMatrixAnimation();
   }
+}
+
+void UplinkBridge::setMirrorActive(bool active) {
+  mirrorActive = active;
+  if (active) {
+    lastMirrorHeartbeat = millis();
+    lastMirrorFrameTime = 0;
+  }
+}
+
+void UplinkBridge::sendMirrorFrame(LGFX_Sprite* canvas) {
+  if (!mirrorActive || !canvas) return;
+
+  uint32_t now = millis();
+  // Auto-failsafe timeout: if host hasn't pinged within 3.5 seconds, auto-disable mirror
+  if (now - lastMirrorHeartbeat > 3500) {
+    mirrorActive = false;
+    return;
+  }
+
+  // Throttle to 20 FPS (50ms interval) for smooth USB-CDC throughput with minimal latency
+  if (now - lastMirrorFrameTime < 50) return;
+  lastMirrorFrameTime = now;
+
+  uint16_t* pixels = (uint16_t*)canvas->getBuffer();
+  if (!pixels) return;
+
+  // Allocate RLE scratch buffer in Octal PSRAM on first use (172 KB in 8 MB PSRAM pool)
+  static uint8_t* rleBuf = nullptr;
+  if (!rleBuf) {
+    if (psramFound()) {
+      rleBuf = (uint8_t*)ps_malloc(240 * 240 * 3);
+    } else {
+      rleBuf = (uint8_t*)malloc(240 * 240 * 3);
+    }
+  }
+  if (!rleBuf) return;
+
+  // Ultra-fast 16-bit Run-Length Encoding
+  uint32_t outIdx = 0;
+  const uint32_t total = 57600; // 240 * 240
+  uint32_t i = 0;
+
+  while (i < total) {
+    uint16_t c = pixels[i];
+    uint8_t run = 1;
+    while ((i + run) < total && pixels[i + run] == c && run < 255) {
+      run++;
+    }
+    rleBuf[outIdx++] = run;
+    rleBuf[outIdx++] = (uint8_t)(c & 0xFF);
+    rleBuf[outIdx++] = (uint8_t)((c >> 8) & 0xFF);
+    i += run;
+  }
+
+  // 16-byte Sync Header: "NXDS" (NX Display Stream)
+  uint8_t hdr[16];
+  hdr[0] = 'N'; hdr[1] = 'X'; hdr[2] = 'D'; hdr[3] = 'S';
+  hdr[4] = 240 & 0xFF; hdr[5] = (240 >> 8) & 0xFF; // Width = 240
+  hdr[6] = 240 & 0xFF; hdr[7] = (240 >> 8) & 0xFF; // Height = 240
+  hdr[8] = 0x01;                                   // Format: 1 = RLE-RGB565
+  hdr[9] = 0x00;                                   // Reserved
+  hdr[10] = (uint8_t)(outIdx & 0xFF);              // Payload Size (uint32)
+  hdr[11] = (uint8_t)((outIdx >> 8) & 0xFF);
+  hdr[12] = (uint8_t)((outIdx >> 16) & 0xFF);
+  hdr[13] = (uint8_t)((outIdx >> 24) & 0xFF);
+  hdr[14] = 0x55; hdr[15] = 0xAA;                  // Tail sync word
+
+  Serial.write(hdr, 16);
+  Serial.write(rleBuf, outIdx);
+  Serial.flush();
 }
