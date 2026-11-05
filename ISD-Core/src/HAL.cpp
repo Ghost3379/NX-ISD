@@ -119,11 +119,22 @@ void HAL::initPins() {
   pinMode(CS_TFT, OUTPUT);
   digitalWrite(CS_TFT, HIGH);
 
-  // 3. User Controls
+  // 3. User Controls (Explicitly engage ESP-IDF internal pullups for v1.3 prototype & v1.4)
   pinMode(BTN, INPUT_PULLUP);
+  gpio_pullup_en((gpio_num_t)BTN);
+  gpio_pulldown_dis((gpio_num_t)BTN);
+
   pinMode(LEVER_LEFT, INPUT_PULLUP);
+  gpio_pullup_en((gpio_num_t)LEVER_LEFT);
+  gpio_pulldown_dis((gpio_num_t)LEVER_LEFT);
+
   pinMode(LEVER_PUSH, INPUT_PULLUP);
+  gpio_pullup_en((gpio_num_t)LEVER_PUSH);
+  gpio_pulldown_dis((gpio_num_t)LEVER_PUSH);
+
   pinMode(LEVER_RIGHT, INPUT_PULLUP);
+  gpio_pullup_en((gpio_num_t)LEVER_RIGHT);
+  gpio_pulldown_dis((gpio_num_t)LEVER_RIGHT);
 
   // 4. Power & Charge Detection (BQ25170 /PG and /STAT are open-drain, active-LOW)
   pinMode(USB_DETECT, INPUT_PULLUP);

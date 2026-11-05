@@ -637,7 +637,8 @@ def decode_rle_rgb565(payload: bytes, width: int = 240, height: int = 240) -> Op
 
     while in_idx + 2 < p_len and out_idx < max_out:
         run = payload[in_idx]
-        c = payload[in_idx + 1] | (payload[in_idx + 2] << 8)
+        # LovyanGFX sprite pixels are byte-swapped for SPI DMA (big-endian 16-bit)
+        c = (payload[in_idx + 1] << 8) | payload[in_idx + 2]
         in_idx += 3
         c3 = c * 3
         pixel_rgb = lut[c3:c3 + 3]
