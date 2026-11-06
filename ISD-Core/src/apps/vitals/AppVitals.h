@@ -96,11 +96,14 @@ private:
   float liveSpo2 = 98.0f;
 
   // Settings
+  int measureModeIndex = 0; // 0 = SPOT (15s), 1 = CONTINUOUS
+  const char* measureModeLabels[2] = {"SPOT SCAN (15s)", "CONTINUOUS"};
   int reminderIndex = 0; // 0=OFF, 1=30m, 2=1h, 3=2h, 4=4h
   const char* reminderLabels[5] = {"OFF", "30 MIN", "1 HOUR", "2 HOURS", "4 HOURS"};
   int alertModeIndex = 0; // 0=AUDIO & LED, 1=LED ONLY, 2=AUDIO ONLY
   const char* alertLabels[3] = {"AUDIO & LED", "LED ONLY", "AUDIO ONLY"};
-  int selectedSettingRow = 0; // 0 or 1
+  int selectedSettingRow = 0; // 0, 1, or 2
+  static const int NUM_SETTING_ROWS = 3;
 
   // Sensor state
   bool sensorAwake = false;
@@ -131,21 +134,25 @@ public:
 
   void handleNavLeft() {
     if (currentView == VITALS_VIEW_SETTINGS) {
-      currentView = VITALS_VIEW_DASHBOARD;
-      HAL::buzzPip(2400, 15);
+      selectedSettingRow = (selectedSettingRow + NUM_SETTING_ROWS - 1) % NUM_SETTING_ROWS;
+      HAL::buzzPip(2400, 12);
     }
   }
 
   void handleNavRight() {
     if (currentView == VITALS_VIEW_DASHBOARD) {
       currentView = VITALS_VIEW_SETTINGS;
+      selectedSettingRow = 0;
       HAL::buzzPip(2800, 15);
+    } else if (currentView == VITALS_VIEW_SETTINGS) {
+      selectedSettingRow = (selectedSettingRow + 1) % NUM_SETTING_ROWS;
+      HAL::buzzPip(2400, 12);
     }
   }
 
   void handleNavPush() {
     if (currentView == VITALS_VIEW_DASHBOARD) {
-      // Start Option A Calibrated Measurement Session
+      // Start measurement session
       startScan();
     } else if (currentView == VITALS_VIEW_SCAN) {
       if (scanState == SCAN_FINISHED) {
@@ -154,16 +161,28 @@ public:
           currentView = VITALS_VIEW_DASHBOARD;
           stopSensor();
         } else {
-          // Retry calibration scan
+          // Retry scan
           startScan();
         }
+      } else if (measureModeIndex == 1 && scanState == SCAN_ACTIVE) {
+        // In continuous mode, PUSH also saves & returns to dashboard!
+        if (beatCount >= 3 && liveBpm >= 45.0f) {
+          finalizeScan(sharedState);
+        } else {
+          stopSensor();
+        }
+        currentView = VITALS_VIEW_DASHBOARD;
+        HAL::buzzPip(4400, 20);
       }
     } else if (currentView == VITALS_VIEW_SETTINGS) {
       // Toggle selected setting
       if (selectedSettingRow == 0) {
+        measureModeIndex = (measureModeIndex + 1) % 2;
+        HAL::buzzPip(3200, 15);
+      } else if (selectedSettingRow == 1) {
         reminderIndex = (reminderIndex + 1) % 5;
         HAL::buzzPip(3200, 15);
-      } else {
+      } else if (selectedSettingRow == 2) {
         alertModeIndex = (alertModeIndex + 1) % 3;
         HAL::buzzPip(3200, 15);
       }
@@ -173,8 +192,11 @@ public:
   // Handle back button (return true if handled internally, false if should exit to AppMenu)
   bool handleNavBtn() {
     if (currentView == VITALS_VIEW_SCAN) {
-      // Cancel active scan and return to dashboard
-      stopSensor();
+      if (measureModeIndex == 1 && scanState == SCAN_ACTIVE && beatCount >= 3 && liveBpm >= 45.0f) {
+        finalizeScan(sharedState);
+      } else {
+        stopSensor();
+      }
       currentView = VITALS_VIEW_DASHBOARD;
       HAL::buzzPip(2000, 15);
       return true;
@@ -214,7 +236,7 @@ public:
     pulseSmooth = 0.0f;
     contactPersistence = 0;
     releasePersistence = 0;
-    peakEnv = 100.0f;
+    peakEnv = 60.0f;
     aboveThreshold = false;
     samplesSinceLastBeat = 0;
     latestRawIr = 0.0f;
@@ -224,40 +246,51 @@ public:
     touchQuality = TOUCH_NO_FINGER;
 
     wakeSensor();
-    if (HAL::heartRateReady) {
-      HAL::heartRateSensor.clearFIFO();
-    }
     HAL::buzzPip(3800, 25);
   }
 
   void stopSensor() {
-    if (sensorAwake && HAL::heartRateReady) {
-      HAL::heartRateSensor.setPulseAmplitudeRed(0);
-      HAL::heartRateSensor.setPulseAmplitudeIR(0);
-      HAL::heartRateSensor.shutDown();
-      sensorAwake = false;
+    if (i2cMutex && xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+      if (sensorAwake && HAL::heartRateReady) {
+        HAL::heartRateSensor.setPulseAmplitudeRed(0);
+        HAL::heartRateSensor.setPulseAmplitudeIR(0);
+        HAL::heartRateSensor.shutDown();
+        sensorAwake = false;
+      }
+      xSemaphoreGive(i2cMutex);
+    }
+    if (stateMutex && xSemaphoreTake(stateMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+      sharedState.fingerDetected = false;
+      sharedState.beatDetected = false;
+      xSemaphoreGive(stateMutex);
     }
   }
 
   void wakeSensor() {
-    if (HAL::heartRateReady) {
-      HAL::heartRateSensor.wakeUp();
-      // Setup MAX30105 using proven parameters:
-      // powerLevel = 0x24 (7.2mA), sampleAverage = 4, ledMode = 2 (Red + IR), sampleRate = 400 (100 Hz output), pulseWidth = 411, adcRange = 4096
-      HAL::heartRateSensor.setup(0x24, 4, 2, 400, 411, 4096);
-      HAL::heartRateSensor.setPulseAmplitudeRed(0x24);
-      HAL::heartRateSensor.setPulseAmplitudeIR(0x24);
-      HAL::heartRateSensor.clearFIFO();
-      sensorAwake = true;
+    if (i2cMutex && xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+      if (HAL::heartRateReady) {
+        HAL::heartRateSensor.wakeUp();
+        // Setup MAX30102:
+        // powerLevel = 0x24 (7.2mA), sampleAverage = 4, ledMode = 2 (Red + IR),
+        // sampleRate = 400 (100 Hz output), pulseWidth = 411 (18-bit), adcRange = 16384 (62.5 pA/LSB)
+        HAL::heartRateSensor.setup(0x24, 4, 2, 400, 411, 16384);
+        HAL::heartRateSensor.setPulseAmplitudeRed(0x24);
+        HAL::heartRateSensor.setPulseAmplitudeIR(0x24);
+        HAL::heartRateSensor.setPulseAmplitudeGreen(0);
+        HAL::heartRateSensor.clearFIFO();
+        sensorAwake = true;
+      }
+      xSemaphoreGive(i2cMutex);
     }
   }
 
   void processPpgSample(uint32_t ir, uint32_t red, const SensorState& state) {
     latestRawIr = (float)ir;
 
-    // 1. Dual-Threshold Contact Hysteresis & Persistence Filter (Fixes "Place Finger" Flicker!)
-    const uint32_t CONTACT_ENTER_IR = 42000; // Requires firm tissue contact to enter
-    const uint32_t CONTACT_EXIT_IR  = 28000; // Requires clear absence to exit
+    // 1. Dual-Threshold Contact Hysteresis & Persistence Filter
+    const uint32_t CONTACT_ENTER_IR = 15000;  // Reliable tissue contact threshold on MAX30102
+    const uint32_t CONTACT_EXIT_IR  = 8000;   // Clean finger lift release threshold
+    const uint32_t CONTACT_SAT_IR   = 255000; // 18-bit ADC saturation ceiling (max 262143)
 
     // Dynamic Touch & Pressure Quality Estimation
     sampleCounter++;
@@ -268,18 +301,18 @@ public:
 
     if (ir < CONTACT_EXIT_IR) {
       touchQuality = TOUCH_NO_FINGER;
-    } else if (ir > 185000) {
-      touchQuality = TOUCH_TOO_HARD; // Capillary blanching sweet-spot exceeded
-    } else if (ir < 48000) {
+    } else if (ir >= CONTACT_SAT_IR) {
+      touchQuality = TOUCH_TOO_HARD; // ADC near saturation
+    } else if (ir < 22000) {
       touchQuality = TOUCH_TOO_LIGHT;
-    } else if (baselineDrift > 3000.0f) {
+    } else if (baselineDrift > 4500.0f) {
       touchQuality = TOUCH_UNSTABLE;
     } else {
       touchQuality = TOUCH_OPTIMAL;
     }
 
     if (scanState == SCAN_WAITING_FOR_FINGER) {
-      if (ir >= CONTACT_ENTER_IR) {
+      if (ir >= CONTACT_ENTER_IR && ir < CONTACT_SAT_IR) {
         contactPersistence++;
         releasePersistence = 0;
         if (contactPersistence >= 8) { // 80 ms of continuous contact required
@@ -298,7 +331,7 @@ public:
           redSum = 0;
           irSum = 0;
           sampleAccumCount = 0;
-          peakEnv = 100.0f;
+          peakEnv = 60.0f;
           aboveThreshold = false;
           samplesSinceLastBeat = 0;
           HAL::buzzPip(3200, 15); // Clean touch acknowledgment
@@ -329,21 +362,23 @@ public:
       releasePersistence = 0;
     }
 
-    // 2. Slow DC Baseline Tracking (EMA with ~1.6s time constant at 100 Hz sampling)
-    // gamma = 0.006f ensures baseline only tracks finger pressure drift and does not chase heartbeats
+    // 2. DC Baseline Tracking & High-Pass Filtering
+    // Fast adaptation during settling, smooth clinical tracking during active scan (~0.4 Hz cutoff)
     if (dcBaseline == 0.0f) {
       dcBaseline = (float)ir;
+    } else if (scanState == SCAN_SETTLING) {
+      dcBaseline += 0.08f * ((float)ir - dcBaseline);
     } else {
-      dcBaseline += 0.006f * ((float)ir - dcBaseline);
+      dcBaseline += 0.025f * ((float)ir - dcBaseline);
     }
 
-    // 3. True Photoplethysmogram (PPG) Extraction (Correct Polarity: systolic surge is positive!)
+    // 3. True Photoplethysmogram (PPG) Extraction (Systolic surge is positive)
     float rawPulse = (float)ir - dcBaseline;
 
-    // 4. Cascaded 2-Pole Low-Pass Smoothing (~4.5 Hz cutoff at 100 Hz sampling rate)
-    // Strips 50/60 Hz light flicker & quantization fuzz, leaving a silky clinical pulse wave
-    pulseLp1 += 0.18f * (rawPulse - pulseLp1);
-    pulseSmooth += 0.18f * (pulseLp1 - pulseSmooth);
+    // 4. Cascaded 2-Pole Low-Pass Smoothing (~4.5 Hz cutoff at 100 Hz output)
+    // Strips ambient optical noise, 50/60 Hz flicker & ADC fuzz
+    pulseLp1 += 0.22f * (rawPulse - pulseLp1);
+    pulseSmooth += 0.22f * (pulseLp1 - pulseSmooth);
 
     // 5. Store zero-centered organic pulse into CRT sweep buffer
     ppgSweep[sweepPos] = pulseSmooth;
@@ -351,12 +386,13 @@ public:
 
     // 6. Dynamic Peak Envelope Follower & Adaptive Threshold
     samplesSinceLastBeat++;
-    peakEnv *= 0.996f; // Slowly decay envelope toward noise floor
-    if (peakEnv < 60.0f) peakEnv = 60.0f; // Minimum noise threshold
+    peakEnv *= 0.992f; // Smooth decay towards baseline (~850ms half-life)
+    if (peakEnv < 40.0f) peakEnv = 40.0f; // Noise floor clamp
     if (pulseSmooth > peakEnv) {
-      peakEnv = pulseSmooth;
+      float maxRise = peakEnv + 50.0f; // Slew-rate limit to prevent artifact lockout
+      peakEnv = (pulseSmooth < maxRise) ? pulseSmooth : maxRise;
     }
-    float dynamicThreshold = peakEnv * 0.50f; // 50% of peak height
+    float dynamicThreshold = peakEnv * 0.50f; // 50% peak height threshold
 
     // 7. Dynamic Schmitt-Trigger Beat Detector with Refractory Lockout
     bool beatDetected = false;
@@ -366,14 +402,14 @@ public:
       aboveThreshold = true;
       samplesSinceLastBeat = 0;
       beatDetected = true;
-    } else if (aboveThreshold && pulseSmooth < (dynamicThreshold * 0.60f)) {
+    } else if (aboveThreshold && pulseSmooth < (dynamicThreshold * 0.35f)) {
       aboveThreshold = false; // Hysteresis release
     }
 
     if (scanState == SCAN_SETTLING) {
       uint32_t settlingElapsed = nowMs - settlingStartTime;
       if (settlingElapsed >= SETTLING_DURATION_MS) {
-        // Optical contact is now stable! Lock baseline and begin clean 15-second measurement
+        // Optical contact is now stable! Lock baseline and begin measurement
         scanState = SCAN_ACTIVE;
         scanStartTime = millis();
         scanProgress = 0.0f;
@@ -387,6 +423,8 @@ public:
         irSum = 0;
         sampleAccumCount = 0;
         lastBeatTimestamp = 0;
+        peakEnv = 60.0f;
+        aboveThreshold = false;
 
         HAL::buzzPip(4400, 20); // Acquisition start chime
       }
@@ -394,15 +432,17 @@ public:
     }
 
     if (scanState == SCAN_ACTIVE) {
-      uint32_t elapsed = nowMs - scanStartTime;
-      scanProgress = constrain((float)elapsed / (float)scanDurationMs, 0.0f, 1.0f);
+      if (measureModeIndex == 0) { // SPOT 15s session
+        uint32_t elapsed = nowMs - scanStartTime;
+        scanProgress = constrain((float)elapsed / (float)scanDurationMs, 0.0f, 1.0f);
+      } else { // CONTINUOUS measurement mode
+        scanProgress = 1.0f;
+      }
 
       // 8. Beat Interval Timing & Missed-Beat/Outlier Recovery
       if (beatDetected) {
         if (lastBeatTimestamp > 0) {
           uint32_t delta = nowMs - lastBeatTimestamp;
-          lastBeatTimestamp = nowMs;
-
           if (delta >= 280 && delta <= 1750) {
             float instantBpm = 60000.0f / (float)delta;
             bool acceptForBpm = true;
@@ -449,6 +489,7 @@ public:
               HAL::buzzPip(3200, 6);
             }
           }
+          lastBeatTimestamp = nowMs;
         } else {
           lastBeatTimestamp = nowMs;
         }
@@ -459,7 +500,7 @@ public:
       irSum += ir;
       sampleAccumCount++;
 
-      // SpO2 update every 100 samples (exactly 1.0s at 100 Hz output rate)
+      // SpO2 update every 100 samples (1.0s at 100 Hz output rate)
       if (sampleAccumCount >= 100 && irSum > 0) {
         liveSpo2 = NX_MSF::estimateSpO2(redSum, irSum, sampleAccumCount);
         redSum = 0;
@@ -467,10 +508,31 @@ public:
         sampleAccumCount = 0;
       }
 
-      // 10. Check for session completion
-      if (scanProgress >= 1.0f) {
-        scanState = SCAN_FINISHED;
-        finalizeScan(state);
+      // 10. Continuous Mode updates or Spot Session completion
+      if (measureModeIndex == 1) { // CONTINUOUS MODE
+        if (beatCount >= 3 && liveBpm >= 45.0f) {
+          hasValidData = true;
+          lastBpm = liveBpm;
+          lastSpo2 = (liveSpo2 >= 94.0f && liveSpo2 <= 100.0f) ? liveSpo2 : 98.0f;
+          lastStress = NX_MSF::calculateStress(beatIntervals, MAX_BEAT_INTERVALS, beatCount, beatIntervalIndex, lastBpm, 1.0f);
+        }
+      } else { // SPOT SCAN (15s)
+        if (scanProgress >= 1.0f) {
+          scanState = SCAN_FINISHED;
+          finalizeScan(state);
+          return;
+        }
+      }
+
+      // Live thread-safe sync to shared state for companion uplink & watchface
+      if (stateMutex && xSemaphoreTake(stateMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
+        if (hasValidData) {
+          sharedState.heartRate = (liveBpm > 40.0f) ? liveBpm : lastBpm;
+          sharedState.spo2 = (liveSpo2 >= 90.0f) ? liveSpo2 : lastSpo2;
+        }
+        sharedState.fingerDetected = (touchQuality != TOUCH_NO_FINGER);
+        sharedState.beatDetected = isBeating;
+        xSemaphoreGive(stateMutex);
       }
     }
   }
@@ -478,25 +540,63 @@ public:
   void updateSampling(const SensorState& state) {
     if (currentView != VITALS_VIEW_SCAN || !sensorAwake || !HAL::heartRateReady) return;
 
-    // Drain the MAX30105 hardware FIFO completely (full 100 Hz continuous processing)
-    HAL::heartRateSensor.check();
-    while (HAL::heartRateSensor.available()) {
-      uint32_t ir = HAL::heartRateSensor.getFIFOIR();
-      uint32_t red = HAL::heartRateSensor.getFIFORed();
-      HAL::heartRateSensor.nextSample();
+    // Burst-read all waiting samples directly from MAX30102 hardware FIFO over thread-safe I2C
+    if (i2cMutex && xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(20)) == pdTRUE) {
+      Wire.beginTransmission(0x57);
+      Wire.write(0x04); // FIFO_WR_PTR
+      if (Wire.endTransmission() == 0 && Wire.requestFrom((uint8_t)0x57, (uint8_t)3) == 3) {
+        uint8_t wrPtr = Wire.read();
+        Wire.read(); // ovfCounter (0x05)
+        uint8_t rdPtr = Wire.read(); // FIFO_RD_PTR (0x06)
 
-      processPpgSample(ir, red, state);
+        int numSamples = (wrPtr - rdPtr) & 0x1F;
+        while (numSamples > 0) {
+          int samplesToRead = min(numSamples, 5); // Read in chunks of 5 samples (30 bytes)
+          int bytesToRead = samplesToRead * 6;
+
+          Wire.beginTransmission(0x57);
+          Wire.write(0x07); // FIFO_DATA
+          if (Wire.endTransmission() != 0) break;
+
+          if (Wire.requestFrom((uint8_t)0x57, (uint8_t)bytesToRead) == bytesToRead) {
+            for (int s = 0; s < samplesToRead; s++) {
+              uint8_t r0 = Wire.read();
+              uint8_t r1 = Wire.read();
+              uint8_t r2 = Wire.read();
+              uint8_t ir0 = Wire.read();
+              uint8_t ir1 = Wire.read();
+              uint8_t ir2 = Wire.read();
+
+              uint32_t red = (((uint32_t)r0 << 16) | ((uint32_t)r1 << 8) | (uint32_t)r2) & 0x03FFFF;
+              uint32_t ir  = (((uint32_t)ir0 << 16) | ((uint32_t)ir1 << 8) | (uint32_t)ir2) & 0x03FFFF;
+
+              processPpgSample(ir, red, state);
+            }
+          } else {
+            break;
+          }
+          numSamples -= samplesToRead;
+        }
+      }
+      xSemaphoreGive(i2cMutex);
     }
   }
 
   void finalizeScan(const SensorState& state) {
-    if (beatCount >= 4 && liveBpm >= 45.0f && liveBpm <= 195.0f) {
+    if (beatCount >= 3 && liveBpm >= 45.0f && liveBpm <= 195.0f) {
       hasValidData = true;
       lastBpm = liveBpm;
       lastSpo2 = (liveSpo2 >= 94.0f && liveSpo2 <= 100.0f) ? liveSpo2 : 98.0f;
 
       // Multi-Sensor Fusion (MSF) Stress Calculation via NX-MSF
       lastStress = NX_MSF::calculateStress(beatIntervals, MAX_BEAT_INTERVALS, beatCount, beatIntervalIndex, lastBpm, 1.0f);
+
+      // Save to sharedState
+      if (stateMutex && xSemaphoreTake(stateMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        sharedState.heartRate = lastBpm;
+        sharedState.spo2 = lastSpo2;
+        xSemaphoreGive(stateMutex);
+      }
 
       // Success Chime
       HAL::buzzPip(4800, 35);
@@ -688,21 +788,28 @@ private:
     canvas->drawFastHLine(4, 206, 232, COLOR_ORANGE_DARK);
     canvas->setTextDatum(MC_DATUM);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawString("[PUSH] NEW SCAN   [R] SETTINGS", 120, 220);
+    if (measureModeIndex == 1) {
+      canvas->drawString("[PUSH] CONT SCAN   [R] SETTINGS", 120, 220);
+    } else {
+      canvas->drawString("[PUSH] 15s SCAN    [R] SETTINGS", 120, 220);
+    }
     canvas->setTextDatum(TL_DATUM);
   }
 
   void renderPpgWaveform(int waveY, int waveH, int midY) {
     // Dynamic Window Auto-Scaling around Zero Baseline
-    float maxAbs = 0.0f;
+    float minVal = 0.0f;
+    float maxVal = 0.0f;
     for (int i = 0; i < PPG_SWEEP_SIZE; i++) {
-      float v = fabsf(ppgSweep[i]);
-      if (v > maxAbs) maxAbs = v;
+      float v = ppgSweep[i];
+      if (v > maxVal) maxVal = v;
+      if (v < minVal) minVal = v;
     }
 
-    if (maxAbs < 120.0f) maxAbs = 120.0f;
-    smoothSpan = (smoothSpan * 0.95f) + (maxAbs * 0.05f);
-    float span = max(120.0f, smoothSpan);
+    float currentP2P = maxVal - minVal;
+    if (currentP2P < 60.0f) currentP2P = 60.0f;
+    smoothSpan = (smoothSpan * 0.92f) + (currentP2P * 0.08f);
+    float span = max(60.0f, smoothSpan);
 
     const int ERASE_GAP = 12; // 12-pixel CRT beam erase gap in front of sweep
     int beamX = 11 + sweepPos;
@@ -711,8 +818,8 @@ private:
     int prevX = -1;
     int prevY = -1;
 
-    // Available height above baseline to prevent ceiling clipping
-    int availableHeightAbove = midY - waveY - 6;
+    // Available height above/below baseline to prevent ceiling clipping
+    int availableHeight = min(midY - waveY - 4, waveY + waveH - midY - 4);
 
     for (int x = 0; x < PPG_SWEEP_SIZE; x++) {
       // Calculate distance in front of writing beam cursor
@@ -727,10 +834,10 @@ private:
 
       float val = ppgSweep[x];
       int px = 11 + x;
-      // With correct polarity: positive val (systolic surge) arches UPWARDS (py < midY)
-      // Generous headroom: scales to 75% of available height so peaks remain beautifully rounded without hitting clamps
-      int py = midY - (int)((val * (float)availableHeightAbove) / (span * 1.30f));
-      py = constrain(py, waveY + 3, waveY + waveH - 3);
+
+      // Systolic peak (val > 0) arches UPWARDS (py < midY)
+      int py = midY - (int)((val * (float)availableHeight) / (span * 0.55f));
+      py = constrain(py, waveY + 2, waveY + waveH - 2);
 
       if (x == (sweepPos - 1 + PPG_SWEEP_SIZE) % PPG_SWEEP_SIZE) {
         beamY = py; // Capture current writing tip Y
@@ -747,7 +854,7 @@ private:
     }
 
     // Live CRT sweep scanner beam cursor
-    canvas->drawFastVLine(beamX, waveY + 3, waveH - 6, COLOR_ORANGE_DARK);
+    canvas->drawFastVLine(beamX, waveY + 2, waveH - 4, COLOR_ORANGE_DARK);
     canvas->fillCircle(beamX, beamY, 2, COLOR_ORANGE_BRIGHT);
     canvas->drawCircle(beamX, beamY, 4, COLOR_ORANGE_MID);
   }
@@ -813,7 +920,7 @@ private:
       int waveY = 88;
       int waveH = 100;
       canvas->drawRect(10, waveY, 220, waveH, COLOR_ORANGE_DIM);
-      int midY = waveY + (waveH * 58 / 100);
+      int midY = waveY + (waveH / 2);
       canvas->drawFastHLine(11, midY, 218, COLOR_ORANGE_DARK);
       canvas->drawFastVLine(10 + 55, waveY + 1, waveH - 2, COLOR_ORANGE_DARK);
       canvas->drawFastVLine(10 + 110, waveY + 1, waveH - 2, COLOR_ORANGE_DARK);
@@ -842,18 +949,30 @@ private:
       // Full-Screen Live Telemetry Scanning Screen
       canvas->setTextDatum(TL_DATUM);
 
-      // 1. Live Countdown Bar at Top
+      // 1. Live Countdown Bar / Continuous Pulse Indicator at Top
       int barX = 14, barY = 36, barW = 212, barH = 6;
       canvas->drawRect(barX, barY, barW, barH, COLOR_ORANGE_DARK);
-      int fillW = (int)((barW - 2) * scanProgress);
-      canvas->fillRect(barX + 1, barY + 1, fillW, barH - 2, COLOR_ORANGE_BRIGHT);
 
-      // Time remaining countdown label
-      int secRemaining = (int)ceilf((1.0f - scanProgress) * (scanDurationMs / 1000.0f));
-      char timeBuf[24];
-      snprintf(timeBuf, sizeof(timeBuf), "CALIBRATING: %ds", secRemaining);
-      canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-      canvas->drawString(timeBuf, 14, 46);
+      if (measureModeIndex == 0) { // SPOT 15s session
+        int fillW = (int)((barW - 2) * scanProgress);
+        canvas->fillRect(barX + 1, barY + 1, fillW, barH - 2, COLOR_ORANGE_BRIGHT);
+
+        int secRemaining = (int)ceilf((1.0f - scanProgress) * (scanDurationMs / 1000.0f));
+        char timeBuf[24];
+        snprintf(timeBuf, sizeof(timeBuf), "CALIBRATING: %ds", secRemaining);
+        canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
+        canvas->drawString(timeBuf, 14, 46);
+      } else { // CONTINUOUS MODE
+        int sweepW = 36;
+        int sweepRange = barW - 2 - sweepW;
+        int sweepX = barX + 1 + (int)(fmodf((float)millis() * 0.12f, (float)sweepRange));
+        canvas->fillRect(sweepX, barY + 1, sweepW, barH - 2, COLOR_ORANGE_BRIGHT);
+
+        canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
+        canvas->drawString("MODE: CONTINUOUS", 14, 46);
+        canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
+        canvas->drawRightString("LIVE SCAN", 226, 46);
+      }
 
       // 2. Heartbeat Indicator & Live BPM
       bool beatFlash = (millis() - beatAnimTimer < 180);
@@ -884,8 +1003,7 @@ private:
       int waveY = 100;
       int waveH = 88;
       canvas->drawRect(10, waveY, 220, waveH, COLOR_ORANGE_DIM);
-      // Oscilloscope background grid
-      int midY = waveY + (waveH * 58 / 100);
+      int midY = waveY + (waveH / 2);
       canvas->drawFastHLine(11, midY, 218, COLOR_ORANGE_DARK);
       canvas->drawFastVLine(10 + 55, waveY + 1, waveH - 2, COLOR_ORANGE_DARK);
       canvas->drawFastVLine(10 + 110, waveY + 1, waveH - 2, COLOR_ORANGE_DARK);
@@ -906,7 +1024,11 @@ private:
         canvas->drawString("MOTION DETECTED: HOLD STEADY", 120, 206);
       } else {
         canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-        canvas->drawString("KEEP STILL // [BTN] CANCEL", 120, 206);
+        if (measureModeIndex == 1) {
+          canvas->drawString("[BTN] STOP & SAVE // [PUSH] DONE", 120, 206);
+        } else {
+          canvas->drawString("KEEP STILL // [BTN] CANCEL", 120, 206);
+        }
       }
       canvas->setTextDatum(TL_DATUM);
 
@@ -941,7 +1063,7 @@ private:
 
         canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
         canvas->drawString("WEAK OPTICAL CONTACT", 120, 96, &fonts::Font2);
-        canvas->drawString("Fewer than 5 clear beats locked", 120, 124);
+        canvas->drawString("Fewer than 4 clear beats locked", 120, 124);
         canvas->drawString("Rest finger gently without moving", 120, 144);
 
         canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
@@ -954,29 +1076,37 @@ private:
   void renderSettings(const SensorState& state) {
     canvas->setTextSize(1);
     canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-    canvas->drawString("VITALS SETTINGS", 14, 36, &fonts::Font2);
+    canvas->drawString("VITALS SETTINGS", 14, 34, &fonts::Font2);
+
+    // Setting 0: Measurement Mode (Spot 15s vs Continuous)
+    bool row0 = (selectedSettingRow == 0);
+    canvas->drawRoundRect(10, 56, 220, 44, 4, row0 ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_DIM);
+    canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
+    canvas->drawString("MEASUREMENT MODE", 18, 62);
+    canvas->setTextColor(row0 ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID, COLOR_BG);
+    canvas->drawString(measureModeLabels[measureModeIndex], 18, 76, &fonts::Font2);
 
     // Setting 1: Reminder Interval
-    bool row0 = (selectedSettingRow == 0);
-    canvas->drawRoundRect(10, 64, 220, 52, 4, row0 ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_DIM);
+    bool row1 = (selectedSettingRow == 1);
+    canvas->drawRoundRect(10, 106, 220, 44, 4, row1 ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_DIM);
     canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas->drawString("HRM MEASUREMENT REMINDER", 18, 72);
-    canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-    canvas->drawString(reminderLabels[reminderIndex], 18, 90, &fonts::Font2);
+    canvas->drawString("HRM REMINDER", 18, 112);
+    canvas->setTextColor(row1 ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID, COLOR_BG);
+    canvas->drawString(reminderLabels[reminderIndex], 18, 126, &fonts::Font2);
 
     // Setting 2: Alert Mode
-    bool row1 = (selectedSettingRow == 1);
-    canvas->drawRoundRect(10, 126, 220, 52, 4, row1 ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_DIM);
+    bool row2 = (selectedSettingRow == 2);
+    canvas->drawRoundRect(10, 156, 220, 44, 4, row2 ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_DIM);
     canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas->drawString("NOTIFICATION DISPATCH", 18, 134);
-    canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-    canvas->drawString(alertLabels[alertModeIndex], 18, 152, &fonts::Font2);
+    canvas->drawString("NOTIFICATION DISPATCH", 18, 162);
+    canvas->setTextColor(row2 ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID, COLOR_BG);
+    canvas->drawString(alertLabels[alertModeIndex], 18, 176, &fonts::Font2);
 
     // Bottom Navigation Context
     canvas->drawFastHLine(4, 206, 232, COLOR_ORANGE_DARK);
     canvas->setTextDatum(MC_DATUM);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawString("[PUSH] TOGGLE   [L] VITALS", 120, 220);
+    canvas->drawString("[L/R] SELECT  [PUSH] TOGGLE  [BTN] BACK", 120, 220);
     canvas->setTextDatum(TL_DATUM);
   }
 

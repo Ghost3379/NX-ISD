@@ -154,9 +154,12 @@ public:
   void enterStandby() {
     isStandby = true;
     if (HAL::heartRateReady) {
-      HAL::heartRateSensor.setPulseAmplitudeRed(0);
-      HAL::heartRateSensor.setPulseAmplitudeIR(0);
-      HAL::heartRateSensor.shutDown();
+      if (i2cMutex && xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+        HAL::heartRateSensor.setPulseAmplitudeRed(0);
+        HAL::heartRateSensor.setPulseAmplitudeIR(0);
+        HAL::heartRateSensor.shutDown();
+        xSemaphoreGive(i2cMutex);
+      }
     }
     if (display) {
       HAL::fadeOutBacklight(display);

@@ -98,6 +98,7 @@ void IRAM_ATTR isrLeverRight() {
 // Background Sensor Acquisition Task running on Core 0 (PRO CPU)
 void vSensorTask(void* pvParameters) {
   uint32_t lastSlowPoll = 0;
+  static uint32_t lastLightPoll = 0;
 
   for (;;) {
     uint32_t now = millis();
@@ -106,74 +107,12 @@ void vSensorTask(void* pvParameters) {
     bool curUsb = (digitalRead(USB_DETECT) == LOW);
     bool curChg = (digitalRead(BAT_STAT) == LOW);
 
-    // 2. IMU polling (if BNO085 is present and ready)
     float curRoll = 0.0f, curPitch = 0.0f, curYaw = 0.0f;
     uint8_t curCalib = 0;
     bool imuOk = false;
-    if (HAL::imuReady) {
-      sh2_SensorValue_t sensorValue;
-      while (HAL::imuSensor.getSensorEvent(&sensorValue)) {
-        float qr = 1.0f, qi = 0.0f, qj = 0.0f, qk = 0.0f;
-        bool validRv = false;
-
-        if (sensorValue.sensorId == SH2_ROTATION_VECTOR) {
-          qr = sensorValue.un.rotationVector.real;
-          qi = sensorValue.un.rotationVector.i;
-          qj = sensorValue.un.rotationVector.j;
-          qk = sensorValue.un.rotationVector.k;
-          curCalib = sensorValue.status & 0x03;
-          validRv = true;
-        } else if (sensorValue.sensorId == SH2_GEOMAGNETIC_ROTATION_VECTOR) {
-          qr = sensorValue.un.geoMagRotationVector.real;
-          qi = sensorValue.un.geoMagRotationVector.i;
-          qj = sensorValue.un.geoMagRotationVector.j;
-          qk = sensorValue.un.geoMagRotationVector.k;
-          curCalib = sensorValue.status & 0x03;
-          validRv = true;
-        } else if (sensorValue.sensorId == SH2_ARVR_STABILIZED_RV) {
-          qr = sensorValue.un.arvrStabilizedRV.real;
-          qi = sensorValue.un.arvrStabilizedRV.i;
-          qj = sensorValue.un.arvrStabilizedRV.j;
-          qk = sensorValue.un.arvrStabilizedRV.k;
-          curCalib = sensorValue.status & 0x03;
-          validRv = true;
-        }
-
-        if (validRv) {
-          float sqr = qr * qr;
-          float sqi = qi * qi;
-          float sqj = qj * qj;
-          float sqk = qk * qk;
-          float denom = sqi + sqj + sqk + sqr;
-          if (denom > 0.0001f) {
-            float sinP = constrain(-2.0f * (qi * qk - qj * qr) / denom, -1.0f, 1.0f);
-            curPitch = asin(sinP) * RAD_TO_DEG;
-            curRoll  = atan2(2.0f * (qj * qk + qi * qr), (-sqi - sqj + sqk + sqr)) * RAD_TO_DEG;
-            curYaw   = atan2(2.0f * (qi * qj + qk * qr), (sqi - sqj - sqk + sqr)) * RAD_TO_DEG;
-            imuOk = true;
-          }
-        }
-      }
-    }
-
-    // 2b. Fast Ambient Light Polling (every 100ms for real-time palm cover & auto-dim)
-    static uint32_t lastLightPoll = 0;
-    bool doLightPoll = (now - lastLightPoll >= 100);
     float fastLux = 0.0f;
     bool fastLightOk = false;
-    if (doLightPoll) {
-      lastLightPoll = now;
-      if (HAL::lightSensorReady) {
-        OPT3001 res = HAL::lightSensor.readResult();
-        if (res.error == NO_ERROR) {
-          fastLux = res.lux;
-          fastLightOk = true;
-        }
-      }
-    }
-
-    // 3. Slow Sensor polling (every 1000ms: Fuel Gauge, RTC, BME690)
-    // Executed OUTSIDE the mutex so stateMutex lock time is strictly < 1 microsecond!
+    bool doLightPoll = (now - lastLightPoll >= 100);
     bool doSlowPoll = (now - lastSlowPoll >= 1000);
     float slowVolt = 0.0f, slowPct = 0.0f, slowRate = 0.0f;
     bool slowFuelOk = false;
@@ -183,34 +122,99 @@ void vSensorTask(void* pvParameters) {
     bme68xData slowEnvData;
     bool slowEnvOk = false;
 
-    if (doSlowPoll) {
-      lastSlowPoll = now;
+    // Thread-safe I2C bus acquisition (protects against concurrent MAX30102 sampling on Core 1)
+    if (i2cMutex && xSemaphoreTake(i2cMutex, pdMS_TO_TICKS(15)) == pdTRUE) {
+      // 2. IMU polling (if BNO085 is present and ready)
+      if (HAL::imuReady) {
+        sh2_SensorValue_t sensorValue;
+        while (HAL::imuSensor.getSensorEvent(&sensorValue)) {
+          float qr = 1.0f, qi = 0.0f, qj = 0.0f, qk = 0.0f;
+          bool validRv = false;
 
-      // Battery Fuel Gauge (MAX17048 with hardware I2C fallback)
-      slowFuelOk = HAL::readFuelGauge(slowVolt, slowPct, slowRate);
+          if (sensorValue.sensorId == SH2_ROTATION_VECTOR) {
+            qr = sensorValue.un.rotationVector.real;
+            qi = sensorValue.un.rotationVector.i;
+            qj = sensorValue.un.rotationVector.j;
+            qk = sensorValue.un.rotationVector.k;
+            curCalib = sensorValue.status & 0x03;
+            validRv = true;
+          } else if (sensorValue.sensorId == SH2_GEOMAGNETIC_ROTATION_VECTOR) {
+            qr = sensorValue.un.geoMagRotationVector.real;
+            qi = sensorValue.un.geoMagRotationVector.i;
+            qj = sensorValue.un.geoMagRotationVector.j;
+            qk = sensorValue.un.geoMagRotationVector.k;
+            curCalib = sensorValue.status & 0x03;
+            validRv = true;
+          } else if (sensorValue.sensorId == SH2_ARVR_STABILIZED_RV) {
+            qr = sensorValue.un.arvrStabilizedRV.real;
+            qi = sensorValue.un.arvrStabilizedRV.i;
+            qj = sensorValue.un.arvrStabilizedRV.j;
+            qk = sensorValue.un.arvrStabilizedRV.k;
+            curCalib = sensorValue.status & 0x03;
+            validRv = true;
+          }
 
-      // RTC Real Time (RV-3028)
-      if (HAL::rtcReady) {
-        HAL::rtcClock.updateTime();
-        snprintf(slowTime, sizeof(slowTime), "%02d:%02d:%02d",
-                 HAL::rtcClock.getHours(),
-                 HAL::rtcClock.getMinutes(),
-                 HAL::rtcClock.getSeconds());
-        snprintf(slowDate, sizeof(slowDate), "%04d-%02d-%02d",
-                 HAL::rtcClock.getYear(),
-                 HAL::rtcClock.getMonth(),
-                 HAL::rtcClock.getDate());
-        slowRtcOk = true;
-      }
-
-      // BME690 Environmental (Temp, Humidity, Pressure, Gas)
-      if (HAL::envSensorReady) {
-        if (HAL::envSensor.fetchData()) {
-          HAL::envSensor.getData(slowEnvData);
-          slowEnvOk = true;
+          if (validRv) {
+            float sqr = qr * qr;
+            float sqi = qi * qi;
+            float sqj = qj * qj;
+            float sqk = qk * qk;
+            float denom = sqi + sqj + sqk + sqr;
+            if (denom > 0.0001f) {
+              float sinP = constrain(-2.0f * (qi * qk - qj * qr) / denom, -1.0f, 1.0f);
+              curPitch = asin(sinP) * RAD_TO_DEG;
+              curRoll  = atan2(2.0f * (qj * qk + qi * qr), (-sqi - sqj + sqk + sqr)) * RAD_TO_DEG;
+              curYaw   = atan2(2.0f * (qi * qj + qk * qr), (sqi - sqj - sqk + sqr)) * RAD_TO_DEG;
+              imuOk = true;
+            }
+          }
         }
-        HAL::envSensor.setOpMode(BME68X_FORCED_MODE);
       }
+
+      // 2b. Fast Ambient Light Polling (every 100ms for real-time palm cover & auto-dim)
+      if (doLightPoll) {
+        lastLightPoll = now;
+        if (HAL::lightSensorReady) {
+          OPT3001 res = HAL::lightSensor.readResult();
+          if (res.error == NO_ERROR) {
+            fastLux = res.lux;
+            fastLightOk = true;
+          }
+        }
+      }
+
+      // 3. Slow Sensor polling (every 1000ms: Fuel Gauge, RTC, BME690)
+      if (doSlowPoll) {
+        lastSlowPoll = now;
+
+        // Battery Fuel Gauge (MAX17048 with hardware I2C fallback)
+        slowFuelOk = HAL::readFuelGauge(slowVolt, slowPct, slowRate);
+
+        // RTC Real Time (RV-3028)
+        if (HAL::rtcReady) {
+          HAL::rtcClock.updateTime();
+          snprintf(slowTime, sizeof(slowTime), "%02d:%02d:%02d",
+                   HAL::rtcClock.getHours(),
+                   HAL::rtcClock.getMinutes(),
+                   HAL::rtcClock.getSeconds());
+          snprintf(slowDate, sizeof(slowDate), "%04d-%02d-%02d",
+                   HAL::rtcClock.getYear(),
+                   HAL::rtcClock.getMonth(),
+                   HAL::rtcClock.getDate());
+          slowRtcOk = true;
+        }
+
+        // BME690 Environmental (Temp, Humidity, Pressure, Gas)
+        if (HAL::envSensorReady) {
+          if (HAL::envSensor.fetchData()) {
+            HAL::envSensor.getData(slowEnvData);
+            slowEnvOk = true;
+          }
+          HAL::envSensor.setOpMode(BME68X_FORCED_MODE);
+        }
+      }
+
+      xSemaphoreGive(i2cMutex);
     }
 
     // 4. Thread-safe state update (< 1 microsecond memory copy)
