@@ -1,32 +1,27 @@
 package com.nx.isd.uplink.ui.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nx.isd.uplink.ui.theme.*
 
 /**
- * Tactical sidepanel drawer containing the registered hardware fleet,
- * device switcher, and pairing actions.
+ * Clean sidepanel drawer showing registered devices and quick actions.
  */
 @Composable
 fun TacticalDeviceDrawer(
@@ -41,161 +36,124 @@ fun TacticalDeviceDrawer(
         drawerContentColor = TextPrimary,
         modifier = Modifier
             .fillMaxHeight()
-            .width(320.dp)
-            .border(width = 1.dp, color = AmberDim)
+            .width(300.dp)
+            .border(width = 1.dp, color = TacticalBorder)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .padding(20.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column {
-                // Header: NX-UPLINK title + branding
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "NX-UPLINK",
-                            fontFamily = CircuitForem,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = AmberBright,
-                            letterSpacing = 2.sp
-                        )
-                        Text(
-                            text = "HARDWARE FLEET BRIDGE // v1.0",
-                            fontFamily = TypewriterFont,
-                            fontSize = 10.sp,
-                            color = TextSecondary
-                        )
-                    }
+            // Header
+            Text(
+                text = "NX-Uplink",
+                fontFamily = CircuitForem,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = AmberBright,
+                letterSpacing = 1.sp
+            )
 
-                    // Tactical reticle indicator
-                    Canvas(modifier = Modifier.size(24.dp)) {
-                        drawCircle(
-                            color = AmberBright,
-                            radius = 6.dp.toPx(),
-                            style = Stroke(width = 1.5.dp.toPx())
-                        )
-                        drawCircle(
-                            color = AmberBright,
-                            radius = 2.dp.toPx()
-                        )
-                    }
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider(color = TacticalBorder, thickness = 1.dp)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = "MY DEVICES",
+                fontFamily = CircuitForem,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextSecondary,
+                letterSpacing = 1.sp
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Device 1: NX-ISD
+            DrawerDeviceRow(
+                name = "NX-ISD",
+                type = "Smartwatch",
+                status = "Connected (Simulation)",
+                statusColor = NominalGreen,
+                isSelected = selectedDevice == "NX-ISD",
+                onClick = {
+                    onSelectDevice("NX-ISD")
+                    onCloseDrawer()
                 }
+            )
 
-                Spacer(modifier = Modifier.height(20.dp))
-                HorizontalDivider(color = AmberDim, thickness = 1.dp)
-                Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-                // Section 1: Device List
-                Text(
-                    text = "REGISTERED HARDWARE",
-                    fontFamily = CircuitForem,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextSecondary,
-                    letterSpacing = 1.5.sp
-                )
+            // Device 2: NX-Edge
+            DrawerDeviceRow(
+                name = "NX-Edge",
+                type = "Dev Blade",
+                status = "Coming soon",
+                statusColor = TextDim,
+                isSelected = selectedDevice == "NX-Edge",
+                onClick = {
+                    onSelectDevice("NX-Edge")
+                    onCloseDrawer()
+                }
+            )
 
-                Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider(color = TacticalBorder, thickness = 1.dp)
+            Spacer(modifier = Modifier.height(20.dp))
 
-                // Device 1: NX-ISD (Tactical Watch)
-                DrawerDeviceItem(
-                    title = "NX-ISD",
-                    subtitle = "Tactical Biometric Watch",
-                    telemetry = "ESP32-S3 • 240x240 • 4x4 MATRIX",
-                    badge = if (selectedDevice == "NX-ISD") "ACTIVE" else "SIMULATED",
-                    badgeColor = if (selectedDevice == "NX-ISD") NominalGreen else AmberBright,
-                    isSelected = selectedDevice == "NX-ISD",
-                    onClick = {
-                        onSelectDevice("NX-ISD")
-                        onCloseDrawer()
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Device 2: NX-Edge (M.2 Blade)
-                DrawerDeviceItem(
-                    title = "NX-Edge",
-                    subtitle = "M.2 2260 Dev Blade",
-                    telemetry = "BARE ESP32-S3 • DUAL RF • BNO085",
-                    badge = "IN DEV",
-                    badgeColor = AmberDim,
-                    isSelected = selectedDevice == "NX-Edge",
-                    onClick = {
-                        onSelectDevice("NX-Edge")
-                        onCloseDrawer()
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-                HorizontalDivider(color = AmberDim.copy(alpha = 0.5f), thickness = 1.dp)
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Section 2: Fleet Management Actions
-                Text(
-                    text = "FLEET ACTIONS",
-                    fontFamily = CircuitForem,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextSecondary,
-                    letterSpacing = 1.5.sp
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Button: Start Screen / Fleet Overview
-                DrawerActionButton(
-                    icon = Icons.Default.GridView,
-                    label = "DEVICE FLEET OVERVIEW",
-                    sublabel = "Return to start screen",
-                    onClick = {
+            // Navigation Actions
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {
                         onNavigateFleet()
                         onCloseDrawer()
                     }
+                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.GridView,
+                    contentDescription = null,
+                    tint = AmberBright,
+                    modifier = Modifier.size(20.dp)
                 )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Button: Connect / Pair Device
-                DrawerActionButton(
-                    icon = Icons.Default.Add,
-                    label = "+ PAIR NEW HARDWARE",
-                    sublabel = "BLE 2.4GHz GATT scanner",
-                    onClick = {
-                        onConnectNewDevice()
-                        onCloseDrawer()
-                    }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "All Devices",
+                    fontFamily = TypewriterFont,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextPrimary
                 )
             }
 
-            // Footer Diagnostics
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {
+                        onConnectNewDevice()
+                        onCloseDrawer()
+                    }
+                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                HorizontalDivider(color = AmberDim.copy(alpha = 0.3f), thickness = 1.dp)
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "GATT STACK: ARMED // MTU 512",
-                    fontFamily = TypewriterFont,
-                    fontSize = 10.sp,
-                    color = TextDim
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = AmberBright,
+                    modifier = Modifier.size(20.dp)
                 )
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "SECURITY: AES-128 AUTH READY",
+                    text = "Connect a device",
                     fontFamily = TypewriterFont,
-                    fontSize = 10.sp,
-                    color = TextDim
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextPrimary
                 )
             }
         }
@@ -203,122 +161,64 @@ fun TacticalDeviceDrawer(
 }
 
 @Composable
-private fun DrawerDeviceItem(
-    title: String,
-    subtitle: String,
-    telemetry: String,
-    badge: String,
-    badgeColor: Color,
+private fun DrawerDeviceRow(
+    name: String,
+    type: String,
+    status: String,
+    statusColor: Color,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                color = if (isSelected) TacticalSurfaceElevated else TacticalSurface,
-                shape = RoundedCornerShape(6.dp)
-            )
+            .clip(RoundedCornerShape(10.dp))
+            .background(if (isSelected) TacticalSurfaceElevated else TacticalSurface)
             .border(
-                width = if (isSelected) 1.5.dp else 1.dp,
+                width = 1.dp,
                 color = if (isSelected) AmberBright else TacticalBorder,
-                shape = RoundedCornerShape(6.dp)
+                shape = RoundedCornerShape(10.dp)
             )
             .clickable { onClick() }
             .padding(14.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = title,
+                    text = name,
                     fontFamily = CircuitForem,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = if (isSelected) AmberBright else TextPrimary
                 )
-
-                Box(
-                    modifier = Modifier
-                        .background(badgeColor.copy(alpha = 0.15f), shape = RoundedCornerShape(3.dp))
-                        .border(1.dp, badgeColor, shape = RoundedCornerShape(3.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = badge,
-                        fontFamily = TypewriterFont,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = badgeColor
-                    )
-                }
+                Text(
+                    text = type,
+                    fontFamily = TypewriterFont,
+                    fontSize = 11.sp,
+                    color = TextSecondary
+                )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                text = subtitle,
-                fontFamily = TypewriterFont,
-                fontSize = 11.sp,
-                color = TextSecondary
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = telemetry,
-                fontFamily = TypewriterFont,
-                fontSize = 9.sp,
-                color = TextDim
-            )
-        }
-    }
-}
-
-@Composable
-private fun DrawerActionButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    sublabel: String,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(TacticalSurface, shape = RoundedCornerShape(6.dp))
-            .border(1.dp, TacticalBorder, shape = RoundedCornerShape(6.dp))
-            .clickable { onClick() }
-            .padding(12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = AmberBright,
-                modifier = Modifier.size(20.dp)
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column {
-                Text(
-                    text = label,
-                    fontFamily = CircuitForem,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = AmberBright
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .background(statusColor, CircleShape)
                 )
                 Text(
-                    text = sublabel,
+                    text = status,
                     fontFamily = TypewriterFont,
-                    fontSize = 10.sp,
-                    color = TextDim
+                    fontSize = 11.sp,
+                    color = statusColor
                 )
             }
         }

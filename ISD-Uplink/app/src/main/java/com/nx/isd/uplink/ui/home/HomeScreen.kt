@@ -97,19 +97,19 @@ fun HomeScreen(
                                 letterSpacing = 2.sp
                             )
 
-                            // Fleet switcher pill
+                            // Device switcher button
                             Box(
                                 modifier = Modifier
-                                    .background(TacticalSurfaceElevated, shape = RoundedCornerShape(4.dp))
-                                    .border(1.dp, AmberDim, shape = RoundedCornerShape(4.dp))
+                                    .background(TacticalSurfaceElevated, shape = RoundedCornerShape(8.dp))
+                                    .border(1.dp, TacticalBorder, shape = RoundedCornerShape(8.dp))
                                     .clickable { onNavigateFleet() }
-                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 Text(
-                                    text = "FLEET",
+                                    text = "Devices",
                                     fontFamily = TypewriterFont,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
                                     color = AmberBright
                                 )
                             }
