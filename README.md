@@ -83,6 +83,7 @@ The board is programmed via **PlatformIO** (Arduino Framework) and is optimized 
 * **[ISD-Core](ISD-Core/):** The dual-core FreeRTOS operating system handling task scheduling (Core 1 UI @ ~42Hz, Core 0 Sensors @ 50Hz/1Hz), thread-safe `SensorState` telemetry, 3D Cover Flow launcher, 360° radial dials, and smoothstep backlight transitions. See [`ISD-Core/README.md`](ISD-Core/README.md) for the software architecture and [`ISD-Core/MANUAL.md`](ISD-Core/MANUAL.md) for the complete user manual.
 * **Persistent Storage Subsystem (`StorageManager`):** Manages non-volatile configuration storage, sensor logs, and system data on high-speed MicroSD storage (`4-bit SDMMC` mode on v1.4 hardware; SPI NAND on legacy v1.3 prototype). Stores a 64-byte packed binary struct (`/sys/config.bin`) with CRC-16 validation and a zero-wear save policy (writes occur only on user confirmation/exit, never while dialing).
 * **Unified Host CLI & Config Engine (`tools/isd_cli.py` / `isd-cli`):** Standalone PC terminal tool providing blind navigation control, live sensor monitoring, BLE Uplink Bridge triggering, and offline `/sys/config.bin` binary inspection, verification, and JSON conversion.
+* **NX-Uplink Android Companion App:** The official Android companion app for NX-ISD (and the NX ecosystem) is maintained in its own dedicated repository: [**Ghost3379/NX-Uplink**](https://github.com/Ghost3379/NX-Uplink).
 * **NX-MSF (Mathematical Sensor Fusion):** The analytical physics and math engine executing 1D Kalman filter variometer tracking, Magnus-Tetens dew point calculation, barometric storm gradients, RMSSD heart rate variability, and software energy accounting.
 * **NX-AIS (Advanced Information System):** The autonomous on-device contextual advisor translating raw multi-sensor telemetry into proactive health, environmental, and tactical notifications.
 * **NX-SDS (Self-Diagnostic System):** The internal hardware integrity and health assurance engine providing continuous I2C bus recovery, on-demand in-situ proof-testing, and predictive battery/sensor aging analytics.
@@ -103,6 +104,6 @@ In the spirit of full open-source transparency:
 * **Engineering & Ownership:** All hardware schematics, PCB routing, component selection, electrical calculations, physical assembly, and system verification remain 100% human-engineered, tested, and maintained by the author ([@Ghost3379](https://github.com/Ghost3379)).
 
 ## License
-The firmware/software in the [ISD-Core] & [ISD-Uplink] directories are licensed under the GNU General Public License v3.0 (GPLv3).
+The firmware/software in the [ISD-Core] directory is licensed under the GNU General Public License v3.0 (GPLv3).
 
 The hardware design files in the [ISD-PCB] directory are licensed under the CERN Open Hardware Licence Version 2 - Strongly Reciprocal (CERN-OHL-S).
