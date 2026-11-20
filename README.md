@@ -103,6 +103,6 @@ In the spirit of full open-source transparency:
 * **Engineering & Ownership:** All hardware schematics, PCB routing, component selection, electrical calculations, physical assembly, and system verification remain 100% human-engineered, tested, and maintained by the author ([@Ghost3379](https://github.com/Ghost3379)).
 
 ## License
-The software/firmware in the [ISD-Core] directory is licensed under the GNU General Public License v3.0 (GPLv3).
+The firmware/software in the [ISD-Core] & [ISD-Uplink] directories are licensed under the GNU General Public License v3.0 (GPLv3).
 
 The hardware design files in the [ISD-PCB] directory are licensed under the CERN Open Hardware Licence Version 2 - Strongly Reciprocal (CERN-OHL-S).
