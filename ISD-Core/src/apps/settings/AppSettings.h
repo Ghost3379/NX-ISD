@@ -506,9 +506,9 @@ public:
     canvas->setTextDatum(MC_DATUM);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
     if (viewMode == SETTINGS_VIEW_CATEGORIES) {
-      canvas->drawString("[PUSH] SELECT   < LEVER > NAV   [BTN] BACK", 120, 220);
+      canvas->drawString("[PUSH] OPEN   [L/R] NAV   [BTN] BACK", 120, 220);
     } else {
-      canvas->drawString("[PUSH] CHANGE   < LEVER > NAV   [BTN] BACK", 120, 220);
+      canvas->drawString("[PUSH] EDIT   [L/R] NAV   [BTN] BACK", 120, 220);
     }
     canvas->setTextDatum(TL_DATUM);
 
@@ -967,7 +967,7 @@ private:
     // 6. Context Bottom Bar
     canvas->setTextSize(1);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawCenterString("< LEVER > ADJUST | PUSH: OK", cx, 196);
+    canvas->drawCenterString("[L/R] ADJUST   [PUSH] OK", cx, 196);
   }
 
   void renderNpmBrightnessDial() {
@@ -1039,15 +1039,10 @@ private:
     snprintf(pBuf, sizeof(pBuf), "%d%%", HAL::npmBrightnessPercent);
     canvas->drawCenterString(pBuf, cx, cy + 3);
 
-    // Subtitle indicating power state
-    canvas->setTextSize(1);
-    canvas->setTextColor(isPowered ? COLOR_ORANGE_MID : COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawCenterString(isPowered ? "4x4 MATRIX ACTIVE" : "MATRIX UNPOWERED", cx, cy + 28);
-
     // 6. Context Bottom Bar
     canvas->setTextSize(1);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawCenterString("< LEVER > ADJUST | PUSH: OK", cx, 196);
+    canvas->drawCenterString("[L/R] ADJUST   [PUSH] OK", cx, 196);
   }
 
   void renderTimeoutDial() {
@@ -1130,47 +1125,31 @@ private:
     canvas->drawFastHLine(cx - 2, glyphY - 8, 5, COLOR_ORANGE_MID);
     canvas->drawFastVLine(cx, glyphY - 8, 2, COLOR_ORANGE_MID);
 
-    // 5. Large Digital Readout & Context Subtitle
+    // 5. Large Digital Readout
+    canvas->setTextSize(3);
+    canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
     if (HAL::screenTimeoutSec == 0) {
-      canvas->setTextSize(3);
-      canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-      canvas->drawCenterString("NEVER", cx, cy - 2);
-      canvas->setTextSize(1);
-      canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawCenterString("ALWAYS ON", cx, cy + 24);
+      canvas->drawCenterString("NEVER", cx, cy + 3);
     } else if (HAL::screenTimeoutSec < 60) {
-      canvas->setTextSize(3);
-      canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
       char pBuf[16];
       snprintf(pBuf, sizeof(pBuf), "%ds", HAL::screenTimeoutSec);
-      canvas->drawCenterString(pBuf, cx, cy - 2);
-      canvas->setTextSize(1);
-      canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawCenterString("SECONDS", cx, cy + 24);
+      canvas->drawCenterString(pBuf, cx, cy + 3);
     } else {
-      canvas->setTextSize(3);
-      canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-      char pBuf[16];
-      snprintf(pBuf, sizeof(pBuf), "%ds", HAL::screenTimeoutSec);
-      canvas->drawCenterString(pBuf, cx, cy - 4);
-
-      canvas->setTextSize(1);
-      canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
       int m = HAL::screenTimeoutSec / 60;
       int s = HAL::screenTimeoutSec % 60;
-      char subBuf[24];
+      char pBuf[16];
       if (s == 0) {
-        snprintf(subBuf, sizeof(subBuf), "(%d MIN)", m);
+        snprintf(pBuf, sizeof(pBuf), "%dm", m);
       } else {
-        snprintf(subBuf, sizeof(subBuf), "(%dm %02ds)", m, s);
+        snprintf(pBuf, sizeof(pBuf), "%dm%ds", m, s);
       }
-      canvas->drawCenterString(subBuf, cx, cy + 22);
+      canvas->drawCenterString(pBuf, cx, cy + 3);
     }
 
     // 6. Context Bottom Bar
     canvas->setTextSize(1);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawCenterString("< LEVER > ADJUST | PUSH: OK", cx, 196);
+    canvas->drawCenterString("[L/R] ADJUST   [PUSH] OK", cx, 196);
   }
 
   void renderFadeDial() {
@@ -1277,7 +1256,7 @@ private:
     // 6. Context Bottom Bar
     canvas->setTextSize(1);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawCenterString("< LEVER > ADJUST | PUSH: OK", cx, 196);
+    canvas->drawCenterString("[L/R] ADJUST   [PUSH] OK", cx, 196);
   }
 
   void renderBuzzerVolumeDial() {
@@ -1351,19 +1330,18 @@ private:
     // 5. Large Digital Readout
     canvas->setTextSize(3);
     canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-    char pBuf[8];
-    snprintf(pBuf, sizeof(pBuf), "%d%%", HAL::buzzerVolumePercent);
-    canvas->drawCenterString(pBuf, cx, cy + 3);
-
-    // Subtitle indicating state
-    canvas->setTextSize(1);
-    canvas->setTextColor(HAL::silentMode ? COLOR_ORANGE_DIM : COLOR_ORANGE_MID, COLOR_BG);
-    canvas->drawCenterString(HAL::silentMode ? "[SYSTEM AUDIO MUTED]" : "PIEZO DUTY CYCLE", cx, cy + 28);
+    if (HAL::silentMode) {
+      canvas->drawCenterString("MUTED", cx, cy + 3);
+    } else {
+      char pBuf[8];
+      snprintf(pBuf, sizeof(pBuf), "%d%%", HAL::buzzerVolumePercent);
+      canvas->drawCenterString(pBuf, cx, cy + 3);
+    }
 
     // 6. Context Bottom Bar
     canvas->setTextSize(1);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawCenterString("< LEVER > ADJUST | PUSH: OK", cx, 196);
+    canvas->drawCenterString("[L/R] ADJUST   [PUSH] OK", cx, 196);
   }
 
   void renderBuzzerDurationDial() {
@@ -1437,15 +1415,10 @@ private:
     snprintf(pBuf, sizeof(pBuf), "%d ms", HAL::buzzerTickDurationMs);
     canvas->drawCenterString(pBuf, cx, cy + 3);
 
-    // Subtitle
-    canvas->setTextSize(1);
-    canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas->drawCenterString("HAPTIC PULSE WIDTH", cx, cy + 28);
-
     // 6. Context Bottom Bar
     canvas->setTextSize(1);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawCenterString("< LEVER > ADJUST | PUSH: OK", cx, 196);
+    canvas->drawCenterString("[L/R] ADJUST   [PUSH] OK", cx, 196);
   }
 
   void renderBuzzerPitchDial() {
@@ -1520,23 +1493,10 @@ private:
     snprintf(pBuf, sizeof(pBuf), "%d Hz", HAL::buzzerBaseFreqHz);
     canvas->drawCenterString(pBuf, cx, cy + 3);
 
-    // Subtitle indicating tonal register
-    canvas->setTextSize(1);
-    const char* toneDesc;
-    if (HAL::buzzerBaseFreqHz < 2400) {
-      toneDesc = "LOW PITCH // MELLOW";
-    } else if (HAL::buzzerBaseFreqHz <= 3400) {
-      toneDesc = "MID PITCH // BALANCED";
-    } else {
-      toneDesc = "HIGH PITCH // CRISP";
-    }
-    canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
-    canvas->drawCenterString(toneDesc, cx, cy + 28);
-
     // 6. Context Bottom Bar
     canvas->setTextSize(1);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawCenterString("< LEVER > ADJUST | PUSH: OK", cx, 196);
+    canvas->drawCenterString("[L/R] ADJUST   [PUSH] OK", cx, 196);
   }
 
   void renderTiltMenu(const SensorState& state) {
@@ -1665,7 +1625,7 @@ private:
     canvas->drawFastHLine(4, 206, 232, COLOR_ORANGE_DARK);
     canvas->setTextDatum(MC_DATUM);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawString("[PUSH] SELECT   < LEVER > NAV   [BTN] BACK", 120, 220);
+    canvas->drawString("[PUSH] SET   [L/R] NAV   [BTN] BACK", 120, 220);
     canvas->setTextDatum(TL_DATUM);
   }
 };

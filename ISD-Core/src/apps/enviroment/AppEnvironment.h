@@ -509,11 +509,11 @@ private:
     canvas->drawString("DEW POINT & FOG SENTINEL", 16, p2y + 6);
 
     char dpBuf[40];
-    snprintf(dpBuf, sizeof(dpBuf), "DEW: %.1f°C  MARGIN: %.1f°C", dewPointC, fogMargin);
+    snprintf(dpBuf, sizeof(dpBuf), "DEW: %.1fC  MARGIN: %.1fC", dewPointC, fogMargin);
     canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
     canvas->drawString(dpBuf, 16, p2y + 20);
 
-    const char* fogStatus = (fogMargin <= 1.5f) ? "[!] DENSE FOG IMMINENT" : "[OK] NO CONDENSATION RISK";
+    const char* fogStatus = (fogMargin <= 1.5f) ? "[!] DENSE FOG ALERT" : "[OK] NO FOG RISK";
     canvas->setTextColor((fogMargin <= 1.5f) ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID, COLOR_BG);
     canvas->drawString(fogStatus, 16, p2y + 34);
   }
@@ -699,7 +699,7 @@ private:
 
     // 2. Primary Readouts
     char tBuf[32];
-    snprintf(tBuf, sizeof(tBuf), "%.1f%s", dispTemp, useFahrenheit ? "°F" : "°C");
+    snprintf(tBuf, sizeof(tBuf), "%.1f%s", dispTemp, useFahrenheit ? "F" : "C");
     canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
     canvas->drawString(tBuf, 64, topY + 14, &fonts::Font4);
 
@@ -707,7 +707,7 @@ private:
     canvas->setTextColor(COLOR_ORANGE_MID, COLOR_BG);
     canvas->drawString(tBuf, 64, topY + 46, &fonts::Font2);
 
-    snprintf(tBuf, sizeof(tBuf), "DEW: %.1f%s", dispDew, useFahrenheit ? "°F" : "°C");
+    snprintf(tBuf, sizeof(tBuf), "DEW: %.1f%s", dispDew, useFahrenheit ? "F" : "C");
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
     canvas->drawString(tBuf, 64, topY + 68);
 
@@ -715,7 +715,7 @@ private:
       float minD = useFahrenheit ? (minRecordedTemp * 1.8f + 32.0f) : minRecordedTemp;
       float maxD = useFahrenheit ? (maxRecordedTemp * 1.8f + 32.0f) : maxRecordedTemp;
       char mmBuf[32];
-      snprintf(mmBuf, sizeof(mmBuf), "MIN:%.1f°  MAX:%.1f°", minD, maxD);
+      snprintf(mmBuf, sizeof(mmBuf), "MIN:%.1f  MAX:%.1f", minD, maxD);
       canvas->drawString(mmBuf, 64, topY + 84);
     }
 
@@ -830,7 +830,7 @@ private:
     int sparkHeaderY = topY + 118;
     if (isGasBurnActive) {
       canvas->setTextColor(COLOR_ORANGE_BRIGHT, COLOR_BG);
-      canvas->drawString("[ 300°C HEATER SCAN ]", 12, sparkHeaderY);
+      canvas->drawString("[ 300C HEATER SCAN ]", 12, sparkHeaderY);
     } else {
       bool isFlashing = (airQ.rateOfChangeKohmPerS < -6.0f) && ((millis() % 600) < 300);
       canvas->setTextColor(isFlashing ? COLOR_ORANGE_BRIGHT : COLOR_ORANGE_MID, COLOR_BG);

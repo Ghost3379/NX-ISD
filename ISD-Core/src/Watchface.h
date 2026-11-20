@@ -978,7 +978,7 @@ private:
     if (!qpInTileMode) {
       canvas.drawCenterString("PUSH LEVER TO NAVIGATE", 120 + offsetX, 196);
     } else {
-      canvas.drawCenterString("LEVER: SELECT | BTN: BACK", 120 + offsetX, 196);
+      canvas.drawCenterString("[PUSH] SELECT   [BTN] BACK", 120 + offsetX, 196);
     }
   }
 
@@ -1043,7 +1043,7 @@ private:
     // 6. Context Bottom Bar
     canvas.setTextSize(1);
     canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas.drawCenterString("< LEVER > ADJUST | PUSH: OK", cx, 196);
+    canvas.drawCenterString("[L/R] ADJUST   [PUSH] OK", cx, 196);
   }
 
   void renderShutdownMenu(int offsetX) {
@@ -1115,7 +1115,7 @@ private:
     // Bottom Navigation Context Prompt
     canvas.setTextSize(1);
     canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas.drawCenterString("< LEVER > SELECT | PUSH: OK", 120 + offsetX, 206);
+    canvas.drawCenterString("[PUSH] SELECT   [L/R] NAV", 120 + offsetX, 206);
   }
 
   void renderNotifMenu(int offsetX) {
@@ -1216,7 +1216,7 @@ private:
     // Context Prompt at bottom
     canvas.setTextSize(1);
     canvas.setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas.drawCenterString("< LEVER > SELECT | PUSH: SET", 120 + offsetX, 198);
+    canvas.drawCenterString("[PUSH] SET   [L/R] NAV", 120 + offsetX, 198);
   }
 
   void renderPageIndicator(float dotX) {

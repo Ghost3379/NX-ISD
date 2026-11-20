@@ -892,7 +892,7 @@ private:
       canvas->drawCircle(arrowTipX + 4, arrowTipY + 4, beaconR, COLOR_ORANGE_MID);
 
       canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-      canvas->drawString("SENSOR LOCATOR ↘", 140, 196);
+      canvas->drawString("SENSOR LOCATOR ->", 140, 196);
 
       canvas->drawString("[BTN] CANCEL SCAN", 120, 222);
       canvas->setTextDatum(TL_DATUM);
@@ -1106,7 +1106,7 @@ private:
     canvas->drawFastHLine(4, 206, 232, COLOR_ORANGE_DARK);
     canvas->setTextDatum(MC_DATUM);
     canvas->setTextColor(COLOR_ORANGE_DIM, COLOR_BG);
-    canvas->drawString("[L/R] SELECT  [PUSH] TOGGLE  [BTN] BACK", 120, 220);
+    canvas->drawString("[PUSH] TOGGLE   [L/R] NAV   [BTN] BACK", 120, 220);
     canvas->setTextDatum(TL_DATUM);
   }
 
