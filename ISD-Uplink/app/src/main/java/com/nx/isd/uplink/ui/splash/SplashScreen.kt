@@ -107,15 +107,15 @@ fun SplashScreen(
         ) {
             // Tactical Title Header (Circuit Forem)
             Text(
-                text = "NX-ISD",
+                text = "NX-UPLINK",
                 color = AmberBright,
-                fontSize = 44.sp,
+                fontSize = 42.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = CircuitForem,
                 letterSpacing = 4.sp
             )
             Text(
-                text = "COMMAND UPLINK // MOBILE BRIDGE",
+                text = "COMMAND UPLINK // HARDWARE BRIDGE",
                 color = TextSecondary,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
