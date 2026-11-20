@@ -14,7 +14,7 @@
 				)
 			)
 		)
-		(property "Value" "SMD-8503-3627-16Ω"
+		(property "Value" "SMD-8503-3627-16Î©"
 			(layer "F.Fab")
 			(uuid "884bbdb1-b0e1-4c09-a41f-87e2f9501438")
 			(effects
@@ -183,33 +183,33 @@
 			)
 		)
 		(pad "1" smd rect
+		(at 3.599822 3.599949 315)
 			(size 2 2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net "+3V3")
 			(pinfunction "1_1")
 			(pintype "unspecified")
 			(uuid "2cee3ced-0e29-471c-b5c9-a8bc9f0b44d4")
 		)
 		(pad "2" smd rect
+		(at -3.599822 3.599949 315)
 			(size 2 2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net "unconnected-(B1-Pad2)")
 			(pinfunction "2_2")
 			(pintype "unspecified+no_connect")
 			(uuid "063681e4-33cd-4b6c-98e0-0d4809de453a")
 		)
 		(pad "3" smd rect
+		(at -3.599822 -3.599949 315)
 			(size 2 2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net "unconnected-(B1-Pad3)")
 			(pinfunction "3_3")
 			(pintype "unspecified+no_connect")
 			(uuid "64320878-e531-4574-8496-103f10949917")
 		)
 		(pad "4" smd rect
+		(at 3.599568 -3.599695 315)
 			(size 2 2)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net "Net-(D3-A)")
 			(pinfunction "4_4")
 			(pintype "unspecified")
 			(uuid "e24d6a89-4ddf-4df9-b054-cba2c5a14fcb")

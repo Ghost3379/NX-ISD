@@ -1,922 +1,951 @@
 (footprint "SON50P200X200X80-9N"
-		(layer "F.Cu")
-		(uuid "1e136394-0c49-455b-87e6-ba9f267488b4")
-		(property "Reference" "REF**"
-			(layer "F.SilkS")
-			(hide yes)
-			(uuid "b8ed44b0-dec8-4a52-a38f-031ae14db4fd")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "Value" "BQ25170DSGR"
-			(layer "F.Fab")
-			(uuid "5cc32bdd-fb0a-4eee-849e-84a5b3663cb5")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "1d7e286a-6010-471f-99f6-d644ccdc19ee")
-			(effects
-				(font
-					(size 1.27 1.27)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "Description" ""
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "b3be9bb3-a891-47a3-a04b-55146b48f438")
-			(effects
-				(font
-					(size 1.27 1.27)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "L1_NOM" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "55d5b630-9bd4-4ee0-bdc6-3953b0a2f1e9")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "SNAPEDA_PACKAGE_ID" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "16879f89-8651-49f5-b114-5aad8ad869bb")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "B_NOM" "0.25"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "754d770f-5c1b-4799-8493-6997df79986b")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "EMAX" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "d83818be-5b47-46e9-962d-ff943922c1f8")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "VACANCIES" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "cda1abb2-c178-4e2c-ac5b-c52717a36031")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "BALL_COLUMNS" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "fbafecf5-c799-451e-a77b-535c25fff76d")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "D1_NOM" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "a101de90-591d-4c5b-8a9f-694faadbf284")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "THERMAL_PAD" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "6dbd0b1f-d5d5-4517-a644-1ad095dacd8a")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "DMAX" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "b3fc3ec2-984b-476c-95b0-d8e9764f1d94")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "Check_prices" "https://www.snapeda.com/parts/BQ25170DSGR/Texas+Instruments/view-part/?ref=eda"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "4c254514-1f2e-4f32-aba3-67c76ce4f279")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "L1_MIN" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "d9be8d27-c326-457c-a3b4-4f63b63cf1e0")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "B_MAX" "0.32"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "f1761b02-283c-4aea-90d7-f72af0db4289")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "Description_1" "800-mA linear battery charger for 1-cell Li-ion and LiFePO4"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "9bb75e01-1d80-4cb4-8e0d-d8ded57c3900")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "EMIN" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "8f82b2b5-16c8-4edb-870c-47bf712b8e6e")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "JEDEC" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "0166ea65-d92e-42a9-be3a-b2bfe3177ea8")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "Price" "None"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "d16153cb-292e-438d-9e63-2fbc29d9677e")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "ENOM" "0.5"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "16fef805-681d-407a-ad33-7d547670ca8e")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "D_NOM" "2.0"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "4505387d-ad36-45af-9514-ceb6d7f60309")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "D_MAX" "2.1"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "2f658133-3679-4dfa-8b5e-e0187fac8b2e")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "L_MAX" "0.4"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "fc23fa0c-7157-4789-a343-52369dd675e5")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "A_MAX" "0.8"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "82c988b0-c83b-4dcc-912a-58f153a61a22")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "D1_MAX" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "8957fc3c-3073-4455-90e9-865d01f3ba3f")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "Package" "WSON-8 Texas Instruments"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "3d3067d4-c22b-4e85-92c8-8c8f4468edd0")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "L1_MAX" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "949a0143-ea76-45b8-95ec-4a57e2fa713e")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "D1_MIN" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "393ea138-a3b9-418e-878e-de50def18607")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "E2_NOM" "0.9"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "a1084756-b1a3-4d6d-850e-1541cc07f795")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "D2_NOM" "1.6"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "26b0b18e-8620-4d97-b7e8-ec74aa9bb5f2")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "PARTREV" "A"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "b84a1873-848f-46b5-ab38-4f318fe6e5c2")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "DNOM" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "dad7d2ba-d55e-4c5a-a199-2a571818ac9e")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "SnapEDA_Link" "https://www.snapeda.com/parts/BQ25170DSGR/Texas+Instruments/view-part/?ref=snap"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "fa146d01-b6d4-4f87-b17a-bbd9ceca9974")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "DMIN" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "4c0e79f1-175e-4d55-b29f-a78989ee5b22")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "E_NOM" "2.0"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "8a1b3f64-e60c-4943-aca0-5a7a44eca459")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "BALL_ROWS" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "39b70ea9-f7e8-44c1-b4bd-884c292288d6")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "B_MIN" "0.18"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "11c20905-a6a2-4f24-89b8-7da009917c39")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "STANDARD" "IPC 7351B"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "1551f946-1e77-4037-a28e-3ceeeba4be38")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "PIN_COUNT" "8.0"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "6aecc68e-99ee-419f-aaed-0406522bdd11")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "L_NOM" "0.3"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "47b33803-68e0-4818-b5a4-db234a0cb8e8")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "MANUFACTURER" "Texas Instruments"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "db374d65-71b7-4df6-a4ca-06b41f65fd01")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "IPC" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "5d8e9de1-51c9-4cf8-a9bf-a8f8575868bc")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "PIN_COLUMNS" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "ce69f26c-0fbd-4128-8a60-c875a5e56f2f")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "MF" "Texas Instruments"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "fd23bb60-7ee5-4715-8aac-5ee21af49504")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "BODY_DIAMETER" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "9fb6b7d6-a236-46ca-9ebe-b613bc11f564")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "E_MIN" "1.9"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "a08c6070-afa0-4af4-b549-0b3fd7a3a59e")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "PACKAGE_TYPE" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "725025f8-8531-4259-9599-78d8173524d9")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "D_MIN" "1.9"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "f2badd41-c608-4eed-9d45-15786ad57544")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "MP" "BQ25170DSGR"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "637469bf-345e-4a2a-8890-85cd4ba36fdb")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "PINS" ""
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "392c73f4-2dbd-4a78-8585-9221907ee28f")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "L_MIN" "0.2"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "59681a6e-2e12-4855-a279-ebc9b220778a")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "Availability" "In Stock"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "0303731f-6b1d-441c-b66d-fc78ce48ff28")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(property "E_MAX" "2.1"
-			(unlocked yes)
-			(layer "F.Fab")
-			(hide yes)
-			(uuid "64bfcb1a-b146-4b1a-898c-461b62fd4100")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(units
-			(unit
-				(name "A")
-				(pins "1" "7" "2" "3" "8" "6" "5" "9" "4")
-			)
-		)
-		(attr smd)
-		(duplicate_pad_numbers_are_jumpers no)
-		(fp_line
-			(start -1 -1.21)
-			(end 1 -1.21)
-			(stroke
-				(width 0.127)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "b58be7ca-2398-48fd-8014-aa8ac32950fa")
-		)
-		(fp_line
-			(start -1 1.21)
-			(end 1 1.21)
-			(stroke
-				(width 0.127)
-				(type solid)
-			)
-			(layer "F.SilkS")
-			(uuid "c66161b5-f648-42ec-93c2-7278607d0538")
-		)
-		(fp_circle
-			(center -1.945 -0.75)
-			(end -1.845 -0.75)
-			(stroke
-				(width 0.2)
-				(type solid)
-			)
-			(fill no)
-			(layer "F.SilkS")
-			(uuid "b478810a-a1d9-4213-8aae-3681633bd9a3")
-		)
-		(fp_poly
-			(pts
-				(xy -0.45 -0.8) (xy 0.45 -0.8) (xy 0.45 -0.1) (xy -0.45 -0.1)
-			)
-			(stroke
-				(width 0.01)
-				(type solid)
-			)
-			(fill yes)
-			(layer "F.Paste")
-			(uuid "78df5684-f810-48ab-9b40-664151f58673")
-		)
-		(fp_poly
-			(pts
-				(xy -0.45 0.1) (xy 0.45 0.1) (xy 0.45 0.8) (xy -0.45 0.8)
-			)
-			(stroke
-				(width 0.01)
-				(type solid)
-			)
-			(fill yes)
-			(layer "F.Paste")
-			(uuid "b06ce9e8-3837-45ee-a496-f35740ee801b")
-		)
-		(fp_line
-			(start -1.615 -1.25)
-			(end -1.615 1.25)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "c3fae59d-5a60-49bb-9179-47cf80d288d5")
-		)
-		(fp_line
-			(start -1.615 -1.25)
-			(end 1.615 -1.25)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "3f95814a-d2b7-4263-9024-a31fa3b2fba2")
-		)
-		(fp_line
-			(start -1.615 1.25)
-			(end 1.615 1.25)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "9615fc78-fa0c-4582-970a-13ecf843e657")
-		)
-		(fp_line
-			(start 1.615 -1.25)
-			(end 1.615 1.25)
-			(stroke
-				(width 0.05)
-				(type solid)
-			)
-			(layer "F.CrtYd")
-			(uuid "f07c1b57-228d-4fd9-b41c-ddbe6c72abe2")
-		)
-		(fp_line
-			(start -1 -1)
-			(end -1 1)
-			(stroke
-				(width 0.127)
-				(type solid)
-			)
-			(layer "F.Fab")
-			(uuid "6773da9d-be34-40f5-af07-c0a9c26fe386")
-		)
-		(fp_line
-			(start -1 -1)
-			(end 1 -1)
-			(stroke
-				(width 0.127)
-				(type solid)
-			)
-			(layer "F.Fab")
-			(uuid "eed33efd-74fd-444c-a2e7-52201e18f16b")
-		)
-		(fp_line
-			(start -1 1)
-			(end 1 1)
-			(stroke
-				(width 0.127)
-				(type solid)
-			)
-			(layer "F.Fab")
-			(uuid "b72ebc24-33ed-4576-9f4c-7306aaa49b13")
-		)
-		(fp_line
-			(start 1 -1)
-			(end 1 1)
-			(stroke
-				(width 0.127)
-				(type solid)
-			)
-			(layer "F.Fab")
-			(uuid "e97c83b7-5691-466f-a536-cefc258f5760")
-		)
-		(fp_circle
-			(center -1.945 -0.75)
-			(end -1.845 -0.75)
-			(stroke
-				(width 0.2)
-				(type solid)
-			)
-			(fill no)
-			(layer "F.Fab")
-			(uuid "6c352b89-1339-4fe8-b668-1ee365805770")
-		)
-		(pad "1" smd roundrect
-			(size 0.76 0.28)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.125)
-			(net "VBUS")
-			(pinfunction "IN_1")
-			(pintype "input")
-			(solder_mask_margin 0.102)
-			(uuid "0dd82398-f1dd-4740-b50c-5fbf1f9f37dd")
-		)
-		(pad "2" smd roundrect
-			(size 0.76 0.28)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.125)
-			(net "Net-(U5-ISET)")
-			(pinfunction "ISET_2")
-			(pintype "input")
-			(solder_mask_margin 0.102)
-			(uuid "f582d642-e74a-4f69-ae6a-35414892fb40")
-		)
-		(pad "3" smd roundrect
-			(size 0.76 0.28)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.125)
-			(net "Net-(U5-TS)")
-			(pinfunction "TS_3")
-			(pintype "input")
-			(solder_mask_margin 0.102)
-			(uuid "1fbd715f-4df6-4037-951a-c529d7cde928")
-		)
-		(pad "4" smd roundrect
-			(size 0.76 0.28)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.125)
-			(net "GND")
-			(pinfunction "GND_4")
-			(pintype "power_in")
-			(solder_mask_margin 0.102)
-			(uuid "2234ae93-1a10-4e10-8e58-5443e41bfcd2")
-		)
-		(pad "5" smd roundrect
-			(size 0.76 0.28)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.125)
-			(net "/Logic section/BAT_STAT")
-			(pinfunction "STAT_5")
-			(pintype "output")
-			(solder_mask_margin 0.102)
-			(uuid "9bfe8941-f3c3-46a0-89cd-bc123eee11cd")
-		)
-		(pad "6" smd roundrect
-			(size 0.76 0.28)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.125)
-			(net "/Logic section/USB_DETECT")
-			(pinfunction "~{PG}_6")
-			(pintype "output")
-			(solder_mask_margin 0.102)
-			(uuid "f80d9366-f763-4193-a028-45f611b3ecfa")
-		)
-		(pad "7" smd roundrect
-			(size 0.76 0.28)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.125)
-			(net "Net-(U5-VSET)")
-			(pinfunction "VSET_7")
-			(pintype "input")
-			(solder_mask_margin 0.102)
-			(uuid "257d5013-205b-46dc-855d-85fa5d4fadb3")
-		)
-		(pad "8" smd roundrect
-			(size 0.76 0.28)
-			(layers "F.Cu" "F.Mask" "F.Paste")
-			(roundrect_rratio 0.125)
-			(net "VBAT")
-			(pinfunction "OUT_8")
-			(pintype "output")
-			(solder_mask_margin 0.102)
-			(uuid "1d8cd019-2a58-4c66-9bb3-42bf65146483")
-		)
-		(pad "9" thru_hole circle
-			(size 0.45 0.45)
-			(drill 0.25)
-			(layers "*.Cu")
-			(remove_unused_layers no)
-			(net "GND")
-			(pinfunction "EXP_9")
-			(pintype "power_in")
-			(uuid "7a24163d-6c9d-444c-bc5e-dd0b35f78b16")
-		)
-		(pad "9" smd rect
-			(size 0.9 1.6)
-			(layers "F.Cu" "F.Mask")
-			(net "GND")
-			(pinfunction "EXP_9")
-			(pintype "power_in")
-			(solder_mask_margin 0.102)
-			(uuid "5b301f3c-c0ab-402e-9011-212890859cf2")
-		)
-		(pad "9" thru_hole circle
-			(size 0.45 0.45)
-			(drill 0.25)
-			(layers "*.Cu")
-			(remove_unused_layers no)
-			(net "GND")
-			(pinfunction "EXP_9")
-			(pintype "power_in")
-			(uuid "43f7caa4-3578-4a0a-8269-f0d28a3b6f31")
-		)
-		(embedded_fonts no)
-		(model "${KIPRJMOD}/../KiCad Library v6 & newer/NX-ISD_3dModels/BQ25170DSGR.step"
-			(offset
-				(xyz 0 0 0)
-			)
-			(scale
-				(xyz 1 1 1)
-			)
-			(rotate
-				(xyz -90 -0 -0)
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 0 0 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "261fe2e8-60f1-4c9a-80e6-d6ff5218d916")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
 			)
 		)
 	)
+	(property "Value" "BQ25170DSGR"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "0c4b6e1a-b93d-4a19-b8ca-0249a36b634c")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "d92b18ac-b22c-4c7e-89e4-508c36375e23")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "598de197-73f4-405d-8524-2e98d4d8309b")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "L1_NOM" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "1c290937-a9fe-4362-a8e5-11e4a4d0c8bd")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "SNAPEDA_PACKAGE_ID" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "99339880-dd21-4c04-bb93-732205b6762f")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "B_NOM" "0.25"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "44904c9d-1d56-4333-8b74-180aef2502f9")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "EMAX" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "02c1f605-4146-465c-80bb-abb387dafa95")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "VACANCIES" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "16705f44-6cdb-4b3e-8cb6-994c2af32c37")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "BALL_COLUMNS" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "7ca46560-8175-42ba-8ae0-9b59b84af237")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "D1_NOM" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "94b0b82c-4c23-41d2-b099-c5461c4481c8")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "THERMAL_PAD" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "21816780-3534-4a52-a840-208eadc0468f")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "DMAX" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "33cb2e98-0160-4521-8a27-406e3128aae3")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Check_prices" "https://www.snapeda.com/parts/BQ25170DSGR/Texas+Instruments/view-part/?ref=eda"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "638f3ef4-55ae-4976-951b-7813db357018")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "L1_MIN" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "cc3d3210-9b38-4cfc-8657-35ef6faded97")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "B_MAX" "0.32"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "46ad1a5f-e74b-4aef-b8d5-fc5f4305e5ef")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description_1" "800-mA linear battery charger for 1-cell Li-ion and LiFePO4"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "07545b75-f81f-432a-b967-bb218aaea197")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "EMIN" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "679cdeef-66d8-445c-a500-0808ac047d7a")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "JEDEC" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "fd2602e4-74b2-4414-aba5-4dd971992971")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Price" "None"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "ac491dc1-f6d3-4a75-b6eb-317c1cc596cf")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "ENOM" "0.5"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "e872559d-528c-4aeb-bf76-7e04d45b34b7")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "D_NOM" "2.0"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "8659888a-bd1e-4606-9e87-d6743e83f943")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "D_MAX" "2.1"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "483ce0e9-259e-4fc5-8c5f-b2bab55e304a")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "L_MAX" "0.4"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "0ea278fb-e62b-42dc-b006-1bb66cf76354")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "A_MAX" "0.8"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "49a9e099-37db-4ee9-b0c0-525cbe455640")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "D1_MAX" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "86c96c85-1b1d-44d2-85d4-d439705484b6")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Package" "WSON-8 Texas Instruments"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "354fc086-fb1b-498a-bfdb-4a4f0e633d6a")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "L1_MAX" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "227cfa48-a9b4-446e-b08d-97e0915487c8")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "D1_MIN" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "8be32716-ab61-457a-a91a-84cbd766a5c5")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "E2_NOM" "0.9"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "bdac6281-b8b4-46e0-a876-6c20187aa716")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "D2_NOM" "1.6"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "81368dd2-c681-4906-a600-f7c52dbef22b")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "PARTREV" "A"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "9b3d9796-ebb5-40b9-b60a-641a3590c799")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "DNOM" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "b27c0ab2-c03b-41fc-9fe6-1c102fa9eacf")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "SnapEDA_Link" "https://www.snapeda.com/parts/BQ25170DSGR/Texas+Instruments/view-part/?ref=snap"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "1bd0b0be-2825-4591-a0d8-056bbc356c77")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "DMIN" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "cf336f64-9e8a-4b9f-a3c5-ac67fcbc68b8")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "E_NOM" "2.0"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "c0a4fd12-dfb2-44c5-8fc7-a1b2950d00f8")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "BALL_ROWS" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "31dacd58-133b-4e80-bda4-3f1966b42ae7")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "B_MIN" "0.18"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "1588b69f-6ad0-49ee-a8ea-916bd737a913")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "STANDARD" "IPC 7351B"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "ec58185a-c02d-4b9b-9fe5-29d6919cd105")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "PIN_COUNT" "8.0"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "5083c9c7-5bea-4a5f-9d9b-e4486548e320")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "L_NOM" "0.3"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "79c0ab77-832a-475c-9369-6ec2be9a5167")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "MANUFACTURER" "Texas Instruments"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "c9b42e46-0805-493f-886a-ffc974db1df0")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "IPC" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "fae98314-dbf1-467c-95a2-374a3198ad82")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "PIN_COLUMNS" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "b6b2739d-cce1-4f92-b887-a409d8012da9")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "MF" "Texas Instruments"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "13af097e-0df0-4690-b83d-899a9f437cb0")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "BODY_DIAMETER" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "fba5fedb-1fa3-4f0b-b6de-07a18e507c1f")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "E_MIN" "1.9"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "b8d27cf4-28da-4586-8e46-3782f8dda2f1")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "PACKAGE_TYPE" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "0ab201ce-5440-4955-bf6e-374bafe4b73d")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "D_MIN" "1.9"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "b0af608e-5f70-4508-ab58-4a0f0431ced5")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "MP" "BQ25170DSGR"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "fbd95646-8e55-421b-8901-8d194c4d0eea")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "PINS" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "a5d2f577-b5a3-434c-973f-1529204dfa72")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "L_MIN" "0.2"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "2267947f-4de0-4357-8454-a9dd6ee98eb9")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Availability" "In Stock"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "8d1f9ab9-f6fe-482e-80a4-b108045cd380")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "E_MAX" "2.1"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "3f50aff6-554f-4825-8dec-2e1bb2a28a51")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start -1 -1.21)
+		(end 1 -1.21)
+		(stroke
+			(width 0.127)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "cec5ddb0-41fa-4e6c-8e15-051379433692")
+	)
+	(fp_line
+		(start -1 1.21)
+		(end 1 1.21)
+		(stroke
+			(width 0.127)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "2d0a5d39-e01d-4dc2-adc0-a3395dca5497")
+	)
+	(fp_circle
+		(center -1.5 -1.5)
+		(end -1.4 -1.5)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.SilkS")
+		(uuid "c976e1d3-5593-4bab-bdd3-e26a436f46dc")
+	)
+	(fp_poly
+		(pts
+			(xy -0.45 -0.8) (xy 0.45 -0.8) (xy 0.45 -0.1) (xy -0.45 -0.1)
+		)
+		(stroke
+			(width 0.01)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.Paste")
+		(uuid "b72a309e-df0c-4c2a-a05d-d21c98a382d2")
+	)
+	(fp_poly
+		(pts
+			(xy -0.45 0.1) (xy 0.45 0.1) (xy 0.45 0.8) (xy -0.45 0.8)
+		)
+		(stroke
+			(width 0.01)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.Paste")
+		(uuid "44a4dd0d-2553-4a43-bf77-d58afd495666")
+	)
+	(fp_line
+		(start -1.615 -1.25)
+		(end -1.615 1.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "b0ee7ed2-ef61-4daf-8180-cb8476c600be")
+	)
+	(fp_line
+		(start -1.615 -1.25)
+		(end 1.615 -1.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "5ec57903-3573-4f54-8aaf-cf687d58081e")
+	)
+	(fp_line
+		(start -1.615 1.25)
+		(end 1.615 1.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "36c610ca-6827-4f4e-a439-3bbb5a198483")
+	)
+	(fp_line
+		(start 1.615 -1.25)
+		(end 1.615 1.25)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "57197f04-5062-4226-a9af-6779049f0c36")
+	)
+	(fp_line
+		(start -1 -1)
+		(end -1 1)
+		(stroke
+			(width 0.127)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "dd1b1a49-6281-484a-b63f-ba47065ead53")
+	)
+	(fp_line
+		(start -1 -1)
+		(end 1 -1)
+		(stroke
+			(width 0.127)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "b96d4a88-2208-42d0-96f6-18581fba918f")
+	)
+	(fp_line
+		(start -1 1)
+		(end 1 1)
+		(stroke
+			(width 0.127)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "ba019d91-0e8a-4a45-b411-315fc541c530")
+	)
+	(fp_line
+		(start 1 -1)
+		(end 1 1)
+		(stroke
+			(width 0.127)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "5d852efb-5515-45e1-a303-de843d3fba43")
+	)
+	(fp_circle
+		(center -1.5 -1.5)
+		(end -1.4 -1.5)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "3becc125-70a8-433f-a98b-d528fdc2d34c")
+	)
+	(pad "1" smd roundrect
+		(at -0.985 -0.75)
+		(size 0.76 0.28)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.125)
+		(solder_mask_margin 0.102)
+		(uuid "f18f058d-9494-4445-8d28-9ffc3b624d4e")
+	)
+	(pad "2" smd roundrect
+		(at -0.985 -0.25)
+		(size 0.76 0.28)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.125)
+		(solder_mask_margin 0.102)
+		(uuid "4eed2151-006d-47ee-a4f5-d53653396cf9")
+	)
+	(pad "3" smd roundrect
+		(at -0.985 0.25)
+		(size 0.76 0.28)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.125)
+		(solder_mask_margin 0.102)
+		(uuid "e806c876-0077-43b2-b416-b502ab87974b")
+	)
+	(pad "4" smd roundrect
+		(at -0.985 0.75)
+		(size 0.76 0.28)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.125)
+		(solder_mask_margin 0.102)
+		(uuid "5293b327-8cc3-411f-a634-240ae6686af4")
+	)
+	(pad "5" smd roundrect
+		(at 0.985 0.75)
+		(size 0.76 0.28)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.125)
+		(solder_mask_margin 0.102)
+		(uuid "487a9d33-1c03-41bd-b2dc-9325251fa060")
+	)
+	(pad "6" smd roundrect
+		(at 0.985 0.25)
+		(size 0.76 0.28)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.125)
+		(solder_mask_margin 0.102)
+		(uuid "11d94a70-fbcb-45ba-9aed-9abfc1bad98e")
+	)
+	(pad "7" smd roundrect
+		(at 0.985 -0.25)
+		(size 0.76 0.28)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.125)
+		(solder_mask_margin 0.102)
+		(uuid "abd15e10-b806-4a3e-9838-89af2f56bc2b")
+	)
+	(pad "8" smd roundrect
+		(at 0.985 -0.75)
+		(size 0.76 0.28)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.125)
+		(solder_mask_margin 0.102)
+		(uuid "36173a3e-55c9-4ec5-89c3-258a42bc4e7f")
+	)
+	(pad "9" thru_hole circle
+		(at 0 -0.55)
+		(size 0.45 0.45)
+		(drill 0.25)
+		(layers "*.Cu")
+		(remove_unused_layers no)
+		(uuid "ac247ecc-e895-4cea-8a0d-97c87bf4396a")
+	)
+	(pad "9" smd rect
+		(at 0 0)
+		(size 0.9 1.6)
+		(layers "F.Cu" "F.Mask")
+		(solder_mask_margin 0.102)
+		(uuid "7ad8efef-0e75-492a-9ce9-651da071b34a")
+	)
+	(pad "9" thru_hole circle
+		(at 0 0.55)
+		(size 0.45 0.45)
+		(drill 0.25)
+		(layers "*.Cu")
+		(remove_unused_layers no)
+		(uuid "a0b6d336-0bee-4836-8e81-537dc1c31882")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/../KiCad Library v6 & newer/NX-ISD_3dModels/BQ25170DSGR.step"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz -90 -0 -0)
+		)
+	)
+)
